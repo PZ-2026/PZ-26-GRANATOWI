@@ -9,51 +9,47 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
-import com.example.artsphere.ui.components.Header
-import com.example.artsphere.ui.components.HeroSection
-import com.example.artsphere.ui.components.SearchSection
-import com.example.artsphere.ui.components.StatisticsSection
+import com.example.artsphere.ui.components.*
 
 @Composable
 fun HomeScreen(
+    isLoggedIn: Boolean,
+    username: String,
+    balance: Double,
     onLoginClick: () -> Unit,
     onRegisterClick: () -> Unit,
     onBrowseClick: () -> Unit,
-    onBecomeSellerClick: () -> Unit
+    onBecomeSellerClick: () -> Unit,
+    onLogoutClick: () -> Unit,
+    onCartClick: () -> Unit,
+    onProfileClick: () -> Unit
 ) {
-    // Menadżer fokusu do ukrywania klawiatury
     val focusManager = LocalFocusManager.current
 
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    focusManager.clearFocus()
-                })
-            },
+            .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
         topBar = {
-            Header(onLoginClick = onLoginClick, onRegisterClick = onRegisterClick)
+            Header(
+                isLoggedIn = isLoggedIn,
+                username = username,
+                balance = balance,
+                onLoginClick = onLoginClick,
+                onRegisterClick = onRegisterClick,
+                onLogoutClick = onLogoutClick,
+                onCartClick = onCartClick,
+                onProfileClick = onProfileClick
+            )
         }
     ) { paddingValues ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
-            item {
-                HeroSection(
-                    onBrowseClick = onBrowseClick,
-                    onBecomeSellerClick = onBecomeSellerClick
-                )
-            }
-            item {
-                SearchSection()
-            }
-            item {
-                StatisticsSection()
-            }
+            item { HeroSection(onBrowseClick = onBrowseClick, onBecomeSellerClick = onBecomeSellerClick) }
+            item { SearchSection() }
+            item { StatisticsSection() }
         }
     }
 }

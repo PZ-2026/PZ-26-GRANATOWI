@@ -1,26 +1,38 @@
 package com.example.artsphere.ui.navigation
 
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.artsphere.ui.screens.HomeScreen
-import com.example.artsphere.ui.screens.LoginScreen
-import com.example.artsphere.ui.screens.RegisterScreen
+import com.example.artsphere.ui.screens.*
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+
+    // Globalny stan użytkownika
+    var isLoggedIn by remember { mutableStateOf(false) }
+    var currentUsername by remember { mutableStateOf("") }
+    var currentBalance by remember { mutableStateOf(1500.00) } // Przykładowe saldo
 
     NavHost(navController = navController, startDestination = "home") {
 
         // Ekran Główny
         composable("home") {
             HomeScreen(
+                isLoggedIn = isLoggedIn,
+                username = currentUsername,
+                balance = currentBalance,
                 onLoginClick = { navController.navigate("login") },
                 onRegisterClick = { navController.navigate("register/user") },
-                onBrowseClick = { /* przewijanie do listy dzieł */ },
-                onBecomeSellerClick = { navController.navigate("register/seller") }
+                onBrowseClick = { /* Przewijanie do listy dzieł */ },
+                onBecomeSellerClick = { navController.navigate("register/seller") },
+                onLogoutClick = {
+                    isLoggedIn = false
+                    currentUsername = ""
+                },
+                onCartClick = { navController.navigate("cart") },
+                onProfileClick = { navController.navigate("client_panel") }
             )
         }
 
@@ -28,20 +40,15 @@ fun AppNavigation() {
         composable("login") {
             LoginScreen(
                 onNavigateBack = {
-                    navController.navigate("home") {
-                        popUpTo("home") { inclusive = false }
-                    }
+                    navController.navigate("home") { popUpTo("home") { inclusive = false } }
                 },
-
                 onNavigateToRegister = {
-                    navController.navigate("register/user") {
-                        popUpTo("login") { inclusive = true }
-                    }
+                    navController.navigate("register/user") { popUpTo("login") { inclusive = true } }
                 },
-                onLoginSuccess = {
-                    navController.navigate("home") {
-                        popUpTo(0)
-                    }
+                onLoginSuccess = { username ->
+                    isLoggedIn = true
+                    currentUsername = username
+                    navController.navigate("home") { popUpTo(0) }
                 }
             )
         }
@@ -51,17 +58,34 @@ fun AppNavigation() {
             val role = backStackEntry.arguments?.getString("role") ?: "user"
             RegisterScreen(
                 initialRole = role,
-                // Powrót do Home
                 onNavigateBack = {
-                    navController.navigate("home") {
-                        popUpTo("home") { inclusive = false }
-                    }
+                    navController.navigate("home") { popUpTo("home") { inclusive = false } }
                 },
-                // przejście do logowania
                 onNavigateToLogin = {
-                    navController.navigate("login") {
-                        popUpTo("register/{role}") { inclusive = true }
-                    }
+                    navController.navigate("login") { popUpTo("register/{role}") { inclusive = true } }
+                }
+            )
+        }
+
+
+        // Ekran Koszyka
+        composable("cart") {
+            CartScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onCheckoutClick = { /* Logika zakupów */ }
+            )
+        }
+
+        // Ekran Panelu Klienta
+        composable("client_panel") {
+            ClientPanelScreen(
+                username = currentUsername,
+                balance = currentBalance,
+                onNavigateBack = { navController.popBackStack() },
+                onLogoutClick = {
+                    isLoggedIn = false
+                    currentUsername = ""
+                    navController.navigate("home") { popUpTo(0) }
                 }
             )
         }

@@ -1,50 +1,79 @@
 package com.example.artsphere.ui.components
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Header(
+    isLoggedIn: Boolean,
+    username: String,
+    balance: Double,
     onLoginClick: () -> Unit,
-    onRegisterClick: () -> Unit
+    onRegisterClick: () -> Unit,
+    onLogoutClick: () -> Unit,
+    onCartClick: () -> Unit,
+    onProfileClick: () -> Unit
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
     TopAppBar(
         title = {
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Palette,
-                    contentDescription = "ArtSphere Logo",
-                    tint = MaterialTheme.colorScheme.primary
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Palette, contentDescription = "ArtSphere Logo", tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "ArtSphere",
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Text("ArtSphere", fontWeight = FontWeight.Bold)
             }
         },
         actions = {
-            TextButton(onClick = onLoginClick) {
-                Text("Logowanie", color = MaterialTheme.colorScheme.primary)
-            }
-            Button(onClick = onRegisterClick) {
-                Text("Rejestracja")
+            if (isLoggedIn) {
+                // Ikona koszyka
+                IconButton(onClick = onCartClick) {
+                    Icon(Icons.Default.ShoppingCart, contentDescription = "Koszyk")
+                }
+
+                // Menu użytkownika
+                Box {
+                    IconButton(onClick = { menuExpanded = !menuExpanded }) {
+                        Icon(Icons.Default.AccountCircle, contentDescription = "Profil")
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Witaj, $username!", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) },
+                            onClick = { menuExpanded = false }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Saldo: ${String.format("%.2f", balance)} zł") },
+                            onClick = { menuExpanded = false }
+                        )
+                        Divider()
+                        DropdownMenuItem(
+                            text = { Text("Panel Użytkownika") },
+                            onClick = { menuExpanded = false; onProfileClick() },
+                            leadingIcon = { Icon(Icons.Default.Settings, null) }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Wyloguj", color = MaterialTheme.colorScheme.error) },
+                            onClick = { menuExpanded = false; onLogoutClick() },
+                            leadingIcon = { Icon(Icons.Default.Logout, null, tint = MaterialTheme.colorScheme.error) }
+                        )
+                    }
+                }
+            } else {
+                TextButton(onClick = onLoginClick) { Text("Zaloguj się") }
+                Button(onClick = onRegisterClick) { Text("Rejestracja") }
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            titleContentColor = MaterialTheme.colorScheme.onSurface
-        )
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
     )
 }
