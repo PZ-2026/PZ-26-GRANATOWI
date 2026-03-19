@@ -1,0 +1,18 @@
+# Gradle files
+.gradle/
+build/
+frontend/build/
+frontend/.gradle/
+
+# IntelliJ/Android Studio files
+.idea/
+*.iml
+frontend/.idea/
+frontend/*.iml
+
+# Local configuration
+local.properties
+frontend/local.properties
+
+# Logi i inne
+*.log
