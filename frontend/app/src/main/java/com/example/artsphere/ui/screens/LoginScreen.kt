@@ -25,49 +25,41 @@ import androidx.compose.ui.unit.sp
 fun LoginScreen(
     onNavigateBack: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: (String) -> Unit
 ) {
     val focusManager = LocalFocusManager.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    // blad dla zlych danych
+    var errorMessage by remember { mutableStateOf("") }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = { focusManager.clearFocus() })
-            }
+            .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) }
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Witaj ponownie!",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        Text(
-            text = "Zaloguj się do swojego konta ArtSphere",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
+        Text("Witaj ponownie!", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
+        Text("Zaloguj się (użyj: test@gmail.com / test123)", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 32.dp))
+
+        if (errorMessage.isNotEmpty()) {
+            Text(text = errorMessage, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 16.dp))
+        }
 
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
+            value = email, onValueChange = { email = it; errorMessage = "" },
             label = { Text("Adres E-mail") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-            singleLine = true
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), singleLine = true
         )
 
         OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
+            value = password, onValueChange = { password = it; errorMessage = "" },
             label = { Text("Hasło") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
             trailingIcon = {
@@ -78,26 +70,29 @@ fun LoginScreen(
             },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-            singleLine = true
+            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), singleLine = true
         )
 
         Button(
-            onClick = { /* TODO: Logika logowania */ },
+            onClick = {
+                focusManager.clearFocus()
+                // logowanie na sztywno
+                if (email == "test@gmail.com" && password == "test123") {
+                    onLoginSuccess("Jan Kowalski")
+                } else {
+                    errorMessage = "Nieprawidłowy e-mail lub hasło!"
+                }
+            },
             modifier = Modifier.fillMaxWidth().height(50.dp)
         ) {
             Text("Zaloguj się")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Nie masz konta?")
-            TextButton(onClick = onNavigateToRegister) {
-                Text("Zarejestruj się")
-            }
+            TextButton(onClick = onNavigateToRegister) { Text("Zarejestruj się") }
         }
-
         TextButton(onClick = onNavigateBack) {
             Text("Wróć do strony głównej", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
