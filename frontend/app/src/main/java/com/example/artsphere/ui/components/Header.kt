@@ -16,6 +16,7 @@ fun Header(
     isLoggedIn: Boolean,
     username: String,
     balance: Double,
+    role: String,
     onLoginClick: () -> Unit,
     onRegisterClick: () -> Unit,
     onLogoutClick: () -> Unit,
@@ -34,12 +35,13 @@ fun Header(
         },
         actions = {
             if (isLoggedIn) {
-                // Ikona koszyka
-                IconButton(onClick = onCartClick) {
-                    Icon(Icons.Default.ShoppingCart, contentDescription = "Koszyk")
+                // sprzedawca nie ma koszyka
+                if (role != "seller") {
+                    IconButton(onClick = onCartClick) {
+                        Icon(Icons.Default.ShoppingCart, contentDescription = "Koszyk")
+                    }
                 }
 
-                // Menu użytkownika
                 Box {
                     IconButton(onClick = { menuExpanded = !menuExpanded }) {
                         Icon(Icons.Default.AccountCircle, contentDescription = "Profil")
@@ -58,9 +60,13 @@ fun Header(
                         )
                         Divider()
                         DropdownMenuItem(
-                            text = { Text("Panel Użytkownika") },
+                            text = {
+                                Text(if (role == "seller") "Panel Sprzedawcy" else "Panel Użytkownika")
+                            },
                             onClick = { menuExpanded = false; onProfileClick() },
-                            leadingIcon = { Icon(Icons.Default.Settings, null) }
+                            leadingIcon = {
+                                Icon(if (role == "seller") Icons.Default.Storefront else Icons.Default.Settings, null)
+                            }
                         )
                         DropdownMenuItem(
                             text = { Text("Wyloguj", color = MaterialTheme.colorScheme.error) },

@@ -25,14 +25,12 @@ import androidx.compose.ui.unit.sp
 fun LoginScreen(
     onNavigateBack: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: (String) -> Unit
+    onLoginSuccess: (String, String) -> Unit // (Username, Role)
 ) {
     val focusManager = LocalFocusManager.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-
-    // blad dla zlych danych
     var errorMessage by remember { mutableStateOf("") }
 
     Column(
@@ -44,7 +42,8 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Witaj ponownie!", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
-        Text("Zaloguj się (użyj: test@gmail.com / test123)", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 32.dp))
+        Text("Klient: test@gmail.com / test123", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Sprzedawca: sprzedawca@gmail.com / test123", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 32.dp))
 
         if (errorMessage.isNotEmpty()) {
             Text(text = errorMessage, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 16.dp))
@@ -76,9 +75,10 @@ fun LoginScreen(
         Button(
             onClick = {
                 focusManager.clearFocus()
-                // logowanie na sztywno
                 if (email == "test@gmail.com" && password == "test123") {
-                    onLoginSuccess("Jan Kowalski")
+                    onLoginSuccess("Jan Kowalski", "user")
+                } else if (email == "sprzedawca@gmail.com" && password == "test123") {
+                    onLoginSuccess("ArtStudio", "seller")
                 } else {
                     errorMessage = "Nieprawidłowy e-mail lub hasło!"
                 }

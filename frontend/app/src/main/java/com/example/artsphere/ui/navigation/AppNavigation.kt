@@ -13,30 +13,38 @@ fun AppNavigation() {
     // Globalny stan użytkownika
     var isLoggedIn by remember { mutableStateOf(false) }
     var currentUsername by remember { mutableStateOf("") }
-    var currentBalance by remember { mutableStateOf(1500.00) } // Przykładowe saldo
+    var currentBalance by remember { mutableStateOf(1500.00) }
+    var currentUserRole by remember { mutableStateOf("user") }
 
     NavHost(navController = navController, startDestination = "home") {
 
-        // Ekran Główny
         composable("home") {
             HomeScreen(
                 isLoggedIn = isLoggedIn,
                 username = currentUsername,
                 balance = currentBalance,
+                role = currentUserRole,
                 onLoginClick = { navController.navigate("login") },
                 onRegisterClick = { navController.navigate("register/user") },
-                onBrowseClick = { /* Przewijanie do listy dzieł */ },
+                onBrowseClick = { /* Przewijanie do wyszukiwarki */ },
                 onBecomeSellerClick = { navController.navigate("register/seller") },
                 onLogoutClick = {
                     isLoggedIn = false
                     currentUsername = ""
+                    currentUserRole = "user"
                 },
                 onCartClick = { navController.navigate("cart") },
-                onProfileClick = { navController.navigate("client_panel") }
+                // wybranie panelu
+                onProfileClick = {
+                    if (currentUserRole == "seller") {
+                        navController.navigate("seller_panel")
+                    } else {
+                        navController.navigate("client_panel")
+                    }
+                }
             )
         }
 
-        // Ekran Logowania
         composable("login") {
             LoginScreen(
                 onNavigateBack = {
@@ -45,15 +53,15 @@ fun AppNavigation() {
                 onNavigateToRegister = {
                     navController.navigate("register/user") { popUpTo("login") { inclusive = true } }
                 },
-                onLoginSuccess = { username ->
+                onLoginSuccess = { username, role ->
                     isLoggedIn = true
                     currentUsername = username
+                    currentUserRole = role
                     navController.navigate("home") { popUpTo(0) }
                 }
             )
         }
 
-        // Ekran Rejestracji
         composable("register/{role}") { backStackEntry ->
             val role = backStackEntry.arguments?.getString("role") ?: "user"
             RegisterScreen(
@@ -67,18 +75,30 @@ fun AppNavigation() {
             )
         }
 
-
-        // Ekran Koszyka
         composable("cart") {
             CartScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onCheckoutClick = { /* Logika zakupów */ }
+                onCheckoutClick = { /* Przejście do kasy */ }
             )
         }
 
-        // Ekran Panelu Klienta
+        // panel uzytkownika
         composable("client_panel") {
             ClientPanelScreen(
+                username = currentUsername,
+                balance = currentBalance,
+                onNavigateBack = { navController.popBackStack() },
+                onLogoutClick = {
+                    isLoggedIn = false
+                    currentUsername = ""
+                    navController.navigate("home") { popUpTo(0) }
+                }
+            )
+        }
+
+        // panel sprzedawcy
+        composable("seller_panel") {
+            SellerPanelScreen(
                 username = currentUsername,
                 balance = currentBalance,
                 onNavigateBack = { navController.popBackStack() },
