@@ -35,8 +35,8 @@ fun Header(
         },
         actions = {
             if (isLoggedIn) {
-                // sprzedawca nie ma koszyka
-                if (role != "seller") {
+                // Tylko klient ma koszyk
+                if (role == "user") {
                     IconButton(onClick = onCartClick) {
                         Icon(Icons.Default.ShoppingCart, contentDescription = "Koszyk")
                     }
@@ -50,23 +50,38 @@ fun Header(
                         expanded = menuExpanded,
                         onDismissRequest = { menuExpanded = false }
                     ) {
+                        // Powitanie dostosowane do roli
+                        val greeting = if (role == "admin") "Witaj adminie $username!" else "Witaj, $username!"
                         DropdownMenuItem(
-                            text = { Text("Witaj, $username!", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) },
+                            text = { Text(greeting, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) },
                             onClick = { menuExpanded = false }
                         )
-                        DropdownMenuItem(
-                            text = { Text("Saldo: ${String.format("%.2f", balance)} zł") },
-                            onClick = { menuExpanded = false }
-                        )
+
+                        // Admin nie ma salda
+                        if (role != "admin") {
+                            DropdownMenuItem(
+                                text = { Text("Saldo: ${String.format("%.2f", balance)} zł") },
+                                onClick = { menuExpanded = false }
+                            )
+                        }
+
                         Divider()
+
+                        val panelName = when (role) {
+                            "seller" -> "Panel Sprzedawcy"
+                            "admin" -> "Panel Admina"
+                            else -> "Panel Użytkownika"
+                        }
+                        val panelIcon = when (role) {
+                            "seller" -> Icons.Default.Storefront
+                            "admin" -> Icons.Default.AdminPanelSettings
+                            else -> Icons.Default.Settings
+                        }
+
                         DropdownMenuItem(
-                            text = {
-                                Text(if (role == "seller") "Panel Sprzedawcy" else "Panel Użytkownika")
-                            },
+                            text = { Text(panelName) },
                             onClick = { menuExpanded = false; onProfileClick() },
-                            leadingIcon = {
-                                Icon(if (role == "seller") Icons.Default.Storefront else Icons.Default.Settings, null)
-                            }
+                            leadingIcon = { Icon(panelIcon, null) }
                         )
                         DropdownMenuItem(
                             text = { Text("Wyloguj", color = MaterialTheme.colorScheme.error) },

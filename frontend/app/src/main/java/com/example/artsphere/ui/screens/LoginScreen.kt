@@ -42,8 +42,10 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Witaj ponownie!", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
+
         Text("Klient: test@gmail.com / test123", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text("Sprzedawca: sprzedawca@gmail.com / test123", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 32.dp))
+        Text("Sprzedawca: sprzedawca@gmail.com / test123", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Admin: admin@gmail.com / test123", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 32.dp))
 
         if (errorMessage.isNotEmpty()) {
             Text(text = errorMessage, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 16.dp))
@@ -79,6 +81,8 @@ fun LoginScreen(
                     onLoginSuccess("Jan Kowalski", "user")
                 } else if (email == "sprzedawca@gmail.com" && password == "test123") {
                     onLoginSuccess("ArtStudio", "seller")
+                } else if (email == "admin@gmail.com" && password == "test123") {
+                    onLoginSuccess("Art", "admin")
                 } else {
                     errorMessage = "Nieprawidłowy e-mail lub hasło!"
                 }

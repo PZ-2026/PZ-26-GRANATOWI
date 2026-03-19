@@ -14,7 +14,7 @@ fun AppNavigation() {
     var isLoggedIn by remember { mutableStateOf(false) }
     var currentUsername by remember { mutableStateOf("") }
     var currentBalance by remember { mutableStateOf(1500.00) }
-    var currentUserRole by remember { mutableStateOf("user") }
+    var currentUserRole by remember { mutableStateOf("user") } // "user", "seller", "admin"
 
     NavHost(navController = navController, startDestination = "home") {
 
@@ -34,17 +34,17 @@ fun AppNavigation() {
                     currentUserRole = "user"
                 },
                 onCartClick = { navController.navigate("cart") },
-                // wybranie panelu
                 onProfileClick = {
-                    if (currentUserRole == "seller") {
-                        navController.navigate("seller_panel")
-                    } else {
-                        navController.navigate("client_panel")
+                    when (currentUserRole) {
+                        "seller" -> navController.navigate("seller_panel")
+                        "admin" -> navController.navigate("admin_panel")
+                        else -> navController.navigate("client_panel")
                     }
                 }
             )
         }
 
+        // logowanie
         composable("login") {
             LoginScreen(
                 onNavigateBack = {
@@ -62,6 +62,7 @@ fun AppNavigation() {
             )
         }
 
+        // rejestracja
         composable("register/{role}") { backStackEntry ->
             val role = backStackEntry.arguments?.getString("role") ?: "user"
             RegisterScreen(
@@ -75,6 +76,7 @@ fun AppNavigation() {
             )
         }
 
+        // koszyk
         composable("cart") {
             CartScreen(
                 onNavigateBack = { navController.popBackStack() },
@@ -82,7 +84,7 @@ fun AppNavigation() {
             )
         }
 
-        // panel uzytkownika
+        // ekran klienta
         composable("client_panel") {
             ClientPanelScreen(
                 username = currentUsername,
@@ -96,11 +98,24 @@ fun AppNavigation() {
             )
         }
 
-        // panel sprzedawcy
+        // ekran sprzedawcy
         composable("seller_panel") {
             SellerPanelScreen(
                 username = currentUsername,
                 balance = currentBalance,
+                onNavigateBack = { navController.popBackStack() },
+                onLogoutClick = {
+                    isLoggedIn = false
+                    currentUsername = ""
+                    navController.navigate("home") { popUpTo(0) }
+                }
+            )
+        }
+
+        // ekran admina
+        composable("admin_panel") {
+            AdminPanelScreen(
+                username = currentUsername,
                 onNavigateBack = { navController.popBackStack() },
                 onLogoutClick = {
                     isLoggedIn = false

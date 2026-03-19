@@ -1,6 +1,5 @@
 package com.example.artsphere.ui.components
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -8,6 +7,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -18,10 +18,10 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun HeroSection(
+    role: String,
     onBrowseClick: () -> Unit,
     onBecomeSellerClick: () -> Unit
 ) {
-
     val heroGradient = Brush.linearGradient(
         colors = listOf(Color(0xFF667EEA), Color(0xFF764BA2))
     )
@@ -31,7 +31,7 @@ fun HeroSection(
             .fillMaxWidth()
             .background(heroGradient)
             .padding(32.dp),
-        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "Odkryj niepowtarzalne dzieła sztuki",
@@ -65,17 +65,20 @@ fun HeroSection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedButton(
-            onClick = onBecomeSellerClick,
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Icon(Icons.Default.Storefront, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Zostań sprzedawcą")
+        // Przycisk zostan sprzedawca tylko dla klienta
+        if (role != "seller" && role != "admin") {
+            OutlinedButton(
+                onClick = onBecomeSellerClick,
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Icon(Icons.Default.Storefront, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Zostań sprzedawcą")
+            }
         }
     }
 }

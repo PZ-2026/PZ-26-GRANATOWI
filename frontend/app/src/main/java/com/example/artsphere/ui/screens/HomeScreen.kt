@@ -49,7 +49,13 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
-            item { HeroSection(onBrowseClick = onBrowseClick, onBecomeSellerClick = onBecomeSellerClick) }
+            item {
+                HeroSection(
+                    role = role,
+                    onBrowseClick = onBrowseClick,
+                    onBecomeSellerClick = onBecomeSellerClick
+                )
+            }
             item { SearchSection() }
             item { StatisticsSection() }
         }
