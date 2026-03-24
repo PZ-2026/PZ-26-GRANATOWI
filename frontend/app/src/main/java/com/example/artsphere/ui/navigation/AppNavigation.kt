@@ -94,7 +94,8 @@ fun AppNavigation() {
                     isLoggedIn = false
                     currentUsername = ""
                     navController.navigate("home") { popUpTo(0) }
-                }
+                },
+                onStatisticsClick = { navController.navigate("client_dashboard") }
             )
         }
 
@@ -108,7 +109,8 @@ fun AppNavigation() {
                     isLoggedIn = false
                     currentUsername = ""
                     navController.navigate("home") { popUpTo(0) }
-                }
+                },
+                onStatisticsClick = { navController.navigate("seller_dashboard") }
             )
         }
 
@@ -121,7 +123,31 @@ fun AppNavigation() {
                     isLoggedIn = false
                     currentUsername = ""
                     navController.navigate("home") { popUpTo(0) }
-                }
+                },
+                onStatisticsClick = { navController.navigate("admin_dashboard") }
+            )
+        }
+
+        // dashboard statystyk administratora
+        composable("admin_dashboard") {
+            AdminDashboardScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // dashboard statystyk sprzedawcy
+        composable("seller_dashboard") {
+            SellerDashboardScreen(
+                onBackClick = { navController.popBackStack() },
+                balance = currentBalance
+            )
+        }
+
+        // dashboard statystyk klienta
+        composable("client_dashboard") {
+            ClientDashboardScreen(
+                onBackClick = { navController.popBackStack() },
+                balance = currentBalance
             )
         }
     }

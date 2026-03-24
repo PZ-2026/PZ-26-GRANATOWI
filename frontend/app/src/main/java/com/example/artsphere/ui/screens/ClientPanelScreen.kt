@@ -50,7 +50,8 @@ fun ClientPanelScreen(
     username: String,
     balance: Double,
     onNavigateBack: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onStatisticsClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -109,7 +110,7 @@ fun ClientPanelScreen(
                         Box(modifier = Modifier.weight(1f)) { PanelCardItem("Wesprzyj", Icons.Default.VolunteerActivism) }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Statystyki", Icons.Default.QueryStats) }
+                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Statystyki", Icons.Default.QueryStats, onClick = onStatisticsClick) }
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 }
@@ -134,12 +135,12 @@ fun ClientPanelScreen(
 }
 
 @Composable
-fun PanelCardItem(title: String, icon: ImageVector) {
+fun PanelCardItem(title: String, icon: ImageVector, onClick: () -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(110.dp)
-            .clickable { /* TODO */ },
+            .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {

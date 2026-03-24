@@ -57,7 +57,8 @@ import java.util.Locale
 fun AdminPanelScreen(
     username: String,
     onNavigateBack: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onStatisticsClick: () -> Unit = {}
 ) {
     val adminGradient = Brush.horizontalGradient(colors = listOf(Color(0xFFE94057), Color(0xFF8A2387)))
     val currentDate = SimpleDateFormat("EEEE, d MMMM yyyy", Locale("pl", "PL")).format(Date())
@@ -131,7 +132,7 @@ fun AdminPanelScreen(
                     AdminActionItem("Zarządzanie dziełami", Icons.Default.Brush)
                     AdminActionItem("Zarządzanie zamówieniami", Icons.Default.ShoppingCart)
                     AdminActionItem("Zarządzanie kategoriami", Icons.Default.Category)
-                    AdminActionItem("Raporty i statystyki", Icons.Default.BarChart)
+                    AdminActionItem("Raporty i statystyki", Icons.Default.BarChart, onClick = onStatisticsClick)
                     AdminActionItem("Edytuj swój profil", Icons.Default.ManageAccounts)
                 }
             }
@@ -155,9 +156,9 @@ fun AdminPanelScreen(
 }
 
 @Composable
-fun AdminActionItem(title: String, icon: ImageVector) {
+fun AdminActionItem(title: String, icon: ImageVector, onClick: () -> Unit = {}) {
     OutlinedButton(
-        onClick = { /* TODO */ },
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth().height(56.dp),
         shape = MaterialTheme.shapes.small,
         border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray),

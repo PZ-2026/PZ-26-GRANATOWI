@@ -52,7 +52,8 @@ fun SellerPanelScreen(
     username: String,
     balance: Double,
     onNavigateBack: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onStatisticsClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -110,7 +111,7 @@ fun SellerPanelScreen(
                     SellerListItem("Moje finanse", Icons.Default.AttachMoney)
                     SellerListItem("Najlepsi fani", Icons.Default.Star)
                     SellerListItem("Obserwujący", Icons.Default.People)
-                    SellerListItem("Statystyki sprzedaży", Icons.Default.QueryStats)
+                    SellerListItem("Statystyki sprzedaży", Icons.Default.QueryStats, onClick = onStatisticsClick)
                 }
             }
 
@@ -133,9 +134,9 @@ fun SellerPanelScreen(
 }
 
 @Composable
-fun SellerListItem(title: String, icon: ImageVector) {
+fun SellerListItem(title: String, icon: ImageVector, onClick: () -> Unit = {}) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { /* TODO */ },
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
     ) {
