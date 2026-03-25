@@ -20,6 +20,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.artsphere.api.LoginRequest
+import com.example.artsphere.api.RetrofitClient
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
@@ -28,10 +31,13 @@ fun LoginScreen(
     onLoginSuccess: (String, String) -> Unit // (Username, Role)
 ) {
     val focusManager = LocalFocusManager.current
+    val coroutineScope = rememberCoroutineScope()
+    
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -43,24 +49,28 @@ fun LoginScreen(
     ) {
         Text("Witaj ponownie!", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
 
-        Text("Klient: test@gmail.com / test123", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text("Sprzedawca: sprzedawca@gmail.com / test123", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text("Admin: admin@gmail.com / test123", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 32.dp))
+        Text("Kupujący: buyer@gmail.pl / buyer123", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Sprzedawca: artist@gmail.com / artist123", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Admin: admin@gmail.com / admin123", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 32.dp))
 
         if (errorMessage.isNotEmpty()) {
             Text(text = errorMessage, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 16.dp))
         }
 
         OutlinedTextField(
-            value = email, onValueChange = { email = it; errorMessage = "" },
+            value = email, 
+            onValueChange = { email = it; errorMessage = "" },
             label = { Text("Adres E-mail") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), singleLine = true
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), 
+            singleLine = true,
+            enabled = !isLoading
         )
 
         OutlinedTextField(
-            value = password, onValueChange = { password = it; errorMessage = "" },
+            value = password, 
+            onValueChange = { password = it; errorMessage = "" },
             label = { Text("Hasło") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
             trailingIcon = {
@@ -71,25 +81,62 @@ fun LoginScreen(
             },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), singleLine = true
+            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), 
+            singleLine = true,
+            enabled = !isLoading
         )
 
         Button(
             onClick = {
                 focusManager.clearFocus()
-                if (email == "test@gmail.com" && password == "test123") {
-                    onLoginSuccess("Jan Kowalski", "user")
-                } else if (email == "sprzedawca@gmail.com" && password == "test123") {
-                    onLoginSuccess("ArtStudio", "seller")
-                } else if (email == "admin@gmail.com" && password == "test123") {
-                    onLoginSuccess("Art", "admin")
-                } else {
-                    errorMessage = "Nieprawidłowy e-mail lub hasło!"
+                
+                if (email.isBlank() || password.isBlank()) {
+                    errorMessage = "Wypełnij wszystkie pola"
+                    return@Button
+                }
+                
+                isLoading = true
+                errorMessage = ""
+                
+                coroutineScope.launch {
+                    try {
+                        val response = RetrofitClient.authApi.login(
+                            LoginRequest(email = email, password = password)
+                        )
+                        
+                        if (response.isSuccessful && response.body() != null) {
+                            val loginResponse = response.body()!!
+                            val role = when(loginResponse.role) {
+                                "ADMIN" -> "admin"
+                                "ARTIST" -> "seller"
+                                "BUYER" -> "user"
+                                else -> "user"
+                            }
+                            val displayName = "${loginResponse.firstName ?: ""} ${loginResponse.lastName ?: ""}".trim()
+                                .ifEmpty { loginResponse.username }
+                            
+                            onLoginSuccess(displayName, role)
+                        } else {
+                            errorMessage = response.errorBody()?.string() ?: "Błąd logowania"
+                        }
+                    } catch (e: Exception) {
+                        errorMessage = "Błąd połączenia: ${e.message}"
+                    } finally {
+                        isLoading = false
+                    }
                 }
             },
-            modifier = Modifier.fillMaxWidth().height(50.dp)
+            modifier = Modifier.fillMaxWidth().height(50.dp),
+            enabled = !isLoading
         ) {
-            Text("Zaloguj się")
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Text("Zaloguj się")
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))

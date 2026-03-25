@@ -1,11 +1,14 @@
 -- Role
 INSERT INTO roles (id, name) VALUES (1, 'ADMIN'), (2, 'ARTIST'), (3, 'BUYER') ON CONFLICT DO NOTHING;
 
--- Użytkownicy (Hasła na razie jawne, potem wejdzie BCrypt)
+-- Użytkownicy (Hasła zahashowane BCrypt)
+-- admin@gmail.com / admin123
+-- artist@gmail.com / artist123
+-- buyer@gmail.pl / buyer123
 INSERT INTO users (id, username, email, password, role_id, balance) VALUES
-(1, 'admin_boss', 'admin@gmail.com', 'admin123', 1, 0.00),
-(2, 'vincent_v', 'artist@gmail.com', 'artist123', 2, 5000.00),
-(3, 'jan_kowalski', 'buyer@gmail.pl', 'buyer123', 3, 1000.00)
+(1, 'admin_boss', 'admin@gmail.com', '$2a$10$QKF1lCALKVYAYcQqKFM.XON5/0jo4wNjaVc./seo/foE59Kk46oc6', 1, 0.00),
+(2, 'vincent_v', 'artist@gmail.com', '$2a$10$0H2LUr1P9YTYzkEs5ZWVbea.Q.iIo56tDykg240GErzFHdgZGL16K', 2, 5000.00),
+(3, 'jan_kowalski', 'buyer@gmail.pl', '$2a$10$gBNvBS5dAfIrNoDdVFDphe2THId1ACcJ2scXaL8bMycngvy8SARSO', 3, 1000.00)
 ON CONFLICT (id) DO NOTHING;
 
 -- Konfiguracja

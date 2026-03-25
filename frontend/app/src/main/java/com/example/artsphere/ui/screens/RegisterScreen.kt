@@ -21,6 +21,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.artsphere.api.RegisterRequest
+import com.example.artsphere.api.RetrofitClient
+import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterScreen(
@@ -29,6 +32,8 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
+    val coroutineScope = rememberCoroutineScope()
+    
     var currentStep by remember { mutableStateOf(1) }
     var selectedRole by remember { mutableStateOf(initialRole) }
 
@@ -48,6 +53,10 @@ fun RegisterScreen(
     var houseNumber by remember { mutableStateOf("") }
     var apartmentNumber by remember { mutableStateOf("") }
     var sellerDescription by remember { mutableStateOf("") }
+    
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var successMessage by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -67,6 +76,22 @@ fun RegisterScreen(
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 24.dp)
         )
+        
+        if (errorMessage.isNotEmpty()) {
+            Text(
+                text = errorMessage, 
+                color = MaterialTheme.colorScheme.error, 
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
+        
+        if (successMessage.isNotEmpty()) {
+            Text(
+                text = successMessage, 
+                color = MaterialTheme.colorScheme.primary, 
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
@@ -192,11 +217,71 @@ fun RegisterScreen(
             }
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                OutlinedButton(onClick = { currentStep = 1 }, modifier = Modifier.weight(1f).height(50.dp).padding(end = 8.dp)) {
+                OutlinedButton(
+                    onClick = { currentStep = 1 }, 
+                    modifier = Modifier.weight(1f).height(50.dp).padding(end = 8.dp),
+                    enabled = !isLoading
+                ) {
                     Text("Wstecz")
                 }
-                Button(onClick = { /* TODO: Zapisz do API */ }, modifier = Modifier.weight(1f).height(50.dp).padding(start = 8.dp)) {
-                    Text("Utwórz konto")
+                Button(
+                    onClick = {
+                        focusManager.clearFocus()
+                        
+                        if (username.isBlank() || email.isBlank() || password.isBlank() || 
+                            firstName.isBlank() || lastName.isBlank()) {
+                            errorMessage = "Wypełnij wszystkie wymagane pola"
+                            return@Button
+                        }
+                        
+                        if (password != confirmPassword) {
+                            errorMessage = "Hasła nie są identyczne"
+                            return@Button
+                        }
+                        
+                        isLoading = true
+                        errorMessage = ""
+                        successMessage = ""
+                        
+                        coroutineScope.launch {
+                            try {
+                                val roleName = if (selectedRole == "seller") "ARTIST" else "BUYER"
+                                val response = RetrofitClient.authApi.register(
+                                    RegisterRequest(
+                                        username = username,
+                                        email = email,
+                                        password = password,
+                                        firstName = firstName,
+                                        lastName = lastName,
+                                        roleName = roleName
+                                    )
+                                )
+                                
+                                if (response.isSuccessful) {
+                                    successMessage = "Konto utworzone! Możesz się zalogować."
+                                    kotlinx.coroutines.delay(2000)
+                                    onNavigateToLogin()
+                                } else {
+                                    errorMessage = response.errorBody()?.string() ?: "Błąd rejestracji"
+                                }
+                            } catch (e: Exception) {
+                                errorMessage = "Błąd połączenia: ${e.message}"
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    }, 
+                    modifier = Modifier.weight(1f).height(50.dp).padding(start = 8.dp),
+                    enabled = !isLoading
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text("Utwórz konto")
+                    }
                 }
             }
         }
