@@ -5,6 +5,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.artsphere.ui.screens.*
+import com.example.artsphere.ui.screens.Client.FollowedOffersScreen
+import com.example.artsphere.ui.screens.Client.OrdersScreen
+import com.example.artsphere.ui.screens.Client.SupportScreen
+import com.example.artsphere.ui.screens.Seller.FollowersScreen
 
 @Composable
 fun AppNavigation() {
@@ -95,7 +99,10 @@ fun AppNavigation() {
                     currentUsername = ""
                     navController.navigate("home") { popUpTo(0) }
                 },
-                onStatisticsClick = { navController.navigate("client_dashboard") }
+                onStatisticsClick = { navController.navigate("client_dashboard") },
+                onOrdersClick = { navController.navigate("client_orders") },
+                onSupportClick = { navController.navigate("client_support") },
+                onFollowedClick = { navController.navigate("client_followed") }
             )
         }
 
@@ -110,7 +117,8 @@ fun AppNavigation() {
                     currentUsername = ""
                     navController.navigate("home") { popUpTo(0) }
                 },
-                onStatisticsClick = { navController.navigate("seller_dashboard") }
+                onStatisticsClick = { navController.navigate("seller_dashboard") },
+                onFollowersClick = { navController.navigate("seller_followers") }
             )
         }
 
@@ -149,6 +157,26 @@ fun AppNavigation() {
                 onBackClick = { navController.popBackStack() },
                 balance = currentBalance
             )
+        }
+
+        // ekran "moje zakupy" kupującego
+        composable("client_orders") {
+            OrdersScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        // ekran wesprzyj kupującego
+        composable("client_support") {
+            SupportScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        // ekran obserwowanych kupującego
+        composable("client_followed") {
+            FollowedOffersScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        // ekran obserwujących sprzedawcy
+        composable("seller_followers") {
+            FollowersScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }
