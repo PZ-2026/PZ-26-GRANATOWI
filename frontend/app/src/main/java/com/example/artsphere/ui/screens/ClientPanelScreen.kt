@@ -51,7 +51,10 @@ fun ClientPanelScreen(
     balance: Double,
     onNavigateBack: () -> Unit,
     onLogoutClick: () -> Unit,
-    onStatisticsClick: () -> Unit = {}
+    onStatisticsClick: () -> Unit = {},
+    onOrdersClick: () -> Unit = {},
+    onSupportClick: () -> Unit = {},
+    onFollowedClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -102,12 +105,16 @@ fun ClientPanelScreen(
                         Box(modifier = Modifier.weight(1f)) { PanelCardItem("Zarządzanie adresami", Icons.Default.LocationOn) }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Moje zakupy", Icons.Default.History) }
-                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Obserwowani", Icons.Default.Group) }
+                        Box(modifier = Modifier.weight(1f)) {
+                            PanelCardItem("Moje zakupy", Icons.Default.History, onClick = onOrdersClick)
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            PanelCardItem("Obserwowani", Icons.Default.Group, onClick = onFollowedClick)
+                        }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Box(modifier = Modifier.weight(1f)) { PanelCardItem("Mój portfel", Icons.Default.AccountBalanceWallet) }
-                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Wesprzyj", Icons.Default.VolunteerActivism) }
+                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Wesprzyj", Icons.Default.VolunteerActivism, onClick = onSupportClick) }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Box(modifier = Modifier.weight(1f)) { PanelCardItem("Statystyki", Icons.Default.QueryStats, onClick = onStatisticsClick) }
