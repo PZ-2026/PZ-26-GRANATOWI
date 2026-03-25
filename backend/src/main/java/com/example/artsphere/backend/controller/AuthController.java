@@ -1,26 +1,38 @@
 package com.example.artsphere.backend.controller;
 
-import com.example.artsphere.backend.model.User;
-import com.example.artsphere.backend.repository.UserRepository;
+import com.example.artsphere.backend.dto.LoginRequest;
+import com.example.artsphere.backend.dto.LoginResponse;
+import com.example.artsphere.backend.dto.RegisterRequest;
+import com.example.artsphere.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     @Autowired
-    private UserRepository userRepository;
+    private AuthService authService;
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            LoginResponse response = authService.login(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     @PostMapping("/register")
-    public String registerUser(@RequestBody User user) {
-        if(userRepository.findByUsername(user.getUsername()).isPresent()) {
-            return "Użytkownik już istnieje!";
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        try {
+            String message = authService.register(request);
+            return ResponseEntity.ok(message);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        userRepository.save(user);
-        return "Zarejestrowano pomyślnie!";
     }
 }
