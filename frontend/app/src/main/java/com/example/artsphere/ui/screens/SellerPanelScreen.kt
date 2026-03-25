@@ -55,6 +55,10 @@ fun SellerPanelScreen(
     onLogoutClick: () -> Unit,
     onStatisticsClick: () -> Unit = {},
     onFollowersClick: () -> Unit = {},
+    onAddArtworkClick: () -> Unit = {},
+    onManageArtworksClick: () -> Unit = {},
+    onSalesHistoryClick: () -> Unit = {},
+    onTopFansClick: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -106,11 +110,11 @@ fun SellerPanelScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     SellerListItem("Edytuj profil", Icons.Default.Person)
-                    SellerListItem("Dodaj nowe dzieło", Icons.Default.AddCircle)
-                    SellerListItem("Zarządzanie swoimi dziełami", Icons.Default.Edit)
-                    SellerListItem("Historia sprzedaży", Icons.Default.ShoppingCart)
+                    SellerListItem("Dodaj nowe dzieło", Icons.Default.AddCircle, onClick = onAddArtworkClick)
+                    SellerListItem("Zarządzanie swoimi dziełami", Icons.Default.Edit, onClick = onManageArtworksClick)
+                    SellerListItem("Historia sprzedaży", Icons.Default.ShoppingCart, onClick = onSalesHistoryClick)
                     SellerListItem("Moje finanse", Icons.Default.AttachMoney)
-                    SellerListItem("Najlepsi fani", Icons.Default.Star)
+                    SellerListItem("Najlepsi fani", Icons.Default.Star, onClick = onTopFansClick)
                     SellerListItem("Obserwujący", Icons.Default.People, onClick = onFollowersClick)
                     SellerListItem("Statystyki sprzedaży", Icons.Default.QueryStats, onClick = onStatisticsClick)
                 }
