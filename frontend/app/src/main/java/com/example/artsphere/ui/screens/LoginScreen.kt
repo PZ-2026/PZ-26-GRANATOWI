@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 fun LoginScreen(
     onNavigateBack: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: (String, String) -> Unit // (Username, Role)
+    onLoginSuccess: (Long, String, String) -> Unit // (userId, Username, Role)
 ) {
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
@@ -115,7 +115,7 @@ fun LoginScreen(
                             val displayName = "${loginResponse.firstName ?: ""} ${loginResponse.lastName ?: ""}".trim()
                                 .ifEmpty { loginResponse.username }
                             
-                            onLoginSuccess(displayName, role)
+                            onLoginSuccess(loginResponse.userId, displayName, role)
                         } else {
                             errorMessage = response.errorBody()?.string() ?: "Błąd logowania"
                         }

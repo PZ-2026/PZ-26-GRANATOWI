@@ -52,9 +52,7 @@ fun ClientPanelScreen(
     onNavigateBack: () -> Unit,
     onLogoutClick: () -> Unit,
     onStatisticsClick: () -> Unit = {},
-    onOrdersClick: () -> Unit = {},
-    onSupportClick: () -> Unit = {},
-    onFollowedClick: () -> Unit = {}
+    onAddressesClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -102,19 +100,21 @@ fun ClientPanelScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Box(modifier = Modifier.weight(1f)) { PanelCardItem("Edytuj profil", Icons.Default.ManageAccounts) }
-                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Zarządzanie adresami", Icons.Default.LocationOn) }
+                        Box(modifier = Modifier.weight(1f)) { 
+                            PanelCardItem(
+                                "Zarządzanie adresami", 
+                                Icons.Default.LocationOn,
+                                onClick = onAddressesClick
+                            ) 
+                        }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            PanelCardItem("Moje zakupy", Icons.Default.History, onClick = onOrdersClick)
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            PanelCardItem("Obserwowani", Icons.Default.Group, onClick = onFollowedClick)
-                        }
+                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Moje zakupy", Icons.Default.History) }
+                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Obserwowani", Icons.Default.Group) }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Box(modifier = Modifier.weight(1f)) { PanelCardItem("Mój portfel", Icons.Default.AccountBalanceWallet) }
-                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Wesprzyj", Icons.Default.VolunteerActivism, onClick = onSupportClick) }
+                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Wesprzyj", Icons.Default.VolunteerActivism) }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Box(modifier = Modifier.weight(1f)) { PanelCardItem("Statystyki", Icons.Default.QueryStats, onClick = onStatisticsClick) }
