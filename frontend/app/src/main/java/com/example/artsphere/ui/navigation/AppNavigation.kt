@@ -8,7 +8,12 @@ import com.example.artsphere.ui.screens.*
 import com.example.artsphere.ui.screens.Client.FollowedOffersScreen
 import com.example.artsphere.ui.screens.Client.OrdersScreen
 import com.example.artsphere.ui.screens.Client.SupportScreen
+import com.example.artsphere.ui.screens.Seller.AddArtworkScreen
+import com.example.artsphere.ui.screens.Seller.ArtworkDetailScreen
 import com.example.artsphere.ui.screens.Seller.FollowersScreen
+import com.example.artsphere.ui.screens.Seller.ManageArtworksScreen
+import com.example.artsphere.ui.screens.Seller.SalesHistoryScreen
+import com.example.artsphere.ui.screens.Seller.TopFansScreen
 
 @Composable
 fun AppNavigation() {
@@ -118,7 +123,11 @@ fun AppNavigation() {
                     navController.navigate("home") { popUpTo(0) }
                 },
                 onStatisticsClick = { navController.navigate("seller_dashboard") },
-                onFollowersClick = { navController.navigate("seller_followers") }
+                onFollowersClick = { navController.navigate("seller_followers") },
+                onAddArtworkClick = { navController.navigate("seller_add_artwork") },
+                onManageArtworksClick = { navController.navigate("seller_manage_artworks") },
+                onSalesHistoryClick = { navController.navigate("seller_sales_history") },
+                onTopFansClick = { navController.navigate("seller_top_fans") }
             )
         }
 
@@ -177,6 +186,34 @@ fun AppNavigation() {
         // ekran obserwujących sprzedawcy
         composable("seller_followers") {
             FollowersScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        // ekran dodawania dzieła dla sprzedającego
+        composable("seller_add_artwork") {
+            AddArtworkScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable("seller_artwork_detail") {
+            ArtworkDetailScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        // Zaktualizowana trasa zarządzania
+        composable("seller_manage_artworks") {
+            ManageArtworksScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onAddNewClick = { navController.navigate("seller_add_artwork") },
+                onPreviewClick = { navController.navigate("seller_artwork_detail") } // Podpięcie podglądu
+            )
+        }
+
+        // ekran historii sprzedaży
+        composable("seller_sales_history") {
+            SalesHistoryScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        // kran najlepszych fanów sprzedającego
+        composable("seller_top_fans") {
+            TopFansScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }
