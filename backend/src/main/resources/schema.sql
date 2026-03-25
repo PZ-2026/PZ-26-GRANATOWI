@@ -33,12 +33,19 @@ CREATE TABLE IF NOT EXISTS artworks (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    price DECIMAL(15,2) NOT NULL,
-    artist_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    price DECIMAL(15,2),
+    is_priceless BOOLEAN DEFAULT FALSE,
+    artist VARCHAR(255), -- Nazwa artysty (może być inna niż użytkownik)
+    width DECIMAL(8,2), -- Szerokość w cm
+    height DECIMAL(8,2), -- Wysokość w cm
+    depth DECIMAL(8,2), -- Głębokość w cm
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE, -- Sprzedawca
     category_id INTEGER REFERENCES categories(id),
     image_path VARCHAR(255),
+    is_sold BOOLEAN DEFAULT FALSE,
     status VARCHAR(20) DEFAULT 'AVAILABLE', -- 'AVAILABLE', 'SOLD', 'HIDDEN'
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
 -- 4. Moduł transakcji
@@ -65,4 +72,17 @@ CREATE TABLE IF NOT EXISTS cart_items (
     user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
     artwork_id BIGINT REFERENCES artworks(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+-- 6. Adresy użytkowników (dla Kupującego i Administratora)
+CREATE TABLE IF NOT EXISTS addresses (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    city VARCHAR(255) NOT NULL,
+    postal_code VARCHAR(10) NOT NULL,
+    street VARCHAR(255) NOT NULL,
+    house_number VARCHAR(20) NOT NULL,
+    apartment_number VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );

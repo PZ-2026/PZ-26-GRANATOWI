@@ -5,15 +5,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.artsphere.ui.screens.*
-import com.example.artsphere.ui.screens.Client.FollowedOffersScreen
-import com.example.artsphere.ui.screens.Client.OrdersScreen
-import com.example.artsphere.ui.screens.Client.SupportScreen
-import com.example.artsphere.ui.screens.Seller.AddArtworkScreen
-import com.example.artsphere.ui.screens.Seller.ArtworkDetailScreen
-import com.example.artsphere.ui.screens.Seller.FollowersScreen
-import com.example.artsphere.ui.screens.Seller.ManageArtworksScreen
-import com.example.artsphere.ui.screens.Seller.SalesHistoryScreen
-import com.example.artsphere.ui.screens.Seller.TopFansScreen
 
 @Composable
 fun AppNavigation() {
@@ -21,6 +12,7 @@ fun AppNavigation() {
 
     // Globalny stan użytkownika
     var isLoggedIn by remember { mutableStateOf(false) }
+    var currentUserId by remember { mutableStateOf(0L) }
     var currentUsername by remember { mutableStateOf("") }
     var currentBalance by remember { mutableStateOf(1500.00) }
     var currentUserRole by remember { mutableStateOf("user") } // "user", "seller", "admin"
@@ -62,8 +54,9 @@ fun AppNavigation() {
                 onNavigateToRegister = {
                     navController.navigate("register/user") { popUpTo("login") { inclusive = true } }
                 },
-                onLoginSuccess = { username, role ->
+                onLoginSuccess = { userId, username, role ->
                     isLoggedIn = true
+                    currentUserId = userId
                     currentUsername = username
                     currentUserRole = role
                     navController.navigate("home") { popUpTo(0) }
@@ -105,9 +98,7 @@ fun AppNavigation() {
                     navController.navigate("home") { popUpTo(0) }
                 },
                 onStatisticsClick = { navController.navigate("client_dashboard") },
-                onOrdersClick = { navController.navigate("client_orders") },
-                onSupportClick = { navController.navigate("client_support") },
-                onFollowedClick = { navController.navigate("client_followed") }
+                onAddressesClick = { navController.navigate("addresses") }
             )
         }
 
@@ -123,11 +114,8 @@ fun AppNavigation() {
                     navController.navigate("home") { popUpTo(0) }
                 },
                 onStatisticsClick = { navController.navigate("seller_dashboard") },
-                onFollowersClick = { navController.navigate("seller_followers") },
-                onAddArtworkClick = { navController.navigate("seller_add_artwork") },
-                onManageArtworksClick = { navController.navigate("seller_manage_artworks") },
-                onSalesHistoryClick = { navController.navigate("seller_sales_history") },
-                onTopFansClick = { navController.navigate("seller_top_fans") }
+                onArtworksClick = { navController.navigate("seller_artworks") },
+                onAddArtworkClick = { navController.navigate("artwork_add") }
             )
         }
 
@@ -141,7 +129,8 @@ fun AppNavigation() {
                     currentUsername = ""
                     navController.navigate("home") { popUpTo(0) }
                 },
-                onStatisticsClick = { navController.navigate("admin_dashboard") }
+                onStatisticsClick = { navController.navigate("admin_dashboard") },
+                onAddressesClick = { navController.navigate("addresses_admin") }
             )
         }
 
@@ -168,52 +157,137 @@ fun AppNavigation() {
             )
         }
 
-        // ekran "moje zakupy" kupującego
-        composable("client_orders") {
-            OrdersScreen(onNavigateBack = { navController.popBackStack() })
-        }
-
-        // ekran wesprzyj kupującego
-        composable("client_support") {
-            SupportScreen(onNavigateBack = { navController.popBackStack() })
-        }
-
-        // ekran obserwowanych kupującego
-        composable("client_followed") {
-            FollowedOffersScreen(onNavigateBack = { navController.popBackStack() })
-        }
-
-        // ekran obserwujących sprzedawcy
-        composable("seller_followers") {
-            FollowersScreen(onNavigateBack = { navController.popBackStack() })
-        }
-
-        // ekran dodawania dzieła dla sprzedającego
-        composable("seller_add_artwork") {
-            AddArtworkScreen(onNavigateBack = { navController.popBackStack() })
-        }
-
-        composable("seller_artwork_detail") {
-            ArtworkDetailScreen(onNavigateBack = { navController.popBackStack() })
-        }
-
-        // Zaktualizowana trasa zarządzania
-        composable("seller_manage_artworks") {
-            ManageArtworksScreen(
+        // zarządzanie adresami - Kupujący
+        composable("addresses") {
+            AddressesScreen(
+                userId = currentUserId,
+                isAdmin = false,
                 onNavigateBack = { navController.popBackStack() },
-                onAddNewClick = { navController.navigate("seller_add_artwork") },
-                onPreviewClick = { navController.navigate("seller_artwork_detail") } // Podpięcie podglądu
+                onAddAddress = { navController.navigate("address_add") },
+                onEditAddress = { addressId ->
+                    navController.navigate("address_edit/$addressId")
+                }
             )
         }
 
-        // ekran historii sprzedaży
-        composable("seller_sales_history") {
-            SalesHistoryScreen(onNavigateBack = { navController.popBackStack() })
+        // zarządzanie adresami - Admin
+        composable("addresses_admin") {
+            AddressesScreen(
+                userId = currentUserId,
+                isAdmin = true,
+                onNavigateBack = { navController.popBackStack() },
+                onAddAddress = { navController.navigate("address_add_admin") },
+                onEditAddress = { addressId ->
+                    navController.navigate("address_edit_admin/$addressId")
+                }
+            )
         }
 
-        // kran najlepszych fanów sprzedającego
-        composable("seller_top_fans") {
-            TopFansScreen(onNavigateBack = { navController.popBackStack() })
+        // dodawanie adresu
+        composable("address_add") {
+            AddressFormScreen(
+                userId = currentUserId,
+                addressId = null,
+                onNavigateBack = { navController.popBackStack() },
+                onSuccess = {
+                    navController.navigate("addresses") {
+                        popUpTo("addresses") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // edycja adresu
+        composable("address_edit/{addressId}") { backStackEntry ->
+            val addressId = backStackEntry.arguments?.getString("addressId")?.toLongOrNull()
+            if (addressId != null) {
+                AddressFormScreen(
+                    userId = currentUserId,
+                    addressId = addressId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onSuccess = {
+                        navController.navigate("addresses") {
+                            popUpTo("addresses") { inclusive = true }
+                        }
+                    }
+                )
+            }
+        }
+
+        // dodawanie adresu - Admin (może dla dowolnego użytkownika)
+        composable("address_add_admin") {
+            AddressFormScreen(
+                userId = currentUserId, // Admin może dodawać dla innych, ale potrzebujemy userId selektora
+                addressId = null,
+                isAdmin = true,
+                onNavigateBack = { navController.popBackStack() },
+                onSuccess = {
+                    navController.navigate("addresses_admin") {
+                        popUpTo("addresses_admin") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // edycja adresu - Admin
+        composable("address_edit_admin/{addressId}") { backStackEntry ->
+            val addressId = backStackEntry.arguments?.getString("addressId")?.toLongOrNull()
+            if (addressId != null) {
+                AddressFormScreen(
+                    userId = currentUserId,
+                    addressId = addressId,
+                    isAdmin = true,
+                    onNavigateBack = { navController.popBackStack() },
+                    onSuccess = {
+                        navController.navigate("addresses_admin") {
+                            popUpTo("addresses_admin") { inclusive = true }
+                        }
+                    }
+                )
+            }
+        }
+
+        // zarządzanie dziełami - Sprzedawca
+        composable("seller_artworks") {
+            SellerArtworksScreen(
+                userId = currentUserId,
+                onNavigateBack = { navController.popBackStack() },
+                onAddArtwork = { navController.navigate("artwork_add") },
+                onEditArtwork = { artworkId ->
+                    navController.navigate("artwork_edit/$artworkId")
+                }
+            )
+        }
+
+        // dodawanie dzieła
+        composable("artwork_add") {
+            ArtworkFormScreen(
+                userId = currentUserId,
+                artworkId = null,
+                onNavigateBack = { navController.popBackStack() },
+                onSuccess = {
+                    navController.navigate("seller_artworks") {
+                        popUpTo("seller_artworks") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // edycja dzieła
+        composable("artwork_edit/{artworkId}") { backStackEntry ->
+            val artworkId = backStackEntry.arguments?.getString("artworkId")?.toLongOrNull()
+            if (artworkId != null) {
+                ArtworkFormScreen(
+                    userId = currentUserId,
+                    artworkId = artworkId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onSuccess = {
+                        navController.navigate("seller_artworks") {
+                            popUpTo("seller_artworks") { inclusive = true }
+                        }
+                    }
+                )
+            }
         }
     }
 }

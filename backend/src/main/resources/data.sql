@@ -17,12 +17,20 @@ VALUES ('platform_commission_percentage', '15', 'Procent prowizji pobieranej od 
 ON CONFLICT (key) DO NOTHING;
 
 -- Kategorie
-INSERT INTO categories (id, name) VALUES (1, 'Obraz'), (2, 'Rzeźba'), (3, 'Grafika') ON CONFLICT DO NOTHING;
+INSERT INTO categories (id, name) VALUES 
+(1, 'Obraz'), 
+(2, 'Rzeźba'), 
+(3, 'Grafika'), 
+(4, 'Fotografia'), 
+(5, 'Malarstwo'),
+(6, 'Rysunek') 
+ON CONFLICT (id) DO NOTHING;
 
 -- Dzieła
-INSERT INTO artworks (id, title, price, artist_id, category_id, status) VALUES
-(1, 'Gwiaździsta Noc', 1200.00, 2, 1, 'AVAILABLE'),
-(2, 'Dawid', 4500.00, 2, 2, 'AVAILABLE')
+INSERT INTO artworks (id, title, price, is_priceless, artist, user_id, category_id, width, height, depth, is_sold, status) VALUES
+(1, 'Gwiaździsta Noc', 1200.00, false, 'Vincent van Gogh', 2, 1, 73.7, 92.1, 2.0, false, 'AVAILABLE'),
+(2, 'Dawid', null, true, 'Michał Anioł', 2, 2, 150.0, 517.0, 150.0, false, 'AVAILABLE'),
+(3, 'Mona Lisa', 2500.00, false, 'Leonardo da Vinci', 2, 1, 53.0, 77.0, 2.5, false, 'AVAILABLE')
 ON CONFLICT (id) DO NOTHING;
 
 -- Synchronizacja liczników ID
