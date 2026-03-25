@@ -53,7 +53,8 @@ fun SellerPanelScreen(
     balance: Double,
     onNavigateBack: () -> Unit,
     onLogoutClick: () -> Unit,
-    onStatisticsClick: () -> Unit = {}
+    onStatisticsClick: () -> Unit = {},
+    onFollowersClick: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -110,7 +111,7 @@ fun SellerPanelScreen(
                     SellerListItem("Historia sprzedaży", Icons.Default.ShoppingCart)
                     SellerListItem("Moje finanse", Icons.Default.AttachMoney)
                     SellerListItem("Najlepsi fani", Icons.Default.Star)
-                    SellerListItem("Obserwujący", Icons.Default.People)
+                    SellerListItem("Obserwujący", Icons.Default.People, onClick = onFollowersClick)
                     SellerListItem("Statystyki sprzedaży", Icons.Default.QueryStats, onClick = onStatisticsClick)
                 }
             }
