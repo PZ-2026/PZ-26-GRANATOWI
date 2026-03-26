@@ -57,7 +57,8 @@ fun SellerPanelScreen(
     onStatisticsClick: () -> Unit = {},
     onFollowersClick: () -> Unit = {},
     onArtworksClick: () -> Unit = {},
-    onAddArtworkClick: () -> Unit = {}
+    onAddArtworkClick: () -> Unit = {},
+    onFinanceClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -81,6 +82,7 @@ fun SellerPanelScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color(0xFF2E8B57))
+                        .clickable { onFinanceClick() }
                         .padding(start = 16.dp, end = 16.dp, bottom = 24.dp, top = 16.dp)
                 ) {
                     Column {
@@ -112,7 +114,7 @@ fun SellerPanelScreen(
                     SellerListItem("Dodaj nowe dzieło", Icons.Default.AddCircle, onClick = onAddArtworkClick)
                     SellerListItem("Zarządzanie swoimi dziełami", Icons.Default.Edit, onClick = onArtworksClick)
                     SellerListItem("Historia sprzedaży", Icons.Default.ShoppingCart)
-                    SellerListItem("Moje finanse", Icons.Default.AttachMoney)
+                    SellerListItem("Moje finanse", Icons.Default.AttachMoney, onClick = onFinanceClick)
                     SellerListItem("Najlepsi fani", Icons.Default.Star)
                     SellerListItem("Obserwujący", Icons.Default.People, onClick = onFollowersClick)
                     SellerListItem("Statystyki sprzedaży", Icons.Default.QueryStats, onClick = onStatisticsClick)

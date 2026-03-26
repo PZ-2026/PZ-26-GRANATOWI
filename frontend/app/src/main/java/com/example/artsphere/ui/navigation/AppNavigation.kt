@@ -99,7 +99,8 @@ fun AppNavigation() {
                 },
                 onEditProfileClick = { navController.navigate("edit_profile/client") },
                 onStatisticsClick = { navController.navigate("client_dashboard") },
-                onAddressesClick = { navController.navigate("addresses") }
+                onAddressesClick = { navController.navigate("addresses") },
+                onFinanceClick = { navController.navigate("finance/client") }
             )
         }
 
@@ -117,7 +118,8 @@ fun AppNavigation() {
                 onEditProfileClick = { navController.navigate("edit_profile/seller") },
                 onStatisticsClick = { navController.navigate("seller_dashboard") },
                 onArtworksClick = { navController.navigate("seller_artworks") },
-                onAddArtworkClick = { navController.navigate("artwork_add") }
+                onAddArtworkClick = { navController.navigate("artwork_add") },
+                onFinanceClick = { navController.navigate("finance/seller") }
             )
         }
 
@@ -144,6 +146,17 @@ fun AppNavigation() {
                 role = role,
                 onNavigateBack = { navController.popBackStack() },
                 onSaveSuccess = { navController.popBackStack() }
+            )
+        }
+
+        // finanse
+        composable("finance/{role}") { backStackEntry ->
+            val role = backStackEntry.arguments?.getString("role") ?: "client"
+            FinanceScreen(
+                role = role,
+                currentBalance = currentBalance,
+                onNavigateBack = { navController.popBackStack() },
+                onBalanceChange = { newBalance -> currentBalance = newBalance }
             )
         }
 

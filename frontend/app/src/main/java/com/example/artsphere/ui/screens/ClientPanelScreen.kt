@@ -56,7 +56,8 @@ fun ClientPanelScreen(
     onOrdersClick: () -> Unit = {},
     onSupportClick: () -> Unit = {},
     onFollowedClick: () -> Unit = {},
-    onAddressesClick: () -> Unit = {}
+    onAddressesClick: () -> Unit = {},
+    onFinanceClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -78,7 +79,7 @@ fun ClientPanelScreen(
         ) {
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().clickable { onFinanceClick() },
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -115,7 +116,7 @@ fun ClientPanelScreen(
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Mój portfel", Icons.Default.AccountBalanceWallet) }
+                        Box(modifier = Modifier.weight(1f)) { PanelCardItem("Mój portfel", Icons.Default.AccountBalanceWallet, onClick = onFinanceClick) }
                         Box(modifier = Modifier.weight(1f)) { PanelCardItem("Wesprzyj", Icons.Default.VolunteerActivism, onClick = onSupportClick) }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
