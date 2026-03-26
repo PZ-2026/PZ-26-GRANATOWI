@@ -58,6 +58,7 @@ fun AdminPanelScreen(
     username: String,
     onNavigateBack: () -> Unit,
     onLogoutClick: () -> Unit,
+    onEditProfileClick: () -> Unit = {},
     onStatisticsClick: () -> Unit = {},
     onAddressesClick: () -> Unit = {}
 ) {
@@ -134,7 +135,7 @@ fun AdminPanelScreen(
                     AdminActionItem("Zarządzanie zamówieniami", Icons.Default.ShoppingCart)
                     AdminActionItem("Zarządzanie kategoriami", Icons.Default.Category)
                     AdminActionItem("Raporty i statystyki", Icons.Default.BarChart, onClick = onStatisticsClick)
-                    AdminActionItem("Edytuj swój profil", Icons.Default.ManageAccounts)
+                    AdminActionItem("Edytuj swój profil", Icons.Default.ManageAccounts, onClick = onEditProfileClick)
                 }
             }
 

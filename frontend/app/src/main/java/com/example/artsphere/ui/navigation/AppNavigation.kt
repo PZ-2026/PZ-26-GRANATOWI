@@ -97,6 +97,7 @@ fun AppNavigation() {
                     currentUsername = ""
                     navController.navigate("home") { popUpTo(0) }
                 },
+                onEditProfileClick = { navController.navigate("edit_profile/client") },
                 onStatisticsClick = { navController.navigate("client_dashboard") },
                 onAddressesClick = { navController.navigate("addresses") }
             )
@@ -113,6 +114,7 @@ fun AppNavigation() {
                     currentUsername = ""
                     navController.navigate("home") { popUpTo(0) }
                 },
+                onEditProfileClick = { navController.navigate("edit_profile/seller") },
                 onStatisticsClick = { navController.navigate("seller_dashboard") },
                 onArtworksClick = { navController.navigate("seller_artworks") },
                 onAddArtworkClick = { navController.navigate("artwork_add") }
@@ -129,8 +131,19 @@ fun AppNavigation() {
                     currentUsername = ""
                     navController.navigate("home") { popUpTo(0) }
                 },
+                onEditProfileClick = { navController.navigate("edit_profile/admin") },
                 onStatisticsClick = { navController.navigate("admin_dashboard") },
                 onAddressesClick = { navController.navigate("addresses_admin") }
+            )
+        }
+
+        // edycja profilu
+        composable("edit_profile/{role}") { backStackEntry ->
+            val role = backStackEntry.arguments?.getString("role") ?: "client"
+            EditProfileScreen(
+                role = role,
+                onNavigateBack = { navController.popBackStack() },
+                onSaveSuccess = { navController.popBackStack() }
             )
         }
 

@@ -53,7 +53,9 @@ fun SellerPanelScreen(
     balance: Double,
     onNavigateBack: () -> Unit,
     onLogoutClick: () -> Unit,
+    onEditProfileClick: () -> Unit = {},
     onStatisticsClick: () -> Unit = {},
+    onFollowersClick: () -> Unit = {},
     onArtworksClick: () -> Unit = {},
     onAddArtworkClick: () -> Unit = {}
 ) {
@@ -106,13 +108,13 @@ fun SellerPanelScreen(
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    SellerListItem("Edytuj profil", Icons.Default.Person)
+                    SellerListItem("Edytuj profil", Icons.Default.Person, onClick = onEditProfileClick)
                     SellerListItem("Dodaj nowe dzieło", Icons.Default.AddCircle, onClick = onAddArtworkClick)
                     SellerListItem("Zarządzanie swoimi dziełami", Icons.Default.Edit, onClick = onArtworksClick)
                     SellerListItem("Historia sprzedaży", Icons.Default.ShoppingCart)
                     SellerListItem("Moje finanse", Icons.Default.AttachMoney)
                     SellerListItem("Najlepsi fani", Icons.Default.Star)
-                    SellerListItem("Obserwujący", Icons.Default.People)
+                    SellerListItem("Obserwujący", Icons.Default.People, onClick = onFollowersClick)
                     SellerListItem("Statystyki sprzedaży", Icons.Default.QueryStats, onClick = onStatisticsClick)
                 }
             }
