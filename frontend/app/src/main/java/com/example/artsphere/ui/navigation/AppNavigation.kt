@@ -148,7 +148,8 @@ fun AppNavigation() {
                 onEditProfileClick = { navController.navigate("edit_profile/admin") },
                 onStatisticsClick = { navController.navigate("admin_dashboard") },
                 onAddressesClick = { navController.navigate("addresses_admin") },
-                onUsersClick = { navController.navigate("admin_users") }
+                onUsersClick = { navController.navigate("admin_users") },
+                onArtworksClick = { navController.navigate("admin_artworks") }
             )
         }
 
@@ -207,6 +208,34 @@ fun AppNavigation() {
                     },
                     onChangeRoleClick = {
                         // Placeholder: symulacja zmiany roli
+                    }
+                )
+            }
+        }
+        
+        // zarządzanie dziełami
+        composable("admin_artworks") {
+            var selectedArtwork by remember { mutableStateOf<com.example.artsphere.ui.ArtworkInfo?>(null) }
+            
+            if (selectedArtwork == null) {
+                AdminArtworksScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onArtworkClick = { artwork -> selectedArtwork = artwork }
+                )
+            } else {
+                AdminArtworkDetailScreen(
+                    artwork = selectedArtwork!!,
+                    onBackClick = { selectedArtwork = null },
+                    onEditClick = {
+                        // Placeholder: nawigacja do edycji
+                    },
+                    onDeleteClick = {
+                        // Placeholder: symulacja usunięcia
+                        selectedArtwork = null
+                    },
+                    onChangeStatusClick = { newStatus ->
+                        // Placeholder: symulacja zmiany statusu
+                        selectedArtwork = selectedArtwork!!.copy(status = newStatus)
                     }
                 )
             }
