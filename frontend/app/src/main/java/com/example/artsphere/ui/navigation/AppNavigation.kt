@@ -150,7 +150,8 @@ fun AppNavigation() {
                 onAddressesClick = { navController.navigate("addresses_admin") },
                 onUsersClick = { navController.navigate("admin_users") },
                 onArtworksClick = { navController.navigate("admin_artworks") },
-                onSellersClick = { navController.navigate("admin_sellers") }
+                onSellersClick = { navController.navigate("admin_sellers") },
+                onOrdersClick = { navController.navigate("admin_orders") }
             )
         }
 
@@ -269,6 +270,37 @@ fun AppNavigation() {
                     onToggleVerificationClick = {
                         // Placeholder: symulacja weryfikacji
                         selectedSeller = selectedSeller!!.copy(isVerified = !selectedSeller!!.isVerified)
+                    }
+                )
+            }
+        }
+        
+        // zarządzanie zamówieniami
+        composable("admin_orders") {
+            var selectedOrder by remember { mutableStateOf<com.example.artsphere.ui.OrderInfo?>(null) }
+            
+            if (selectedOrder == null) {
+                AdminOrdersScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onOrderClick = { order -> selectedOrder = order }
+                )
+            } else {
+                AdminOrderDetailScreen(
+                    order = selectedOrder!!,
+                    onBackClick = { selectedOrder = null },
+                    onChangeStatusClick = { newStatus ->
+                        // Placeholder: symulacja zmiany statusu
+                        selectedOrder = selectedOrder!!.copy(status = newStatus)
+                    },
+                    onCancelOrderClick = {
+                        // Placeholder: symulacja anulowania
+                        selectedOrder = selectedOrder!!.copy(
+                            status = "CANCELLED",
+                            paymentStatus = if (selectedOrder!!.paymentStatus == "PAID") "REFUNDED" else "PENDING"
+                        )
+                    },
+                    onSendMessageClick = {
+                        // Placeholder: nawigacja do wiadomości
                     }
                 )
             }

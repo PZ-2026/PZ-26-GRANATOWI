@@ -63,7 +63,8 @@ fun AdminPanelScreen(
     onAddressesClick: () -> Unit = {},
     onUsersClick: () -> Unit = {},
     onArtworksClick: () -> Unit = {},
-    onSellersClick: () -> Unit = {}
+    onSellersClick: () -> Unit = {},
+    onOrdersClick: () -> Unit = {}
 ) {
     val adminGradient = Brush.horizontalGradient(colors = listOf(Color(0xFFE94057), Color(0xFF8A2387)))
     val currentDate = SimpleDateFormat("EEEE, d MMMM yyyy", Locale("pl", "PL")).format(Date())
@@ -135,7 +136,7 @@ fun AdminPanelScreen(
                     AdminActionItem("Zarządzanie adresami", Icons.Default.LocationOn, onClick = onAddressesClick)
                     AdminActionItem("Zarządzanie sprzedawcami", Icons.Default.Storefront, onClick = onSellersClick)
                     AdminActionItem("Zarządzanie dziełami", Icons.Default.Brush, onClick = onArtworksClick)
-                    AdminActionItem("Zarządzanie zamówieniami", Icons.Default.ShoppingCart)
+                    AdminActionItem("Zarządzanie zamówieniami", Icons.Default.ShoppingCart, onClick = onOrdersClick)
                     AdminActionItem("Zarządzanie kategoriami", Icons.Default.Category)
                     AdminActionItem("Raporty i statystyki", Icons.Default.BarChart, onClick = onStatisticsClick)
                     AdminActionItem("Edytuj swój profil", Icons.Default.ManageAccounts, onClick = onEditProfileClick)
