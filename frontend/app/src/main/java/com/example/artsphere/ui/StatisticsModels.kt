@@ -133,6 +133,23 @@ data class OrderInfo(
     val notes: String?
 )
 
+// ========== CATEGORY MANAGEMENT ==========
+data class CategoryInfo(
+    val id: Long,
+    val name: String,
+    val description: String,
+    val slug: String,
+    val parentId: Long?,
+    val parentName: String?,
+    val isActive: Boolean,
+    val artworkCount: Int,
+    val createdDate: String,
+    val lastModified: String,
+    val displayOrder: Int,
+    val iconName: String?,
+    val color: String?
+)
+
 // ========== MOCK DATA PROVIDER ==========
 object MockStatisticsProvider {
     
@@ -949,6 +966,206 @@ object MockStatisticsProvider {
                 estimatedDelivery = "27.03.2026",
                 actualDelivery = null,
                 notes = null
+            )
+        )
+    }
+    
+    fun getMockCategories(): List<CategoryInfo> {
+        return listOf(
+            CategoryInfo(
+                id = 1,
+                name = "Malarstwo",
+                description = "Wszystkie rodzaje dzieł malarskich - od olejnych po akwarele",
+                slug = "malarstwo",
+                parentId = null,
+                parentName = null,
+                isActive = true,
+                artworkCount = 1245,
+                createdDate = "01.01.2024",
+                lastModified = "15.03.2026",
+                displayOrder = 1,
+                iconName = "palette",
+                color = "#E91E63"
+            ),
+            CategoryInfo(
+                id = 2,
+                name = "Malarstwo olejne",
+                description = "Klasyczne malarstwo olejne na płótnie",
+                slug = "malarstwo-olejne",
+                parentId = 1,
+                parentName = "Malarstwo",
+                isActive = true,
+                artworkCount = 567,
+                createdDate = "01.01.2024",
+                lastModified = "10.03.2026",
+                displayOrder = 1,
+                iconName = "brush",
+                color = "#E91E63"
+            ),
+            CategoryInfo(
+                id = 3,
+                name = "Akwarele",
+                description = "Delikatne malarstwo akwarelowe",
+                slug = "akwarele",
+                parentId = 1,
+                parentName = "Malarstwo",
+                isActive = true,
+                artworkCount = 234,
+                createdDate = "01.01.2024",
+                lastModified = "08.03.2026",
+                displayOrder = 2,
+                iconName = "water_drop",
+                color = "#2196F3"
+            ),
+            CategoryInfo(
+                id = 4,
+                name = "Malarstwo akrylowe",
+                description = "Nowoczesne malarstwo akrylowe",
+                slug = "malarstwo-akrylowe",
+                parentId = 1,
+                parentName = "Malarstwo",
+                isActive = true,
+                artworkCount = 444,
+                createdDate = "01.01.2024",
+                lastModified = "20.03.2026",
+                displayOrder = 3,
+                iconName = "brush",
+                color = "#FF5722"
+            ),
+            CategoryInfo(
+                id = 5,
+                name = "Rzeźba",
+                description = "Trójwymiarowe dzieła sztuki - od klasycznych po nowoczesne",
+                slug = "rzezba",
+                parentId = null,
+                parentName = null,
+                isActive = true,
+                artworkCount = 156,
+                createdDate = "01.01.2024",
+                lastModified = "25.03.2026",
+                displayOrder = 2,
+                iconName = "sculpture",
+                color = "#795548"
+            ),
+            CategoryInfo(
+                id = 6,
+                name = "Rzeźba kamienna",
+                description = "Klasyczne rzeźby z kamienia i marmuru",
+                slug = "rzezba-kamienna",
+                parentId = 5,
+                parentName = "Rzeźba",
+                isActive = true,
+                artworkCount = 45,
+                createdDate = "01.01.2024",
+                lastModified = "22.03.2026",
+                displayOrder = 1,
+                iconName = "architecture",
+                color = "#795548"
+            ),
+            CategoryInfo(
+                id = 7,
+                name = "Rzeźba metalowa",
+                description = "Nowoczesne rzeźby z różnych metali",
+                slug = "rzezba-metalowa",
+                parentId = 5,
+                parentName = "Rzeźba",
+                isActive = true,
+                artworkCount = 78,
+                createdDate = "01.01.2024",
+                lastModified = "18.03.2026",
+                displayOrder = 2,
+                iconName = "precision_manufacturing",
+                color = "#607D8B"
+            ),
+            CategoryInfo(
+                id = 8,
+                name = "Fotografia",
+                description = "Fotografia artystyczna i dokumentalna",
+                slug = "fotografia",
+                parentId = null,
+                parentName = null,
+                isActive = true,
+                artworkCount = 789,
+                createdDate = "01.01.2024",
+                lastModified = "26.03.2026",
+                displayOrder = 3,
+                iconName = "camera_alt",
+                color = "#9C27B0"
+            ),
+            CategoryInfo(
+                id = 9,
+                name = "Fotografia portretowa",
+                description = "Profesjonalne portrety i sesje zdjęciowe",
+                slug = "fotografia-portretowa",
+                parentId = 8,
+                parentName = "Fotografia",
+                isActive = true,
+                artworkCount = 345,
+                createdDate = "01.01.2024",
+                lastModified = "24.03.2026",
+                displayOrder = 1,
+                iconName = "portrait",
+                color = "#9C27B0"
+            ),
+            CategoryInfo(
+                id = 10,
+                name = "Sztuka współczesna",
+                description = "Nowoczesne i eksperymentalne formy sztuki",
+                slug = "sztuka-wspolczesna",
+                parentId = null,
+                parentName = null,
+                isActive = true,
+                artworkCount = 234,
+                createdDate = "01.01.2024",
+                lastModified = "27.03.2026",
+                displayOrder = 4,
+                iconName = "auto_fix_high",
+                color = "#FF9800"
+            ),
+            CategoryInfo(
+                id = 11,
+                name = "Grafika cyfrowa",
+                description = "Sztuka cyfrowa i ilustracje komputerowe",
+                slug = "grafika-cyfrowa",
+                parentId = 10,
+                parentName = "Sztuka współczesna",
+                isActive = true,
+                artworkCount = 123,
+                createdDate = "01.01.2024",
+                lastModified = "26.03.2026",
+                displayOrder = 1,
+                iconName = "computer",
+                color = "#FF9800"
+            ),
+            CategoryInfo(
+                id = 12,
+                name = "Rysunek",
+                description = "Tradycyjne rysunki ołówkiem, węglem i innymi technikami",
+                slug = "rysunek",
+                parentId = null,
+                parentName = null,
+                isActive = true,
+                artworkCount = 445,
+                createdDate = "01.01.2024",
+                lastModified = "23.03.2026",
+                displayOrder = 5,
+                iconName = "draw",
+                color = "#4CAF50"
+            ),
+            CategoryInfo(
+                id = 13,
+                name = "Antyki",
+                description = "Historyczne dzieła sztuki i przedmioty kolekcjonerskie",
+                slug = "antyki",
+                parentId = null,
+                parentName = null,
+                isActive = false,
+                artworkCount = 23,
+                createdDate = "01.01.2024",
+                lastModified = "10.02.2026",
+                displayOrder = 6,
+                iconName = "museum",
+                color = "#8BC34A"
             )
         )
     }

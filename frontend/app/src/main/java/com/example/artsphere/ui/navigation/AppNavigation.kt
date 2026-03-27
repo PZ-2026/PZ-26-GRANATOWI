@@ -151,7 +151,8 @@ fun AppNavigation() {
                 onUsersClick = { navController.navigate("admin_users") },
                 onArtworksClick = { navController.navigate("admin_artworks") },
                 onSellersClick = { navController.navigate("admin_sellers") },
-                onOrdersClick = { navController.navigate("admin_orders") }
+                onOrdersClick = { navController.navigate("admin_orders") },
+                onCategoriesClick = { navController.navigate("admin_categories") }
             )
         }
 
@@ -301,6 +302,37 @@ fun AppNavigation() {
                     },
                     onSendMessageClick = {
                         // Placeholder: nawigacja do wiadomości
+                    }
+                )
+            }
+        }
+        
+        // zarządzanie kategoriami
+        composable("admin_categories") {
+            var selectedCategory by remember { mutableStateOf<com.example.artsphere.ui.CategoryInfo?>(null) }
+            
+            if (selectedCategory == null) {
+                AdminCategoriesScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onCategoryClick = { category -> selectedCategory = category }
+                )
+            } else {
+                AdminCategoryDetailScreen(
+                    category = selectedCategory!!,
+                    onBackClick = { selectedCategory = null },
+                    onEditClick = {
+                        // Placeholder: nawigacja do edycji
+                    },
+                    onDeleteClick = {
+                        // Placeholder: symulacja usunięcia
+                        selectedCategory = null
+                    },
+                    onToggleStatusClick = {
+                        // Placeholder: symulacja zmiany statusu
+                        selectedCategory = selectedCategory!!.copy(isActive = !selectedCategory!!.isActive)
+                    },
+                    onManageSubcategoriesClick = {
+                        // Placeholder: nawigacja do podkategorii
                     }
                 )
             }
