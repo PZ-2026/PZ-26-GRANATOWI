@@ -147,7 +147,8 @@ fun AppNavigation() {
                 },
                 onEditProfileClick = { navController.navigate("edit_profile/admin") },
                 onStatisticsClick = { navController.navigate("admin_dashboard") },
-                onAddressesClick = { navController.navigate("addresses_admin") }
+                onAddressesClick = { navController.navigate("addresses_admin") },
+                onUsersClick = { navController.navigate("admin_users") }
             )
         }
 
@@ -177,6 +178,38 @@ fun AppNavigation() {
             AdminDashboardScreen(
                 onBackClick = { navController.popBackStack() }
             )
+        }
+        
+        // zarządzanie użytkownikami
+        composable("admin_users") {
+            var selectedUser by remember { mutableStateOf<com.example.artsphere.ui.UserInfo?>(null) }
+            
+            if (selectedUser == null) {
+                AdminUsersScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onUserClick = { user -> selectedUser = user }
+                )
+            } else {
+                AdminUserDetailScreen(
+                    user = selectedUser!!,
+                    onBackClick = { selectedUser = null },
+                    onEditClick = { 
+                        // Tu można dodać nawigację do ekranu edycji
+                        // navController.navigate("admin_user_edit/${selectedUser!!.id}")
+                    },
+                    onDeleteClick = {
+                        // Placeholder: symulacja usunięcia
+                        selectedUser = null
+                    },
+                    onToggleStatusClick = {
+                        // Placeholder: symulacja zmiany statusu
+                        selectedUser = selectedUser!!.copy(isActive = !selectedUser!!.isActive)
+                    },
+                    onChangeRoleClick = {
+                        // Placeholder: symulacja zmiany roli
+                    }
+                )
+            }
         }
 
         // dashboard statystyk sprzedawcy
