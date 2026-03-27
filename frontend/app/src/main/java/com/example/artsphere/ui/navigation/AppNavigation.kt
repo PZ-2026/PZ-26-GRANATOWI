@@ -5,6 +5,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.artsphere.ui.screens.*
+import com.example.artsphere.ui.screens.Client.FollowedOffersScreen
+import com.example.artsphere.ui.screens.Client.OrdersScreen
+import com.example.artsphere.ui.screens.Client.SupportScreen
+import com.example.artsphere.ui.screens.Seller.FollowersScreen
+import com.example.artsphere.ui.screens.Seller.SalesHistoryScreen
+import com.example.artsphere.ui.screens.Seller.TopFansScreen
 
 @Composable
 fun AppNavigation() {
@@ -100,7 +106,10 @@ fun AppNavigation() {
                 onEditProfileClick = { navController.navigate("edit_profile/client") },
                 onStatisticsClick = { navController.navigate("client_dashboard") },
                 onAddressesClick = { navController.navigate("addresses") },
-                onFinanceClick = { navController.navigate("finance/client") }
+                onFinanceClick = { navController.navigate("finance/client") },
+                onOrdersClick = { navController.navigate("client_orders") },
+                onSupportClick = { navController.navigate("client_support") },
+                onFollowedClick = { navController.navigate("client_followed") }
             )
         }
 
@@ -119,7 +128,10 @@ fun AppNavigation() {
                 onStatisticsClick = { navController.navigate("seller_dashboard") },
                 onArtworksClick = { navController.navigate("seller_artworks") },
                 onAddArtworkClick = { navController.navigate("artwork_add") },
-                onFinanceClick = { navController.navigate("finance/seller") }
+                onFinanceClick = { navController.navigate("finance/seller") },
+                onSalesHistoryClick = { navController.navigate("seller_sales_history") },
+                onTopFansClick = { navController.navigate("seller_top_fans") },
+                onFollowersClick = { navController.navigate("seller_followers") },
             )
         }
 
@@ -314,6 +326,36 @@ fun AppNavigation() {
                     }
                 )
             }
+        }
+
+        // ekran "moje zakupy" kupującego
+        composable("client_orders") {
+            OrdersScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        // ekran wesprzyj kupującego
+        composable("client_support") {
+            SupportScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        // ekran obserwowanych kupującego
+        composable("client_followed") {
+            FollowedOffersScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        // ekran obserwujących sprzedawcy
+        composable("seller_followers") {
+            FollowersScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        // ekran historii sprzedaży
+        composable("seller_sales_history") {
+            SalesHistoryScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        // kran najlepszych fanów sprzedającego
+        composable("seller_top_fans") {
+            TopFansScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }
