@@ -149,7 +149,8 @@ fun AppNavigation() {
                 onStatisticsClick = { navController.navigate("admin_dashboard") },
                 onAddressesClick = { navController.navigate("addresses_admin") },
                 onUsersClick = { navController.navigate("admin_users") },
-                onArtworksClick = { navController.navigate("admin_artworks") }
+                onArtworksClick = { navController.navigate("admin_artworks") },
+                onSellersClick = { navController.navigate("admin_sellers") }
             )
         }
 
@@ -236,6 +237,38 @@ fun AppNavigation() {
                     onChangeStatusClick = { newStatus ->
                         // Placeholder: symulacja zmiany statusu
                         selectedArtwork = selectedArtwork!!.copy(status = newStatus)
+                    }
+                )
+            }
+        }
+        
+        // zarządzanie sprzedawcami
+        composable("admin_sellers") {
+            var selectedSeller by remember { mutableStateOf<com.example.artsphere.ui.SellerInfo?>(null) }
+            
+            if (selectedSeller == null) {
+                AdminSellersScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onSellerClick = { seller -> selectedSeller = seller }
+                )
+            } else {
+                AdminSellerDetailScreen(
+                    seller = selectedSeller!!,
+                    onBackClick = { selectedSeller = null },
+                    onEditClick = {
+                        // Placeholder: nawigacja do edycji
+                    },
+                    onDeleteClick = {
+                        // Placeholder: symulacja usunięcia
+                        selectedSeller = null
+                    },
+                    onToggleStatusClick = {
+                        // Placeholder: symulacja zmiany statusu
+                        selectedSeller = selectedSeller!!.copy(isActive = !selectedSeller!!.isActive)
+                    },
+                    onToggleVerificationClick = {
+                        // Placeholder: symulacja weryfikacji
+                        selectedSeller = selectedSeller!!.copy(isVerified = !selectedSeller!!.isVerified)
                     }
                 )
             }

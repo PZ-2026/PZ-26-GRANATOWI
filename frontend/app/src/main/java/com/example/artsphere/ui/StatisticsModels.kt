@@ -83,6 +83,27 @@ data class ArtworkInfo(
     val views: Int = 0
 )
 
+// ========== SELLER MANAGEMENT ==========
+data class SellerInfo(
+    val id: Long,
+    val username: String,
+    val email: String,
+    val firstName: String,
+    val lastName: String,
+    val balance: Double,
+    val registrationDate: String,
+    val isActive: Boolean = true,
+    val lastLogin: String? = null,
+    // Statystyki sprzedawcy
+    val totalArtworks: Int,
+    val soldArtworks: Int,
+    val activeArtworks: Int,
+    val totalRevenue: Double,
+    val followerCount: Int,
+    val averageRating: Float,
+    val isVerified: Boolean = false
+)
+
 // ========== MOCK DATA PROVIDER ==========
 object MockStatisticsProvider {
     
@@ -512,6 +533,119 @@ object MockStatisticsProvider {
             purchasesThisMonth = 3,
             memberSince = "Styczeń 2024",
             savedArtworks = 34
+        )
+    }
+    
+    fun getMockSellers(): List<SellerInfo> {
+        return listOf(
+            SellerInfo(
+                id = 2,
+                username = "anna_nowak",
+                email = "anna.nowak@example.com",
+                firstName = "Anna",
+                lastName = "Nowak",
+                balance = 15680.50,
+                registrationDate = "22.01.2024",
+                isActive = true,
+                lastLogin = "27.03.2026 14:30",
+                totalArtworks = 8,
+                soldArtworks = 4,
+                activeArtworks = 4,
+                totalRevenue = 6370.00,
+                followerCount = 87,
+                averageRating = 4.7f,
+                isVerified = true
+            ),
+            SellerInfo(
+                id = 3,
+                username = "piotr_wisniewski",
+                email = "piotr.wisniewski@example.com",
+                firstName = "Piotr",
+                lastName = "Wiśniewski",
+                balance = 8420.00,
+                registrationDate = "05.02.2024",
+                isActive = true,
+                lastLogin = "26.03.2026 20:45",
+                totalArtworks = 5,
+                soldArtworks = 2,
+                activeArtworks = 3,
+                totalRevenue = 4850.00,
+                followerCount = 45,
+                averageRating = 4.3f,
+                isVerified = true
+            ),
+            SellerInfo(
+                id = 6,
+                username = "katarzyna_wojcik",
+                email = "k.wojcik@example.com",
+                firstName = "Katarzyna",
+                lastName = "Wójcik",
+                balance = 22100.00,
+                registrationDate = "25.02.2024",
+                isActive = true,
+                lastLogin = "27.03.2026 17:00",
+                totalArtworks = 12,
+                soldArtworks = 5,
+                activeArtworks = 7,
+                totalRevenue = 12450.00,
+                followerCount = 156,
+                averageRating = 4.9f,
+                isVerified = true
+            ),
+            SellerInfo(
+                id = 8,
+                username = "magdalena_zielinska",
+                email = "m.zielinska@example.com",
+                firstName = "Magdalena",
+                lastName = "Zielińska",
+                balance = 11250.00,
+                registrationDate = "08.03.2024",
+                isActive = true,
+                lastLogin = "27.03.2026 09:45",
+                totalArtworks = 6,
+                soldArtworks = 3,
+                activeArtworks = 3,
+                totalRevenue = 4050.00,
+                followerCount = 62,
+                averageRating = 4.5f,
+                isVerified = true
+            ),
+            SellerInfo(
+                id = 11,
+                username = "marek_kozlowski",
+                email = "marek.kozlowski@example.com",
+                firstName = "Marek",
+                lastName = "Kozłowski",
+                balance = 18900.00,
+                registrationDate = "22.03.2024",
+                isActive = true,
+                lastLogin = "27.03.2026 15:50",
+                totalArtworks = 4,
+                soldArtworks = 1,
+                activeArtworks = 3,
+                totalRevenue = 7500.00,
+                followerCount = 34,
+                averageRating = 4.8f,
+                isVerified = false
+            ),
+            SellerInfo(
+                id = 13,
+                username = "jan_kowalczyk",
+                email = "jan.kowal@example.com",
+                firstName = "Jan",
+                lastName = "Kowalczyk",
+                balance = 3200.00,
+                registrationDate = "10.03.2024",
+                isActive = false,
+                lastLogin = "12.03.2026 11:20",
+                totalArtworks = 2,
+                soldArtworks = 0,
+                activeArtworks = 2,
+                totalRevenue = 0.00,
+                followerCount = 8,
+                averageRating = 0.0f,
+                isVerified = false
+            )
         )
     }
 }
