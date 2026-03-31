@@ -21,7 +21,7 @@ fun AppNavigation() {
     var currentUserId by remember { mutableStateOf(0L) }
     var currentUsername by remember { mutableStateOf("") }
     var currentBalance by remember { mutableStateOf(1500.00) }
-    var currentUserRole by remember { mutableStateOf("user") } // "user", "seller", "admin"
+    var currentUserRole by remember { mutableStateOf("guest") } // Zmieniono na guest jako domyślny
 
     NavHost(navController = navController, startDestination = "home") {
 
@@ -33,21 +33,39 @@ fun AppNavigation() {
                 role = currentUserRole,
                 onLoginClick = { navController.navigate("login") },
                 onRegisterClick = { navController.navigate("register/user") },
-                onBrowseClick = { /* Przewijanie do wyszukiwarki */ },
+                onBrowseClick = { /* Przewijanie do wyszukiwarki pozostaje na frontendzie */ },
                 onBecomeSellerClick = { navController.navigate("register/seller") },
                 onLogoutClick = {
                     isLoggedIn = false
                     currentUsername = ""
-                    currentUserRole = "user"
+                    currentUserRole = "guest"
                 },
                 onCartClick = { navController.navigate("cart") },
                 onProfileClick = {
-                    when (currentUserRole) {
-                        "seller" -> navController.navigate("seller_panel")
-                        "admin" -> navController.navigate("admin_panel")
+                    when (currentUserRole.uppercase()) {
+                        "SELLER", "ARTIST" -> navController.navigate("seller_panel")
+                        "ADMIN" -> navController.navigate("admin_panel")
                         else -> navController.navigate("client_panel")
                     }
+                },
+                onArtworkClick = { artworkId ->
+                    // Przekazanie ID do publicznego ekranu dzieła
+                    navController.navigate("public_artwork_detail/$artworkId")
                 }
+            )
+        }
+
+        // --- EKRAN SZCZEGÓŁÓW DZIEŁA DLA WSZYSTKICH ---
+        composable("public_artwork_detail/{artworkId}") { backStackEntry ->
+            val artworkIdStr = backStackEntry.arguments?.getString("artworkId")
+            val artworkId = artworkIdStr?.toLongOrNull() ?: 0L
+
+            PublicArtworkDetailScreen(
+                artworkId = artworkId,
+                isLoggedIn = isLoggedIn,
+                role = currentUserRole,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToLogin = { navController.navigate("login") }
             )
         }
 
@@ -101,6 +119,7 @@ fun AppNavigation() {
                 onLogoutClick = {
                     isLoggedIn = false
                     currentUsername = ""
+                    currentUserRole = "guest"
                     navController.navigate("home") { popUpTo(0) }
                 },
                 onEditProfileClick = { navController.navigate("edit_profile/client") },
@@ -122,6 +141,7 @@ fun AppNavigation() {
                 onLogoutClick = {
                     isLoggedIn = false
                     currentUsername = ""
+                    currentUserRole = "guest"
                     navController.navigate("home") { popUpTo(0) }
                 },
                 onEditProfileClick = { navController.navigate("edit_profile/seller") },
@@ -143,6 +163,7 @@ fun AppNavigation() {
                 onLogoutClick = {
                     isLoggedIn = false
                     currentUsername = ""
+                    currentUserRole = "guest"
                     navController.navigate("home") { popUpTo(0) }
                 },
                 onEditProfileClick = { navController.navigate("edit_profile/admin") },
@@ -183,11 +204,11 @@ fun AppNavigation() {
                 onBackClick = { navController.popBackStack() }
             )
         }
-        
+
         // zarządzanie użytkownikami
         composable("admin_users") {
             var selectedUser by remember { mutableStateOf<com.example.artsphere.ui.UserInfo?>(null) }
-            
+
             if (selectedUser == null) {
                 AdminUsersScreen(
                     onBackClick = { navController.popBackStack() },
@@ -197,7 +218,7 @@ fun AppNavigation() {
                 AdminUserDetailScreen(
                     user = selectedUser!!,
                     onBackClick = { selectedUser = null },
-                    onEditClick = { 
+                    onEditClick = {
                         // Tu można dodać nawigację do ekranu edycji
                         // navController.navigate("admin_user_edit/${selectedUser!!.id}")
                     },
@@ -215,11 +236,11 @@ fun AppNavigation() {
                 )
             }
         }
-        
+
         // zarządzanie dziełami
         composable("admin_artworks") {
             var selectedArtwork by remember { mutableStateOf<com.example.artsphere.ui.ArtworkInfo?>(null) }
-            
+
             if (selectedArtwork == null) {
                 AdminArtworksScreen(
                     onBackClick = { navController.popBackStack() },
@@ -243,11 +264,11 @@ fun AppNavigation() {
                 )
             }
         }
-        
+
         // zarządzanie sprzedawcami
         composable("admin_sellers") {
             var selectedSeller by remember { mutableStateOf<com.example.artsphere.ui.SellerInfo?>(null) }
-            
+
             if (selectedSeller == null) {
                 AdminSellersScreen(
                     onBackClick = { navController.popBackStack() },
@@ -275,11 +296,11 @@ fun AppNavigation() {
                 )
             }
         }
-        
+
         // zarządzanie zamówieniami
         composable("admin_orders") {
             var selectedOrder by remember { mutableStateOf<com.example.artsphere.ui.OrderInfo?>(null) }
-            
+
             if (selectedOrder == null) {
                 AdminOrdersScreen(
                     onBackClick = { navController.popBackStack() },
@@ -306,11 +327,11 @@ fun AppNavigation() {
                 )
             }
         }
-        
+
         // zarządzanie kategoriami
         composable("admin_categories") {
             var selectedCategory by remember { mutableStateOf<com.example.artsphere.ui.CategoryInfo?>(null) }
-            
+
             if (selectedCategory == null) {
                 AdminCategoriesScreen(
                     onBackClick = { navController.popBackStack() },
@@ -411,10 +432,10 @@ fun AppNavigation() {
             }
         }
 
-        // dodawanie adresu - Admin (może dla dowolnego użytkownika)
+        // dodawanie adresu - Admin
         composable("address_add_admin") {
             AddressFormScreen(
-                userId = currentUserId, // Admin może dodawać dla innych, ale potrzebujemy userId selektora
+                userId = currentUserId,
                 addressId = null,
                 isAdmin = true,
                 onNavigateBack = { navController.popBackStack() },

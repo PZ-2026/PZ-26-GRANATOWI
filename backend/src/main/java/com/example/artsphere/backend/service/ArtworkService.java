@@ -27,22 +27,28 @@ public class ArtworkService {
     @Autowired
     private UserRepository userRepository;
 
-    // Pobierz wszystkie dzieła sprzedawcy
     public List<ArtworkResponse> getSellerArtworks(Long userId) {
         List<Artwork> artworks = artworkRepository.findByUserId(userId);
-        return artworks.stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
+        return artworks.stream().map(this::convertToResponse).collect(Collectors.toList());
     }
 
-    // Pobierz wszystkie kategorie
+    public List<ArtworkResponse> getAllAvailableArtworks() {
+        List<Artwork> artworks = artworkRepository.findByIsSoldFalse();
+        return artworks.stream().map(this::convertToResponse).collect(Collectors.toList());
+    }
+
+    public ArtworkResponse getArtworkById(Long artworkId) {
+        Artwork artwork = artworkRepository.findById(artworkId)
+                .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));
+        return convertToResponse(artwork);
+    }
+
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll().stream()
                 .map(category -> new CategoryResponse(category.getId(), category.getName()))
                 .collect(Collectors.toList());
     }
 
-    // Dodaj nowe dzieło
     public ArtworkResponse createArtwork(Long userId, ArtworkRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Użytkownik nie znaleziony"));
@@ -56,13 +62,21 @@ public class ArtworkService {
         Artwork artwork = new Artwork();
         artwork.setTitle(request.getTitle());
         artwork.setDescription(request.getDescription());
-        artwork.setPrice(request.getIsPriceless() ? null : request.getPrice());
+
+        if (request.getIsPriceless() != null && request.getIsPriceless()) {
+            artwork.setPrice(null);
+        } else {
+            artwork.setPrice(request.getPrice());
+        }
+
         artwork.setIsPriceless(request.getIsPriceless() != null ? request.getIsPriceless() : false);
         artwork.setArtist(request.getArtist());
         artwork.setImagePath(request.getImagePath());
+
         artwork.setWidth(request.getWidth());
         artwork.setHeight(request.getHeight());
         artwork.setDepth(request.getDepth());
+
         artwork.setUser(user);
         artwork.setCategory(category);
         artwork.setIsSold(false);
@@ -72,7 +86,6 @@ public class ArtworkService {
         return convertToResponse(saved);
     }
 
-    // Zaktualizuj dzieło
     public ArtworkResponse updateArtwork(Long artworkId, Long userId, ArtworkRequest request) {
         Artwork artwork = artworkRepository.findById(artworkId)
                 .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));
@@ -89,20 +102,27 @@ public class ArtworkService {
 
         artwork.setTitle(request.getTitle());
         artwork.setDescription(request.getDescription());
-        artwork.setPrice(request.getIsPriceless() ? null : request.getPrice());
+
+        if (request.getIsPriceless() != null && request.getIsPriceless()) {
+            artwork.setPrice(null);
+        } else {
+            artwork.setPrice(request.getPrice());
+        }
+
         artwork.setIsPriceless(request.getIsPriceless() != null ? request.getIsPriceless() : false);
         artwork.setArtist(request.getArtist());
         artwork.setImagePath(request.getImagePath());
+
         artwork.setWidth(request.getWidth());
         artwork.setHeight(request.getHeight());
         artwork.setDepth(request.getDepth());
+
         artwork.setCategory(category);
 
         Artwork updated = artworkRepository.save(artwork);
         return convertToResponse(updated);
     }
 
-    // Usuń dzieło
     public void deleteArtwork(Long artworkId, Long userId) {
         Artwork artwork = artworkRepository.findById(artworkId)
                 .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));
@@ -114,41 +134,26 @@ public class ArtworkService {
         artworkRepository.delete(artwork);
     }
 
-    // Pobierz dzieło po ID
-    public ArtworkResponse getArtworkById(Long artworkId) {
-        Artwork artwork = artworkRepository.findById(artworkId)
-                .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));
-        return convertToResponse(artwork);
-    }
-
-    // Pobierz wszystkie dostępne dzieła (dla kupujących)
-    public List<ArtworkResponse> getAllAvailableArtworks() {
-        List<Artwork> artworks = artworkRepository.findByIsSoldFalse();
-        return artworks.stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
-    }
-
     private ArtworkResponse convertToResponse(Artwork artwork) {
         return new ArtworkResponse(
                 artwork.getId(),
                 artwork.getTitle(),
                 artwork.getDescription(),
                 artwork.getPrice(),
-                artwork.getIsPriceless(),
+                artwork.getIsPriceless() != null && artwork.getIsPriceless(),
                 artwork.getArtist(),
                 artwork.getImagePath(),
                 artwork.getWidth(),
                 artwork.getHeight(),
                 artwork.getDepth(),
-                artwork.getUser().getId(),
-                artwork.getUser().getUsername(),
+                artwork.getUser() != null ? artwork.getUser().getId() : 0L,
+                artwork.getUser() != null ? artwork.getUser().getUsername() : "Nieznany",
                 artwork.getCategory() != null ? artwork.getCategory().getId() : null,
                 artwork.getCategory() != null ? artwork.getCategory().getName() : null,
-                artwork.getIsSold(),
+                artwork.getIsSold() != null && artwork.getIsSold(),
                 artwork.getStatus(),
-                artwork.getCreatedAt(),
-                artwork.getUpdatedAt()
+                artwork.getCreatedAt(), // LocalDateTime z powrotem bez modyfikacji!
+                null // Brak updated_at w bazie, wysyłamy null
         );
     }
 }

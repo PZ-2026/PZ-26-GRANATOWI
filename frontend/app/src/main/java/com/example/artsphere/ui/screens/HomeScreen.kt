@@ -23,7 +23,8 @@ fun HomeScreen(
     onBecomeSellerClick: () -> Unit,
     onLogoutClick: () -> Unit,
     onCartClick: () -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onArtworkClick: (Long) -> Unit
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -56,7 +57,9 @@ fun HomeScreen(
                     onBecomeSellerClick = onBecomeSellerClick
                 )
             }
-            item { SearchSection() }
+            item {
+                SearchSection(onArtworkClick = onArtworkClick)
+            }
             item { StatisticsSection() }
         }
     }
