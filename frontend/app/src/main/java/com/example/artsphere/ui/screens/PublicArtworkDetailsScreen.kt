@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -30,6 +31,9 @@ fun PublicArtworkDetailScreen(
     artworkId: Long,
     isLoggedIn: Boolean,
     role: String,
+    cartItems: List<ArtworkResponse>, // Przekazujemy koszyk z góry
+    onAddToCart: (ArtworkResponse) -> Unit,
+    onNavigateToCart: () -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
@@ -37,37 +41,30 @@ fun PublicArtworkDetailScreen(
     var artwork by remember { mutableStateOf<ArtworkResponse?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
+    // Sprawdzamy czy obraz jest już w koszyku po ID
+    val isInCart = cartItems.any { it.id == artworkId }
+
     LaunchedEffect(artworkId) {
         try {
             val response = RetrofitClient.artworkApi.getArtworkById(artworkId)
             if (response.isSuccessful) {
                 artwork = response.body()
             }
-        } catch (e: Exception) {
-            // Ignorujemy błędy dla czystości interfejsu (pokaże się Brak wyników)
-        } finally {
-            isLoading = false
-        }
+        } catch (e: Exception) { } finally { isLoading = false }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Szczegóły dzieła") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, "Wróć") }
-                }
+                navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, "Wróć") } }
             )
         }
     ) { paddingValues ->
         if (isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         } else if (artwork == null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Nie znaleziono dzieła.")
-            }
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Nie znaleziono dzieła.") }
         } else {
             val art = artwork!!
             Column(
@@ -78,93 +75,85 @@ fun PublicArtworkDetailScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Domyślne zdjęcie dzieła
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.LightGray),
+                    modifier = Modifier.fillMaxWidth().height(300.dp).clip(RoundedCornerShape(12.dp)).background(Color.LightGray),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Image,
-                        contentDescription = "Zdjęcie",
-                        modifier = Modifier.size(64.dp),
-                        tint = Color.Gray
-                    )
+                    Icon(Icons.Default.Image, "Zdjęcie", modifier = Modifier.size(64.dp), tint = Color.Gray)
                 }
 
                 Text(text = art.title, fontSize = 28.sp, fontWeight = FontWeight.Bold, lineHeight = 34.sp)
 
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = "Kategoria: ${art.categoryName ?: "Inne"}",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(8.dp)) {
+                    Text("Kategoria: ${art.categoryName ?: "Inne"}", modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
                 }
 
                 Divider()
 
                 Text(text = "Autor: ${art.artist ?: art.userUsername}", fontSize = 18.sp)
 
-                val dimensions = listOfNotNull(
-                    art.width?.let { "Szer: $it cm" },
-                    art.height?.let { "Wys: $it cm" },
-                    art.depth?.let { "Głęb: $it cm" }
-                ).joinToString(" | ")
-
-                if (dimensions.isNotEmpty()) {
-                    Text(text = "Wymiary: $dimensions", fontSize = 16.sp, color = Color.Gray)
-                }
-
                 Text(text = "Opis:", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Text(text = art.description ?: "Brak opisu", fontSize = 16.sp, lineHeight = 24.sp)
 
                 Spacer(modifier = Modifier.height(16.dp))
+                Divider()
 
-                // SEKCJA ZAKUPOWA
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text("Cena:", color = Color.Gray)
-                        if (art.isPriceless) {
-                            Text("Bezcenny", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                        } else {
-                            Text("${String.format("%.2f", art.price ?: 0.0)} zł", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text("Cena:", color = Color.Gray, fontSize = 14.sp)
+                if (art.isPriceless) {
+                    Text("Bezcenny", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                } else {
+                    Text("${String.format("%.2f", art.price ?: 0.0)} zł", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // LOGIKA PRZYCISKÓW KOSZYKA
+                if (!isLoggedIn || role == "guest") {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer), modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Zaloguj się, aby dodać do koszyka i kupić to dzieło.", textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(bottom = 12.dp))
+                            Button(onClick = onNavigateToLogin, modifier = Modifier.fillMaxWidth()) { Text("Zaloguj się") }
                         }
                     }
-
-                    // Logika przycisków na wzór Galeriony:
-                    if (!isLoggedIn) {
-                        Button(
-                            onClick = onNavigateToLogin,
-                            modifier = Modifier.height(50.dp)
-                        ) {
-                            Icon(Icons.Default.Lock, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Zaloguj się, aby kupić")
+                } else if (role == "BUYER" || role == "user") {
+                    if (art.isSold) {
+                        Button(onClick = {}, modifier = Modifier.fillMaxWidth().height(56.dp), enabled = false, shape = RoundedCornerShape(12.dp)) {
+                            Text("Sprzedane", fontSize = 18.sp)
                         }
-                    } else if (role == "user" || role == "BUYER") {
-                        Button(
-                            onClick = { Toast.makeText(context, "Dodano do koszyka!", Toast.LENGTH_SHORT).show() },
-                            modifier = Modifier.height(50.dp),
-                            enabled = !art.isSold
-                        ) {
-                            if (art.isSold) {
-                                Text("Sprzedane")
-                            } else {
-                                Icon(Icons.Default.ShoppingCart, contentDescription = null)
+                    } else if (isInCart) {
+                        // PRZEDMIOT JEST JUŻ W KOSZYKU
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = onNavigateToCart,
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Dodaj do koszyka")
+                                Text("Produkt w koszyku - Przejdź", fontSize = 18.sp)
                             }
+                            OutlinedButton(
+                                onClick = onNavigateBack,
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Kontynuuj przeglądanie", fontSize = 18.sp)
+                            }
+                        }
+                    } else {
+                        // NORMALNE DODAWANIE
+                        Button(
+                            onClick = {
+                                onAddToCart(art)
+                                Toast.makeText(context, "Dodano do koszyka!", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.ShoppingCart, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Dodaj do koszyka", fontSize = 18.sp)
                         }
                     }
                 }

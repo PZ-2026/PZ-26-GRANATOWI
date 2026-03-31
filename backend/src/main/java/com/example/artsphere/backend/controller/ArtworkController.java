@@ -18,81 +18,48 @@ public class ArtworkController {
     @Autowired
     private ArtworkService artworkService;
 
-    // Pobierz dzieła sprzedawcy
     @GetMapping("/seller/{userId}")
     public ResponseEntity<List<ArtworkResponse>> getSellerArtworks(@PathVariable Long userId) {
-        try {
-            List<ArtworkResponse> artworks = artworkService.getSellerArtworks(userId);
-            return ResponseEntity.ok(artworks);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
+        return ResponseEntity.ok(artworkService.getSellerArtworks(userId));
     }
 
-    // Pobierz wszystkie kategorie
     @GetMapping("/categories")
     public ResponseEntity<List<CategoryResponse>> getAllCategories() {
-        try {
-            List<CategoryResponse> categories = artworkService.getAllCategories();
-            return ResponseEntity.ok(categories);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
+        return ResponseEntity.ok(artworkService.getAllCategories());
     }
 
-    // Pobierz wszystkie dostępne dzieła (dla kupujących)
     @GetMapping("/available")
     public ResponseEntity<List<ArtworkResponse>> getAllAvailableArtworks() {
-        try {
-            List<ArtworkResponse> artworks = artworkService.getAllAvailableArtworks();
-            return ResponseEntity.ok(artworks);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
+        return ResponseEntity.ok(artworkService.getAllAvailableArtworks());
     }
 
-    // Pobierz dzieło po ID
     @GetMapping("/{artworkId}")
     public ResponseEntity<ArtworkResponse> getArtworkById(@PathVariable Long artworkId) {
-        try {
-            ArtworkResponse artwork = artworkService.getArtworkById(artworkId);
-            return ResponseEntity.ok(artwork);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
+        return ResponseEntity.ok(artworkService.getArtworkById(artworkId));
     }
 
-    // Dodaj nowe dzieło
     @PostMapping("/seller/{userId}")
     public ResponseEntity<?> createArtwork(@PathVariable Long userId, @RequestBody ArtworkRequest request) {
-        try {
-            ArtworkResponse artwork = artworkService.createArtwork(userId, request);
-            return ResponseEntity.ok(artwork);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return ResponseEntity.ok(artworkService.createArtwork(userId, request));
     }
 
-    // Zaktualizuj dzieło
     @PutMapping("/{artworkId}/seller/{userId}")
-    public ResponseEntity<?> updateArtwork(
-            @PathVariable Long artworkId,
-            @PathVariable Long userId,
-            @RequestBody ArtworkRequest request) {
-        try {
-            ArtworkResponse artwork = artworkService.updateArtwork(artworkId, userId, request);
-            return ResponseEntity.ok(artwork);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<?> updateArtwork(@PathVariable Long artworkId, @PathVariable Long userId, @RequestBody ArtworkRequest request) {
+        return ResponseEntity.ok(artworkService.updateArtwork(artworkId, userId, request));
     }
 
-    // Usuń dzieło
     @DeleteMapping("/{artworkId}/seller/{userId}")
     public ResponseEntity<?> deleteArtwork(@PathVariable Long artworkId, @PathVariable Long userId) {
+        artworkService.deleteArtwork(artworkId, userId);
+        return ResponseEntity.ok("Dzieło usunięte pomyślnie");
+    }
+
+    // NOWY ENDPOINT: Oznaczanie dzieła jako sprzedane (po zakupie w koszyku)
+    @PutMapping("/{artworkId}/mark-sold")
+    public ResponseEntity<?> markAsSold(@PathVariable Long artworkId) {
         try {
-            artworkService.deleteArtwork(artworkId, userId);
-            return ResponseEntity.ok("Dzieło usunięte pomyślnie");
+            artworkService.markAsSold(artworkId);
+            return ResponseEntity.ok("Dzieło zostało oznaczone jako sprzedane");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

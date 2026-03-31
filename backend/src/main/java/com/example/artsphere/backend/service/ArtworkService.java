@@ -156,4 +156,13 @@ public class ArtworkService {
                 null // Brak updated_at w bazie, wysyłamy null
         );
     }
+
+    // Oznacza dzieło jako sprzedane
+    public void markAsSold(Long artworkId) {
+        Artwork artwork = artworkRepository.findById(artworkId)
+                .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));
+        artwork.setIsSold(true);
+        artwork.setStatus("SOLD");
+        artworkRepository.save(artwork);
+    }
 }

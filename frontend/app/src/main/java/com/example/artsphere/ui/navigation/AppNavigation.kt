@@ -4,6 +4,7 @@ import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.artsphere.api.ArtworkResponse
 import com.example.artsphere.ui.screens.*
 import com.example.artsphere.ui.screens.Client.FollowedOffersScreen
 import com.example.artsphere.ui.screens.Client.OrdersScreen
@@ -20,8 +21,11 @@ fun AppNavigation() {
     var isLoggedIn by remember { mutableStateOf(false) }
     var currentUserId by remember { mutableStateOf(0L) }
     var currentUsername by remember { mutableStateOf("") }
-    var currentBalance by remember { mutableStateOf(1500.00) }
-    var currentUserRole by remember { mutableStateOf("guest") } // Zmieniono na guest jako domyślny
+    var currentBalance by remember { mutableStateOf(3000.00) } // Więcej na start by móc kupować
+    var currentUserRole by remember { mutableStateOf("guest") }
+
+    // STAN KOSZYKA (Współdzielony między ekranami)
+    var cartItems by remember { mutableStateOf<List<ArtworkResponse>>(emptyList()) }
 
     NavHost(navController = navController, startDestination = "home") {
 
@@ -33,12 +37,13 @@ fun AppNavigation() {
                 role = currentUserRole,
                 onLoginClick = { navController.navigate("login") },
                 onRegisterClick = { navController.navigate("register/user") },
-                onBrowseClick = { /* Przewijanie do wyszukiwarki pozostaje na frontendzie */ },
+                onBrowseClick = { },
                 onBecomeSellerClick = { navController.navigate("register/seller") },
                 onLogoutClick = {
                     isLoggedIn = false
                     currentUsername = ""
                     currentUserRole = "guest"
+                    cartItems = emptyList() // Czyści koszyk po wylogowaniu
                 },
                 onCartClick = { navController.navigate("cart") },
                 onProfileClick = {
@@ -49,13 +54,11 @@ fun AppNavigation() {
                     }
                 },
                 onArtworkClick = { artworkId ->
-                    // Przekazanie ID do publicznego ekranu dzieła
                     navController.navigate("public_artwork_detail/$artworkId")
                 }
             )
         }
 
-        // --- EKRAN SZCZEGÓŁÓW DZIEŁA DLA WSZYSTKICH ---
         composable("public_artwork_detail/{artworkId}") { backStackEntry ->
             val artworkIdStr = backStackEntry.arguments?.getString("artworkId")
             val artworkId = artworkIdStr?.toLongOrNull() ?: 0L
@@ -64,20 +67,51 @@ fun AppNavigation() {
                 artworkId = artworkId,
                 isLoggedIn = isLoggedIn,
                 role = currentUserRole,
+                cartItems = cartItems, // Przekazujemy koszyk by sprawdzić co w nim jest
+                onAddToCart = { item ->
+                    if (!cartItems.any { it.id == item.id }) cartItems = cartItems + item
+                },
+                onNavigateToCart = { navController.navigate("cart") },
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToLogin = { navController.navigate("login") }
+            )
+        }
+
+        // --- SEKCJA ZAKUPOWA ---
+
+        composable("cart") {
+            CartScreen(
+                cartItems = cartItems,
+                onRemoveItem = { itemToRemove -> cartItems = cartItems.filter { it.id != itemToRemove.id } },
+                onNavigateBack = { navController.popBackStack() },
+                onCheckoutClick = { navController.navigate("checkout") }
+            )
+        }
+
+        composable("checkout") {
+            CheckoutScreen(
+                cartItems = cartItems,
+                currentBalance = currentBalance,
+                onNavigateBack = { navController.popBackStack() },
+                onPaymentSuccess = { totalPaid ->
+                    currentBalance -= totalPaid
+                    cartItems = emptyList() // Opróżnienie koszyka po zakupie
+                    navController.navigate("order_success") { popUpTo("home") } // Wywala kasę z historii
+                }
+            )
+        }
+
+        composable("order_success") {
+            OrderSuccessScreen(
+                onBackToHome = { navController.navigate("home") { popUpTo(0) } }
             )
         }
 
         // logowanie
         composable("login") {
             LoginScreen(
-                onNavigateBack = {
-                    navController.navigate("home") { popUpTo("home") { inclusive = false } }
-                },
-                onNavigateToRegister = {
-                    navController.navigate("register/user") { popUpTo("login") { inclusive = true } }
-                },
+                onNavigateBack = { navController.navigate("home") { popUpTo("home") { inclusive = false } } },
+                onNavigateToRegister = { navController.navigate("register/user") { popUpTo("login") { inclusive = true } } },
                 onLoginSuccess = { userId, username, role ->
                     isLoggedIn = true
                     currentUserId = userId
@@ -93,24 +127,14 @@ fun AppNavigation() {
             val role = backStackEntry.arguments?.getString("role") ?: "user"
             RegisterScreen(
                 initialRole = role,
-                onNavigateBack = {
-                    navController.navigate("home") { popUpTo("home") { inclusive = false } }
-                },
-                onNavigateToLogin = {
-                    navController.navigate("login") { popUpTo("register/{role}") { inclusive = true } }
-                }
+                onNavigateBack = { navController.navigate("home") { popUpTo("home") { inclusive = false } } },
+                onNavigateToLogin = { navController.navigate("login") { popUpTo("register/{role}") { inclusive = true } } }
             )
         }
 
-        // koszyk
-        composable("cart") {
-            CartScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onCheckoutClick = { /* Przejście do kasy */ }
-            )
-        }
+        // *** PONIŻEJ ZNAJDUJE SIĘ TWOJA DOTYCHCZASOWA ZACHOWANA RESZTA PLIKU Z PANELAMI ***
+        // (zostały bez zmian, od 'composable("client_panel")')
 
-        // ekran klienta
         composable("client_panel") {
             ClientPanelScreen(
                 username = currentUsername,
@@ -132,7 +156,6 @@ fun AppNavigation() {
             )
         }
 
-        // ekran sprzedawcy
         composable("seller_panel") {
             SellerPanelScreen(
                 username = currentUsername,
@@ -155,7 +178,6 @@ fun AppNavigation() {
             )
         }
 
-        // ekran admina
         composable("admin_panel") {
             AdminPanelScreen(
                 username = currentUsername,
@@ -177,7 +199,6 @@ fun AppNavigation() {
             )
         }
 
-        // edycja profilu
         composable("edit_profile/{role}") { backStackEntry ->
             val role = backStackEntry.arguments?.getString("role") ?: "client"
             EditProfileScreen(
@@ -187,7 +208,6 @@ fun AppNavigation() {
             )
         }
 
-        // finanse
         composable("finance/{role}") { backStackEntry ->
             val role = backStackEntry.arguments?.getString("role") ?: "client"
             FinanceScreen(
@@ -198,344 +218,72 @@ fun AppNavigation() {
             )
         }
 
-        // dashboard statystyk administratora
-        composable("admin_dashboard") {
-            AdminDashboardScreen(
-                onBackClick = { navController.popBackStack() }
-            )
-        }
+        composable("admin_dashboard") { AdminDashboardScreen(onBackClick = { navController.popBackStack() }) }
 
-        // zarządzanie użytkownikami
         composable("admin_users") {
             var selectedUser by remember { mutableStateOf<com.example.artsphere.ui.UserInfo?>(null) }
-
             if (selectedUser == null) {
-                AdminUsersScreen(
-                    onBackClick = { navController.popBackStack() },
-                    onUserClick = { user -> selectedUser = user }
-                )
+                AdminUsersScreen(onBackClick = { navController.popBackStack() }, onUserClick = { user -> selectedUser = user })
             } else {
-                AdminUserDetailScreen(
-                    user = selectedUser!!,
-                    onBackClick = { selectedUser = null },
-                    onEditClick = {
-                        // Tu można dodać nawigację do ekranu edycji
-                        // navController.navigate("admin_user_edit/${selectedUser!!.id}")
-                    },
-                    onDeleteClick = {
-                        // Placeholder: symulacja usunięcia
-                        selectedUser = null
-                    },
-                    onToggleStatusClick = {
-                        // Placeholder: symulacja zmiany statusu
-                        selectedUser = selectedUser!!.copy(isActive = !selectedUser!!.isActive)
-                    },
-                    onChangeRoleClick = {
-                        // Placeholder: symulacja zmiany roli
-                    }
-                )
+                AdminUserDetailScreen(user = selectedUser!!, onBackClick = { selectedUser = null }, onEditClick = { }, onDeleteClick = { selectedUser = null }, onToggleStatusClick = { selectedUser = selectedUser!!.copy(isActive = !selectedUser!!.isActive) }, onChangeRoleClick = { })
             }
         }
 
-        // zarządzanie dziełami
         composable("admin_artworks") {
             var selectedArtwork by remember { mutableStateOf<com.example.artsphere.ui.ArtworkInfo?>(null) }
-
             if (selectedArtwork == null) {
-                AdminArtworksScreen(
-                    onBackClick = { navController.popBackStack() },
-                    onArtworkClick = { artwork -> selectedArtwork = artwork }
-                )
+                AdminArtworksScreen(onBackClick = { navController.popBackStack() }, onArtworkClick = { artwork -> selectedArtwork = artwork })
             } else {
-                AdminArtworkDetailScreen(
-                    artwork = selectedArtwork!!,
-                    onBackClick = { selectedArtwork = null },
-                    onEditClick = {
-                        // Placeholder: nawigacja do edycji
-                    },
-                    onDeleteClick = {
-                        // Placeholder: symulacja usunięcia
-                        selectedArtwork = null
-                    },
-                    onChangeStatusClick = { newStatus ->
-                        // Placeholder: symulacja zmiany statusu
-                        selectedArtwork = selectedArtwork!!.copy(status = newStatus)
-                    }
-                )
+                AdminArtworkDetailScreen(artwork = selectedArtwork!!, onBackClick = { selectedArtwork = null }, onEditClick = { }, onDeleteClick = { selectedArtwork = null }, onChangeStatusClick = { newStatus -> selectedArtwork = selectedArtwork!!.copy(status = newStatus) })
             }
         }
 
-        // zarządzanie sprzedawcami
         composable("admin_sellers") {
             var selectedSeller by remember { mutableStateOf<com.example.artsphere.ui.SellerInfo?>(null) }
-
             if (selectedSeller == null) {
-                AdminSellersScreen(
-                    onBackClick = { navController.popBackStack() },
-                    onSellerClick = { seller -> selectedSeller = seller }
-                )
+                AdminSellersScreen(onBackClick = { navController.popBackStack() }, onSellerClick = { seller -> selectedSeller = seller })
             } else {
-                AdminSellerDetailScreen(
-                    seller = selectedSeller!!,
-                    onBackClick = { selectedSeller = null },
-                    onEditClick = {
-                        // Placeholder: nawigacja do edycji
-                    },
-                    onDeleteClick = {
-                        // Placeholder: symulacja usunięcia
-                        selectedSeller = null
-                    },
-                    onToggleStatusClick = {
-                        // Placeholder: symulacja zmiany statusu
-                        selectedSeller = selectedSeller!!.copy(isActive = !selectedSeller!!.isActive)
-                    },
-                    onToggleVerificationClick = {
-                        // Placeholder: symulacja weryfikacji
-                        selectedSeller = selectedSeller!!.copy(isVerified = !selectedSeller!!.isVerified)
-                    }
-                )
+                AdminSellerDetailScreen(seller = selectedSeller!!, onBackClick = { selectedSeller = null }, onEditClick = { }, onDeleteClick = { selectedSeller = null }, onToggleStatusClick = { selectedSeller = selectedSeller!!.copy(isActive = !selectedSeller!!.isActive) }, onToggleVerificationClick = { selectedSeller = selectedSeller!!.copy(isVerified = !selectedSeller!!.isVerified) })
             }
         }
 
-        // zarządzanie zamówieniami
         composable("admin_orders") {
             var selectedOrder by remember { mutableStateOf<com.example.artsphere.ui.OrderInfo?>(null) }
-
             if (selectedOrder == null) {
-                AdminOrdersScreen(
-                    onBackClick = { navController.popBackStack() },
-                    onOrderClick = { order -> selectedOrder = order }
-                )
+                AdminOrdersScreen(onBackClick = { navController.popBackStack() }, onOrderClick = { order -> selectedOrder = order })
             } else {
-                AdminOrderDetailScreen(
-                    order = selectedOrder!!,
-                    onBackClick = { selectedOrder = null },
-                    onChangeStatusClick = { newStatus ->
-                        // Placeholder: symulacja zmiany statusu
-                        selectedOrder = selectedOrder!!.copy(status = newStatus)
-                    },
-                    onCancelOrderClick = {
-                        // Placeholder: symulacja anulowania
-                        selectedOrder = selectedOrder!!.copy(
-                            status = "CANCELLED",
-                            paymentStatus = if (selectedOrder!!.paymentStatus == "PAID") "REFUNDED" else "PENDING"
-                        )
-                    },
-                    onSendMessageClick = {
-                        // Placeholder: nawigacja do wiadomości
-                    }
-                )
+                AdminOrderDetailScreen(order = selectedOrder!!, onBackClick = { selectedOrder = null }, onChangeStatusClick = { newStatus -> selectedOrder = selectedOrder!!.copy(status = newStatus) }, onCancelOrderClick = { selectedOrder = selectedOrder!!.copy(status = "CANCELLED", paymentStatus = if (selectedOrder!!.paymentStatus == "PAID") "REFUNDED" else "PENDING") }, onSendMessageClick = { })
             }
         }
 
-        // zarządzanie kategoriami
         composable("admin_categories") {
             var selectedCategory by remember { mutableStateOf<com.example.artsphere.ui.CategoryInfo?>(null) }
-
             if (selectedCategory == null) {
-                AdminCategoriesScreen(
-                    onBackClick = { navController.popBackStack() },
-                    onCategoryClick = { category -> selectedCategory = category }
-                )
+                AdminCategoriesScreen(onBackClick = { navController.popBackStack() }, onCategoryClick = { category -> selectedCategory = category })
             } else {
-                AdminCategoryDetailScreen(
-                    category = selectedCategory!!,
-                    onBackClick = { selectedCategory = null },
-                    onEditClick = {
-                        // Placeholder: nawigacja do edycji
-                    },
-                    onDeleteClick = {
-                        // Placeholder: symulacja usunięcia
-                        selectedCategory = null
-                    },
-                    onToggleStatusClick = {
-                        // Placeholder: symulacja zmiany statusu
-                        selectedCategory = selectedCategory!!.copy(isActive = !selectedCategory!!.isActive)
-                    },
-                    onManageSubcategoriesClick = {
-                        // Placeholder: nawigacja do podkategorii
-                    }
-                )
+                AdminCategoryDetailScreen(category = selectedCategory!!, onBackClick = { selectedCategory = null }, onEditClick = { }, onDeleteClick = { selectedCategory = null }, onToggleStatusClick = { selectedCategory = selectedCategory!!.copy(isActive = !selectedCategory!!.isActive) }, onManageSubcategoriesClick = { })
             }
         }
 
-        // dashboard statystyk sprzedawcy
-        composable("seller_dashboard") {
-            SellerDashboardScreen(
-                onBackClick = { navController.popBackStack() },
-                balance = currentBalance
-            )
-        }
+        composable("seller_dashboard") { SellerDashboardScreen(onBackClick = { navController.popBackStack() }, balance = currentBalance) }
+        composable("client_dashboard") { ClientDashboardScreen(onBackClick = { navController.popBackStack() }, balance = currentBalance) }
 
-        // dashboard statystyk klienta
-        composable("client_dashboard") {
-            ClientDashboardScreen(
-                onBackClick = { navController.popBackStack() },
-                balance = currentBalance
-            )
-        }
+        composable("addresses") { AddressesScreen(userId = currentUserId, isAdmin = false, onNavigateBack = { navController.popBackStack() }, onAddAddress = { navController.navigate("address_add") }, onEditAddress = { addressId -> navController.navigate("address_edit/$addressId") }) }
+        composable("addresses_admin") { AddressesScreen(userId = currentUserId, isAdmin = true, onNavigateBack = { navController.popBackStack() }, onAddAddress = { navController.navigate("address_add_admin") }, onEditAddress = { addressId -> navController.navigate("address_edit_admin/$addressId") }) }
+        composable("address_add") { AddressFormScreen(userId = currentUserId, addressId = null, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("addresses") { popUpTo("addresses") { inclusive = true } } }) }
+        composable("address_edit/{addressId}") { backStackEntry -> val addressId = backStackEntry.arguments?.getString("addressId")?.toLongOrNull(); if (addressId != null) { AddressFormScreen(userId = currentUserId, addressId = addressId, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("addresses") { popUpTo("addresses") { inclusive = true } } }) } }
+        composable("address_add_admin") { AddressFormScreen(userId = currentUserId, addressId = null, isAdmin = true, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("addresses_admin") { popUpTo("addresses_admin") { inclusive = true } } }) }
+        composable("address_edit_admin/{addressId}") { backStackEntry -> val addressId = backStackEntry.arguments?.getString("addressId")?.toLongOrNull(); if (addressId != null) { AddressFormScreen(userId = currentUserId, addressId = addressId, isAdmin = true, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("addresses_admin") { popUpTo("addresses_admin") { inclusive = true } } }) } }
 
-        // zarządzanie adresami - Kupujący
-        composable("addresses") {
-            AddressesScreen(
-                userId = currentUserId,
-                isAdmin = false,
-                onNavigateBack = { navController.popBackStack() },
-                onAddAddress = { navController.navigate("address_add") },
-                onEditAddress = { addressId ->
-                    navController.navigate("address_edit/$addressId")
-                }
-            )
-        }
+        composable("seller_artworks") { SellerArtworksScreen(userId = currentUserId, onNavigateBack = { navController.popBackStack() }, onAddArtwork = { navController.navigate("artwork_add") }, onEditArtwork = { artworkId -> navController.navigate("artwork_edit/$artworkId") }) }
+        composable("artwork_add") { ArtworkFormScreen(userId = currentUserId, artworkId = null, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("seller_artworks") { popUpTo("seller_artworks") { inclusive = true } } }) }
+        composable("artwork_edit/{artworkId}") { backStackEntry -> val artworkId = backStackEntry.arguments?.getString("artworkId")?.toLongOrNull(); if (artworkId != null) { ArtworkFormScreen(userId = currentUserId, artworkId = artworkId, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("seller_artworks") { popUpTo("seller_artworks") { inclusive = true } } }) } }
 
-        // zarządzanie adresami - Admin
-        composable("addresses_admin") {
-            AddressesScreen(
-                userId = currentUserId,
-                isAdmin = true,
-                onNavigateBack = { navController.popBackStack() },
-                onAddAddress = { navController.navigate("address_add_admin") },
-                onEditAddress = { addressId ->
-                    navController.navigate("address_edit_admin/$addressId")
-                }
-            )
-        }
-
-        // dodawanie adresu
-        composable("address_add") {
-            AddressFormScreen(
-                userId = currentUserId,
-                addressId = null,
-                onNavigateBack = { navController.popBackStack() },
-                onSuccess = {
-                    navController.navigate("addresses") {
-                        popUpTo("addresses") { inclusive = true }
-                    }
-                }
-            )
-        }
-
-        // edycja adresu
-        composable("address_edit/{addressId}") { backStackEntry ->
-            val addressId = backStackEntry.arguments?.getString("addressId")?.toLongOrNull()
-            if (addressId != null) {
-                AddressFormScreen(
-                    userId = currentUserId,
-                    addressId = addressId,
-                    onNavigateBack = { navController.popBackStack() },
-                    onSuccess = {
-                        navController.navigate("addresses") {
-                            popUpTo("addresses") { inclusive = true }
-                        }
-                    }
-                )
-            }
-        }
-
-        // dodawanie adresu - Admin
-        composable("address_add_admin") {
-            AddressFormScreen(
-                userId = currentUserId,
-                addressId = null,
-                isAdmin = true,
-                onNavigateBack = { navController.popBackStack() },
-                onSuccess = {
-                    navController.navigate("addresses_admin") {
-                        popUpTo("addresses_admin") { inclusive = true }
-                    }
-                }
-            )
-        }
-
-        // edycja adresu - Admin
-        composable("address_edit_admin/{addressId}") { backStackEntry ->
-            val addressId = backStackEntry.arguments?.getString("addressId")?.toLongOrNull()
-            if (addressId != null) {
-                AddressFormScreen(
-                    userId = currentUserId,
-                    addressId = addressId,
-                    isAdmin = true,
-                    onNavigateBack = { navController.popBackStack() },
-                    onSuccess = {
-                        navController.navigate("addresses_admin") {
-                            popUpTo("addresses_admin") { inclusive = true }
-                        }
-                    }
-                )
-            }
-        }
-
-        // zarządzanie dziełami - Sprzedawca
-        composable("seller_artworks") {
-            SellerArtworksScreen(
-                userId = currentUserId,
-                onNavigateBack = { navController.popBackStack() },
-                onAddArtwork = { navController.navigate("artwork_add") },
-                onEditArtwork = { artworkId ->
-                    navController.navigate("artwork_edit/$artworkId")
-                }
-            )
-        }
-
-        // dodawanie dzieła
-        composable("artwork_add") {
-            ArtworkFormScreen(
-                userId = currentUserId,
-                artworkId = null,
-                onNavigateBack = { navController.popBackStack() },
-                onSuccess = {
-                    navController.navigate("seller_artworks") {
-                        popUpTo("seller_artworks") { inclusive = true }
-                    }
-                }
-            )
-        }
-
-        // edycja dzieła
-        composable("artwork_edit/{artworkId}") { backStackEntry ->
-            val artworkId = backStackEntry.arguments?.getString("artworkId")?.toLongOrNull()
-            if (artworkId != null) {
-                ArtworkFormScreen(
-                    userId = currentUserId,
-                    artworkId = artworkId,
-                    onNavigateBack = { navController.popBackStack() },
-                    onSuccess = {
-                        navController.navigate("seller_artworks") {
-                            popUpTo("seller_artworks") { inclusive = true }
-                        }
-                    }
-                )
-            }
-        }
-
-        // ekran "moje zakupy" kupującego
-        composable("client_orders") {
-            OrdersScreen(onNavigateBack = { navController.popBackStack() })
-        }
-
-        // ekran wesprzyj kupującego
-        composable("client_support") {
-            SupportScreen(onNavigateBack = { navController.popBackStack() })
-        }
-
-        // ekran obserwowanych kupującego
-        composable("client_followed") {
-            FollowedOffersScreen(onNavigateBack = { navController.popBackStack() })
-        }
-
-        // ekran obserwujących sprzedawcy
-        composable("seller_followers") {
-            FollowersScreen(onNavigateBack = { navController.popBackStack() })
-        }
-
-        // ekran historii sprzedaży
-        composable("seller_sales_history") {
-            SalesHistoryScreen(onNavigateBack = { navController.popBackStack() })
-        }
-
-        // kran najlepszych fanów sprzedającego
-        composable("seller_top_fans") {
-            TopFansScreen(onNavigateBack = { navController.popBackStack() })
-        }
+        composable("client_orders") { OrdersScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable("client_support") { SupportScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable("client_followed") { FollowedOffersScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable("seller_followers") { FollowersScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable("seller_sales_history") { SalesHistoryScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable("seller_top_fans") { TopFansScreen(onNavigateBack = { navController.popBackStack() }) }
     }
 }
