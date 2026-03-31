@@ -1,39 +1,85 @@
--- Role
-INSERT INTO roles (id, name) VALUES (1, 'ADMIN'), (2, 'ARTIST'), (3, 'BUYER') ON CONFLICT DO NOTHING;
-
--- Użytkownicy (Hasła zahashowane BCrypt)
--- admin@gmail.com / admin123
--- artist@gmail.com / artist123
--- buyer@gmail.pl / buyer123
-INSERT INTO users (id, username, email, password, role_id, balance) VALUES
-(1, 'admin_boss', 'admin@gmail.com', '$2a$10$QKF1lCALKVYAYcQqKFM.XON5/0jo4wNjaVc./seo/foE59Kk46oc6', 1, 0.00),
-(2, 'vincent_v', 'artist@gmail.com', '$2a$10$0H2LUr1P9YTYzkEs5ZWVbea.Q.iIo56tDykg240GErzFHdgZGL16K', 2, 5000.00),
-(3, 'jan_kowalski', 'buyer@gmail.pl', '$2a$10$gBNvBS5dAfIrNoDdVFDphe2THId1ACcJ2scXaL8bMycngvy8SARSO', 3, 1000.00)
+-- ==========================================================
+-- 1. UŻYTKOWNICY (Bez tabeli roles - rola jako string)
+-- Hasła (BCrypt): admin123, artist123, buyer123
+-- ==========================================================
+INSERT INTO users (id, username, first_name, last_name, email, password, role, balance) VALUES
+-- Admin
+(1, 'admin_boss', 'Robert', 'Gie', 'admin@gmail.com', '$2a$10$QKF1lCALKVYAYcQqKFM.XON5/0jo4wNjaVc./seo/foE59Kk46oc6', 'ADMIN', 0.00),
+-- Sprzedawcy (ARTIST)
+(2, 'vincent_v', 'Vincent', 'van Gogh', 'artist1@art.pl', '$2a$10$0H2LUr1P9YTYzkEs5ZWVbea.Q.iIo56tDykg240GErzFHdgZGL16K', 'ARTIST', 500.00),
+(3, 'anna_art', 'Anna', 'Nowak', 'artist2@art.pl', '$2a$10$0H2LUr1P9YTYzkEs5ZWVbea.Q.iIo56tDykg240GErzFHdgZGL16K', 'ARTIST', 1200.00),
+(4, 'sculptor_max', 'Maksymilian', 'Rzeźbiarz', 'artist3@art.pl', '$2a$10$0H2LUr1P9YTYzkEs5ZWVbea.Q.iIo56tDykg240GErzFHdgZGL16K', 'ARTIST', 0.00),
+-- Kupujący (BUYER)
+(5, 'jan_kowalski', 'Jan', 'Kowalski', 'buyer1@gmail.pl', '$2a$10$gBNvBS5dAfIrNoDdVFDphe2THId1ACcJ2scXaL8bMycngvy8SARSO', 'BUYER', 3000.00),
+(6, 'marta_k', 'Marta', 'Kwiatkowska', 'buyer2@gmail.pl', '$2a$10$gBNvBS5dAfIrNoDdVFDphe2THId1ACcJ2scXaL8bMycngvy8SARSO', 'BUYER', 1500.00),
+(7, 'piotr_t', 'Piotr', 'Tester', 'buyer3@gmail.pl', '$2a$10$gBNvBS5dAfIrNoDdVFDphe2THId1ACcJ2scXaL8bMycngvy8SARSO', 'BUYER', 500.00)
 ON CONFLICT (id) DO NOTHING;
 
--- Konfiguracja
-INSERT INTO system_settings (key, value, description)
-VALUES ('platform_commission_percentage', '15', 'Procent prowizji pobieranej od każdej sprzedaży')
-ON CONFLICT (key) DO NOTHING;
+-- ==========================================================
+-- 2. OPISY SPRZEDAWCÓW (Seller Descriptions)
+-- ==========================================================
+INSERT INTO seller_descriptions (user_id, short_description) VALUES
+(2, 'Mistrz światła i koloru, postimpresjonista.'),
+(3, 'Sztuka nowoczesna, ilustracje cyfrowe.'),
+(4, 'Rzeźbiarz pracujący w marmurze i granicie.')
+ON CONFLICT DO NOTHING;
 
--- Kategorie
+-- ==========================================================
+-- 3. KATEGORIE
+-- ==========================================================
 INSERT INTO categories (id, name) VALUES 
-(1, 'Obraz'), 
-(2, 'Rzeźba'), 
-(3, 'Grafika'), 
-(4, 'Fotografia'), 
-(5, 'Malarstwo'),
-(6, 'Rysunek') 
+(1, 'Obraz'), (2, 'Rzeźba'), (3, 'Grafika'), (4, 'Fotografia')
 ON CONFLICT (id) DO NOTHING;
 
--- Dzieła
-INSERT INTO artworks (id, title, price, is_priceless, artist, user_id, category_id, width, height, depth, is_sold, status) VALUES
-(1, 'Gwiaździsta Noc', 1200.00, false, 'Vincent van Gogh', 2, 1, 73.7, 92.1, 2.0, false, 'AVAILABLE'),
-(2, 'Dawid', null, true, 'Michał Anioł', 2, 2, 150.0, 517.0, 150.0, false, 'AVAILABLE'),
-(3, 'Mona Lisa', 2500.00, false, 'Leonardo da Vinci', 2, 1, 53.0, 77.0, 2.5, false, 'AVAILABLE')
+-- ==========================================================
+-- 4. DZIEŁA SZTUKI (Artworks)
+-- ==========================================================
+INSERT INTO artworks (id, title, description, price, is_priceless, artist, category_id, user_id, status) VALUES
+(1, 'Gwiaździsta Noc', 'Opis klasyka', 1200.00, false, 'Vincent van Gogh', 1, 2, 'AVAILABLE'),
+(2, 'Słoneczniki', 'Bukiet w wazonie', 900.00, false, 'Vincent van Gogh', 1, 2, 'SOLD'),
+(3, 'Neon City', 'Grafika komputerowa', 450.00, false, 'Anna Nowak', 3, 3, 'AVAILABLE'),
+(4, 'Kamienna Twarz', 'Rzeźba z piaskowca', 2100.00, false, 'Maksymilian Rzeźbiarz', 2, 4, 'AVAILABLE'),
+(5, 'Bez tytułu', 'Eksperyment rzeźbiarski', null, true, 'Maksymilian Rzeźbiarz', 2, 4, 'AVAILABLE')
 ON CONFLICT (id) DO NOTHING;
 
--- Synchronizacja liczników ID
+-- ==========================================================
+-- 5. RELACJE (Obserwacje i Donacje)
+-- ==========================================================
+INSERT INTO seller_user_follows (user_id, seller_id) VALUES 
+(5, 2), (5, 3), -- Jan obserwuje Vincenta i Annę
+(6, 4);          -- Marta obserwuje Maksymiliana
+
+INSERT INTO donations (client_id, seller_id, amount) VALUES 
+(5, 2, 50.00), (6, 4, 100.00)
+ON CONFLICT DO NOTHING;
+
+-- ==========================================================
+-- 6. KOSZYKI I ZAMÓWIENIA
+-- ==========================================================
+INSERT INTO carts (id, user_id) VALUES (1, 5), (2, 6) ON CONFLICT (id) DO NOTHING;
+
+-- Jan (5) ma Gwiaździstą Noc (1) w koszyku
+INSERT INTO cart_items (artwork_id, quantity, cart_id) VALUES (1, 1, 1);
+
+-- Zamówienie zrealizowane (Jan kupił Słoneczniki)
+INSERT INTO orders (id, user_id, total_price, status) VALUES (1, 5, 900.00, 'PAID') ON CONFLICT (id) DO NOTHING;
+INSERT INTO order_items (artwork_id, quantity, price, order_id) VALUES (2, 1, 900.00, 1) ON CONFLICT DO NOTHING;
+INSERT INTO sales (price, artwork_id, user_id) VALUES (900.00, 2, 5);
+
+-- ==========================================================
+-- 7. ADRESY
+-- ==========================================================
+INSERT INTO addresses (user_id, city, postal_code, street, house_number) VALUES
+(1, 'Warszawa', '00-001', 'Adminowa', '1'),
+(2, 'Kraków', '31-001', 'Zaułek Artysty', '5A'),
+(5, 'Gdańsk', '80-001', 'Kupiecka', '12'),
+(6, 'Łódź', '90-001', 'Piotrkowska', '100');
+
+-- ==========================================================
+-- 8. SYNCHRONIZACJA LICZNIKÓW
+-- ==========================================================
 SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
 SELECT setval('artworks_id_seq', (SELECT MAX(id) FROM artworks));
 SELECT setval('categories_id_seq', (SELECT MAX(id) FROM categories));
+SELECT setval('carts_id_seq', (SELECT MAX(id) FROM carts));
+SELECT setval('orders_id_seq', (SELECT MAX(id) FROM orders));

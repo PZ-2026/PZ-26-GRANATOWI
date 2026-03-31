@@ -49,8 +49,8 @@ fun LoginScreen(
     ) {
         Text("Witaj ponownie!", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
 
-        Text("Kupujący: buyer@gmail.pl / buyer123", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text("Sprzedawca: artist@gmail.com / artist123", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Kupujący: buyer1@gmail.pl / buyer123", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Sprzedawca: artist1@art.pl / artist123", color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text("Admin: admin@gmail.com / admin123", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 32.dp))
 
         if (errorMessage.isNotEmpty()) {

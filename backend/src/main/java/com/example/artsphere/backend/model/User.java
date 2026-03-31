@@ -21,7 +21,7 @@ public class User {
     private String lastName;
     private BigDecimal balance = BigDecimal.ZERO;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    private Role role;
+    // Zamiana z relacji na zwykły string
+    @Column(name = "role")
+    private String role;
 }
