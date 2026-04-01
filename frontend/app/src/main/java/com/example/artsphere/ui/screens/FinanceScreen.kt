@@ -24,6 +24,7 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FinanceScreen(
+    userId: Long,
     role: String, // "client" or "seller"
     currentBalance: Double,
     onNavigateBack: () -> Unit,
@@ -206,7 +207,7 @@ fun TransactionItem(transaction: TransactionData) {
                 modifier = Modifier
                     .size(40.dp)
                     .background(
-                        if (transaction.isIncome) Color(0xFF4CAF50).copy(alpha = 0.1f) 
+                        if (transaction.isIncome) Color(0xFF4CAF50).copy(alpha = 0.1f)
                         else Color(0xFFF44336).copy(alpha = 0.1f),
                         shape = MaterialTheme.shapes.small
                     ),
@@ -218,14 +219,14 @@ fun TransactionItem(transaction: TransactionData) {
                     tint = if (transaction.isIncome) Color(0xFF4CAF50) else Color(0xFFF44336)
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(transaction.title, fontWeight = FontWeight.SemiBold)
                 Text(transaction.date, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            
+
             Text(
                 text = "${if (transaction.isIncome) "+" else "-"}${String.format("%.2f", transaction.amount)} zł",
                 fontWeight = FontWeight.Bold,

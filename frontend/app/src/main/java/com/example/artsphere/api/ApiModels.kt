@@ -35,11 +35,11 @@ data class AddressRequest(
 data class AddressResponse(
     val id: Long,
     val userId: Long,
-    val username: String,
-    val city: String,
-    val postalCode: String,
-    val street: String,
-    val houseNumber: String,
+    val username: String?,
+    val city: String?,
+    val postalCode: String?,
+    val street: String?,
+    val houseNumber: String?,
     val apartmentNumber: String?
 )
 

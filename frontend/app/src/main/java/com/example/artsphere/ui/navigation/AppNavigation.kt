@@ -21,7 +21,7 @@ fun AppNavigation() {
     var isLoggedIn by remember { mutableStateOf(false) }
     var currentUserId by remember { mutableStateOf(0L) }
     var currentUsername by remember { mutableStateOf("") }
-    var currentBalance by remember { mutableStateOf(3000.00) } // Więcej na start by móc kupować
+    var currentBalance by remember { mutableStateOf(3000.00) }
     var currentUserRole by remember { mutableStateOf("guest") }
 
     // STAN KOSZYKA (Współdzielony między ekranami)
@@ -41,6 +41,7 @@ fun AppNavigation() {
                 onBecomeSellerClick = { navController.navigate("register/seller") },
                 onLogoutClick = {
                     isLoggedIn = false
+                    currentUserId = 0L
                     currentUsername = ""
                     currentUserRole = "guest"
                     cartItems = emptyList() // Czyści koszyk po wylogowaniu
@@ -67,7 +68,7 @@ fun AppNavigation() {
                 artworkId = artworkId,
                 isLoggedIn = isLoggedIn,
                 role = currentUserRole,
-                cartItems = cartItems, // Przekazujemy koszyk by sprawdzić co w nim jest
+                cartItems = cartItems,
                 onAddToCart = { item ->
                     if (!cartItems.any { it.id == item.id }) cartItems = cartItems + item
                 },
@@ -76,8 +77,6 @@ fun AppNavigation() {
                 onNavigateToLogin = { navController.navigate("login") }
             )
         }
-
-        // --- SEKCJA ZAKUPOWA ---
 
         composable("cart") {
             CartScreen(
@@ -88,15 +87,18 @@ fun AppNavigation() {
             )
         }
 
+        // ZAKTUALIZOWANA KASA Z WPROWADZANYM ID I ADRESEM
         composable("checkout") {
             CheckoutScreen(
+                userId = currentUserId,
                 cartItems = cartItems,
                 currentBalance = currentBalance,
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToAddAddress = { navController.navigate("address_add") },
                 onPaymentSuccess = { totalPaid ->
                     currentBalance -= totalPaid
-                    cartItems = emptyList() // Opróżnienie koszyka po zakupie
-                    navController.navigate("order_success") { popUpTo("home") } // Wywala kasę z historii
+                    cartItems = emptyList()
+                    navController.navigate("order_success") { popUpTo("home") }
                 }
             )
         }
@@ -107,7 +109,6 @@ fun AppNavigation() {
             )
         }
 
-        // logowanie
         composable("login") {
             LoginScreen(
                 onNavigateBack = { navController.navigate("home") { popUpTo("home") { inclusive = false } } },
@@ -122,7 +123,6 @@ fun AppNavigation() {
             )
         }
 
-        // rejestracja
         composable("register/{role}") { backStackEntry ->
             val role = backStackEntry.arguments?.getString("role") ?: "user"
             RegisterScreen(
@@ -132,9 +132,6 @@ fun AppNavigation() {
             )
         }
 
-        // *** PONIŻEJ ZNAJDUJE SIĘ TWOJA DOTYCHCZASOWA ZACHOWANA RESZTA PLIKU Z PANELAMI ***
-        // (zostały bez zmian, od 'composable("client_panel")')
-
         composable("client_panel") {
             ClientPanelScreen(
                 username = currentUsername,
@@ -142,6 +139,7 @@ fun AppNavigation() {
                 onNavigateBack = { navController.popBackStack() },
                 onLogoutClick = {
                     isLoggedIn = false
+                    currentUserId = 0L
                     currentUsername = ""
                     currentUserRole = "guest"
                     navController.navigate("home") { popUpTo(0) }
@@ -163,6 +161,7 @@ fun AppNavigation() {
                 onNavigateBack = { navController.popBackStack() },
                 onLogoutClick = {
                     isLoggedIn = false
+                    currentUserId = 0L
                     currentUsername = ""
                     currentUserRole = "guest"
                     navController.navigate("home") { popUpTo(0) }
@@ -184,6 +183,7 @@ fun AppNavigation() {
                 onNavigateBack = { navController.popBackStack() },
                 onLogoutClick = {
                     isLoggedIn = false
+                    currentUserId = 0L
                     currentUsername = ""
                     currentUserRole = "guest"
                     navController.navigate("home") { popUpTo(0) }
@@ -202,7 +202,7 @@ fun AppNavigation() {
         composable("edit_profile/{role}") { backStackEntry ->
             val role = backStackEntry.arguments?.getString("role") ?: "client"
             EditProfileScreen(
-                userId = currentUserId, // DODANA LINIJKA BY KOD WIEDZIAŁ KIM JESTEŚ
+                userId = currentUserId,
                 role = role,
                 onNavigateBack = { navController.popBackStack() },
                 onSaveSuccess = { navController.popBackStack() }
@@ -212,6 +212,7 @@ fun AppNavigation() {
         composable("finance/{role}") { backStackEntry ->
             val role = backStackEntry.arguments?.getString("role") ?: "client"
             FinanceScreen(
+                userId = currentUserId,
                 role = role,
                 currentBalance = currentBalance,
                 onNavigateBack = { navController.popBackStack() },
@@ -271,10 +272,10 @@ fun AppNavigation() {
 
         composable("addresses") { AddressesScreen(userId = currentUserId, isAdmin = false, onNavigateBack = { navController.popBackStack() }, onAddAddress = { navController.navigate("address_add") }, onEditAddress = { addressId -> navController.navigate("address_edit/$addressId") }) }
         composable("addresses_admin") { AddressesScreen(userId = currentUserId, isAdmin = true, onNavigateBack = { navController.popBackStack() }, onAddAddress = { navController.navigate("address_add_admin") }, onEditAddress = { addressId -> navController.navigate("address_edit_admin/$addressId") }) }
-        composable("address_add") { AddressFormScreen(userId = currentUserId, addressId = null, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("addresses") { popUpTo("addresses") { inclusive = true } } }) }
-        composable("address_edit/{addressId}") { backStackEntry -> val addressId = backStackEntry.arguments?.getString("addressId")?.toLongOrNull(); if (addressId != null) { AddressFormScreen(userId = currentUserId, addressId = addressId, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("addresses") { popUpTo("addresses") { inclusive = true } } }) } }
-        composable("address_add_admin") { AddressFormScreen(userId = currentUserId, addressId = null, isAdmin = true, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("addresses_admin") { popUpTo("addresses_admin") { inclusive = true } } }) }
-        composable("address_edit_admin/{addressId}") { backStackEntry -> val addressId = backStackEntry.arguments?.getString("addressId")?.toLongOrNull(); if (addressId != null) { AddressFormScreen(userId = currentUserId, addressId = addressId, isAdmin = true, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("addresses_admin") { popUpTo("addresses_admin") { inclusive = true } } }) } }
+        composable("address_add") { AddressFormScreen(userId = currentUserId, addressId = null, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.popBackStack() }) }
+        composable("address_edit/{addressId}") { backStackEntry -> val addressId = backStackEntry.arguments?.getString("addressId")?.toLongOrNull(); if (addressId != null) { AddressFormScreen(userId = currentUserId, addressId = addressId, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.popBackStack() }) } }
+        composable("address_add_admin") { AddressFormScreen(userId = currentUserId, addressId = null, isAdmin = true, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.popBackStack() }) }
+        composable("address_edit_admin/{addressId}") { backStackEntry -> val addressId = backStackEntry.arguments?.getString("addressId")?.toLongOrNull(); if (addressId != null) { AddressFormScreen(userId = currentUserId, addressId = addressId, isAdmin = true, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.popBackStack() }) } }
 
         composable("seller_artworks") { SellerArtworksScreen(userId = currentUserId, onNavigateBack = { navController.popBackStack() }, onAddArtwork = { navController.navigate("artwork_add") }, onEditArtwork = { artworkId -> navController.navigate("artwork_edit/$artworkId") }) }
         composable("artwork_add") { ArtworkFormScreen(userId = currentUserId, artworkId = null, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("seller_artworks") { popUpTo("seller_artworks") { inclusive = true } } }) }

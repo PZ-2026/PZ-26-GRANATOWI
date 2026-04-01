@@ -8,7 +8,7 @@ import lombok.Data;
 public class AddressResponse {
     private Long id;
     private Long userId;
-    private String username; // Nazwa użytkownika dla admina
+    private String username;
     private String city;
     private String postalCode;
     private String street;

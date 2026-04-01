@@ -18,16 +18,16 @@ ON CONFLICT (id) DO NOTHING;
 -- ==========================================================
 -- 2. OPISY SPRZEDAWCÓW (Seller Descriptions)
 -- ==========================================================
-INSERT INTO seller_descriptions (user_id, short_description) VALUES
-(2, 'Mistrz światła i koloru, postimpresjonista.'),
-(3, 'Sztuka nowoczesna, ilustracje cyfrowe.'),
-(4, 'Rzeźbiarz pracujący w marmurze i granicie.')
-ON CONFLICT DO NOTHING;
+INSERT INTO seller_descriptions (id, user_id, short_description) VALUES
+(1, 2, 'Mistrz światła i koloru, postimpresjonista.'),
+(2, 3, 'Sztuka nowoczesna, ilustracje cyfrowe.'),
+(3, 4, 'Rzeźbiarz pracujący w marmurze i granicie.')
+ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================================
 -- 3. KATEGORIE
 -- ==========================================================
-INSERT INTO categories (id, name) VALUES 
+INSERT INTO categories (id, name) VALUES
 (1, 'Obraz'), (2, 'Rzeźba'), (3, 'Grafika'), (4, 'Fotografia')
 ON CONFLICT (id) DO NOTHING;
 
@@ -45,13 +45,14 @@ ON CONFLICT (id) DO NOTHING;
 -- ==========================================================
 -- 5. RELACJE (Obserwacje i Donacje)
 -- ==========================================================
-INSERT INTO seller_user_follows (user_id, seller_id) VALUES 
-(5, 2), (5, 3), -- Jan obserwuje Vincenta i Annę
-(6, 4);          -- Marta obserwuje Maksymiliana
+INSERT INTO seller_user_follows (id, user_id, seller_id) VALUES
+(1, 5, 2), (2, 5, 3), -- Jan obserwuje Vincenta i Annę
+(3, 6, 4)          -- Marta obserwuje Maksymiliana
+ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO donations (client_id, seller_id, amount) VALUES 
-(5, 2, 50.00), (6, 4, 100.00)
-ON CONFLICT DO NOTHING;
+INSERT INTO donations (id, client_id, seller_id, amount) VALUES
+(1, 5, 2, 50.00), (2, 6, 4, 100.00)
+ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================================
 -- 6. KOSZYKI I ZAMÓWIENIA
@@ -59,27 +60,36 @@ ON CONFLICT DO NOTHING;
 INSERT INTO carts (id, user_id) VALUES (1, 5), (2, 6) ON CONFLICT (id) DO NOTHING;
 
 -- Jan (5) ma Gwiaździstą Noc (1) w koszyku
-INSERT INTO cart_items (artwork_id, quantity, cart_id) VALUES (1, 1, 1);
+INSERT INTO cart_items (id, artwork_id, quantity, cart_id) VALUES (1, 1, 1, 1) ON CONFLICT (id) DO NOTHING;
 
 -- Zamówienie zrealizowane (Jan kupił Słoneczniki)
 INSERT INTO orders (id, user_id, total_price, status) VALUES (1, 5, 900.00, 'PAID') ON CONFLICT (id) DO NOTHING;
-INSERT INTO order_items (artwork_id, quantity, price, order_id) VALUES (2, 1, 900.00, 1) ON CONFLICT DO NOTHING;
-INSERT INTO sales (price, artwork_id, user_id) VALUES (900.00, 2, 5);
+INSERT INTO order_items (id, artwork_id, quantity, price, order_id) VALUES (1, 2, 1, 900.00, 1) ON CONFLICT (id) DO NOTHING;
+INSERT INTO sales (id, price, artwork_id, user_id) VALUES (1, 900.00, 2, 5) ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================================
 -- 7. ADRESY
 -- ==========================================================
-INSERT INTO addresses (user_id, city, postal_code, street, house_number) VALUES
-(1, 'Warszawa', '00-001', 'Adminowa', '1'),
-(2, 'Kraków', '31-001', 'Zaułek Artysty', '5A'),
-(5, 'Gdańsk', '80-001', 'Kupiecka', '12'),
-(6, 'Łódź', '90-001', 'Piotrkowska', '100');
+
+INSERT INTO addresses (id, user_id, city, postal_code, street, house_number) VALUES
+(1, 1, 'Warszawa', '00-001', 'Adminowa', '1'),
+(2, 2, 'Kraków', '31-001', 'Zaułek Artysty', '5A'),
+(3, 5, 'Gdańsk', '80-001', 'Kupiecka', '12'),
+(4, 6, 'Łódź', '90-001', 'Piotrkowska', '100')
+ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================================
 -- 8. SYNCHRONIZACJA LICZNIKÓW
 -- ==========================================================
-SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
-SELECT setval('artworks_id_seq', (SELECT MAX(id) FROM artworks));
-SELECT setval('categories_id_seq', (SELECT MAX(id) FROM categories));
-SELECT setval('carts_id_seq', (SELECT MAX(id) FROM carts));
-SELECT setval('orders_id_seq', (SELECT MAX(id) FROM orders));
+SELECT setval('users_id_seq', (SELECT COALESCE(MAX(id), 1) FROM users));
+SELECT setval('artworks_id_seq', (SELECT COALESCE(MAX(id), 1) FROM artworks));
+SELECT setval('categories_id_seq', (SELECT COALESCE(MAX(id), 1) FROM categories));
+SELECT setval('carts_id_seq', (SELECT COALESCE(MAX(id), 1) FROM carts));
+SELECT setval('orders_id_seq', (SELECT COALESCE(MAX(id), 1) FROM orders));
+SELECT setval('addresses_id_seq', (SELECT COALESCE(MAX(id), 1) FROM addresses));
+SELECT setval('seller_descriptions_id_seq', (SELECT COALESCE(MAX(id), 1) FROM seller_descriptions));
+SELECT setval('seller_user_follows_id_seq', (SELECT COALESCE(MAX(id), 1) FROM seller_user_follows));
+SELECT setval('donations_id_seq', (SELECT COALESCE(MAX(id), 1) FROM donations));
+SELECT setval('cart_items_id_seq', (SELECT COALESCE(MAX(id), 1) FROM cart_items));
+SELECT setval('order_items_id_seq', (SELECT COALESCE(MAX(id), 1) FROM order_items));
+SELECT setval('sales_id_seq', (SELECT COALESCE(MAX(id), 1) FROM sales));
