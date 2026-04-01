@@ -202,6 +202,7 @@ fun AppNavigation() {
         composable("edit_profile/{role}") { backStackEntry ->
             val role = backStackEntry.arguments?.getString("role") ?: "client"
             EditProfileScreen(
+                userId = currentUserId, // DODANA LINIJKA BY KOD WIEDZIAŁ KIM JESTEŚ
                 role = role,
                 onNavigateBack = { navController.popBackStack() },
                 onSaveSuccess = { navController.popBackStack() }
