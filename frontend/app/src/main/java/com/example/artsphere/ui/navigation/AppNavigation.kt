@@ -293,7 +293,14 @@ fun AppNavigation() {
                 onNavigateToArtwork = { artworkId -> navController.navigate("public_artwork_detail/$artworkId") }
             )
         }
-        composable("client_support") { SupportScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable("client_support") {
+            SupportScreen(
+                userId = currentUserId,
+                currentBalance = currentBalance,
+                onBalanceChange = { newBal -> currentBalance = newBal },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
         composable("client_followed") {
             FollowedOffersScreen(
                 userId = currentUserId,

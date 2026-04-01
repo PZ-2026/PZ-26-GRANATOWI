@@ -47,4 +47,13 @@ interface AuthApiService {
 
     @GET("api/follows/{userId}/artworks")
     suspend fun getFollowedArtworks(@Path("userId") userId: Long): Response<List<ArtworkResponse>>
+
+    @GET("api/support/artists")
+    suspend fun getArtists(): Response<List<ArtistDto>>
+
+    @POST("api/support/donate")
+    suspend fun sendSupport(@Body request: DonationRequest): Response<Map<String, Double>>
+
+    @GET("api/support/history/{userId}")
+    suspend fun getSupportHistory(@Path("userId") userId: Long): Response<List<DonationHistoryResponse>>
 }

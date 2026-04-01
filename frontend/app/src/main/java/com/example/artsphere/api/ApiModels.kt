@@ -106,3 +106,20 @@ data class PurchaseResponse(
     val price: Double,
     val date: String
 )
+
+data class ArtistDto(
+    val id: Long,
+    val username: String,
+    val firstName: String?,
+    val lastName: String?
+)
+
+data class DonationRequest(
+    val clientId: Long,
+    val sellerId: Long,
+    val amount: Double
+)
+data class DonationHistoryResponse(
+    val artistName: String,
+    val amount: Double
+)
