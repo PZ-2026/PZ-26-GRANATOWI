@@ -28,11 +28,11 @@ import kotlinx.coroutines.launch
 fun LoginScreen(
     onNavigateBack: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: (Long, String, String) -> Unit // (userId, Username, Role)
+    onLoginSuccess: (Long, String, String, Double) -> Unit // Zaktualizowano o Double (Saldo)
 ) {
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
-    
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -58,18 +58,18 @@ fun LoginScreen(
         }
 
         OutlinedTextField(
-            value = email, 
+            value = email,
             onValueChange = { email = it; errorMessage = "" },
             label = { Text("Adres E-mail") },
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), 
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
             singleLine = true,
             enabled = !isLoading
         )
 
         OutlinedTextField(
-            value = password, 
+            value = password,
             onValueChange = { password = it; errorMessage = "" },
             label = { Text("Hasło") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
@@ -81,7 +81,7 @@ fun LoginScreen(
             },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp), 
+            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
             singleLine = true,
             enabled = !isLoading
         )
@@ -89,33 +89,36 @@ fun LoginScreen(
         Button(
             onClick = {
                 focusManager.clearFocus()
-                
+
                 if (email.isBlank() || password.isBlank()) {
                     errorMessage = "Wypełnij wszystkie pola"
                     return@Button
                 }
-                
+
                 isLoading = true
                 errorMessage = ""
-                
+
                 coroutineScope.launch {
                     try {
                         val response = RetrofitClient.authApi.login(
                             LoginRequest(email = email, password = password)
                         )
-                        
+
                         if (response.isSuccessful && response.body() != null) {
                             val loginResponse = response.body()!!
+
                             val role = when(loginResponse.role) {
                                 "ADMIN" -> "admin"
                                 "ARTIST" -> "seller"
                                 "BUYER" -> "user"
                                 else -> "user"
                             }
+
                             val displayName = "${loginResponse.firstName ?: ""} ${loginResponse.lastName ?: ""}".trim()
                                 .ifEmpty { loginResponse.username }
-                            
-                            onLoginSuccess(loginResponse.userId, displayName, role)
+
+                            // Wysyłamy również pobrane z bazy saldo (balance)
+                            onLoginSuccess(loginResponse.userId, displayName, role, loginResponse.balance ?: 0.0)
                         } else {
                             errorMessage = response.errorBody()?.string() ?: "Błąd logowania"
                         }
@@ -130,10 +133,7 @@ fun LoginScreen(
             enabled = !isLoading
         ) {
             if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
             } else {
                 Text("Zaloguj się")
             }

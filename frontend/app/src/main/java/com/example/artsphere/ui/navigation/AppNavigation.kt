@@ -21,7 +21,7 @@ fun AppNavigation() {
     var isLoggedIn by remember { mutableStateOf(false) }
     var currentUserId by remember { mutableStateOf(0L) }
     var currentUsername by remember { mutableStateOf("") }
-    var currentBalance by remember { mutableStateOf(3000.00) }
+    var currentBalance by remember { mutableStateOf(0.0) }
     var currentUserRole by remember { mutableStateOf("guest") }
 
     // STAN KOSZYKA (Współdzielony między ekranami)
@@ -44,7 +44,8 @@ fun AppNavigation() {
                     currentUserId = 0L
                     currentUsername = ""
                     currentUserRole = "guest"
-                    cartItems = emptyList() // Czyści koszyk po wylogowaniu
+                    currentBalance = 0.0
+                    // Koszyk nie jest czyszczony po wylogowaniu!
                 },
                 onCartClick = { navController.navigate("cart") },
                 onProfileClick = {
@@ -87,7 +88,6 @@ fun AppNavigation() {
             )
         }
 
-        // ZAKTUALIZOWANA KASA Z WPROWADZANYM ID I ADRESEM
         composable("checkout") {
             CheckoutScreen(
                 userId = currentUserId,
@@ -113,11 +113,12 @@ fun AppNavigation() {
             LoginScreen(
                 onNavigateBack = { navController.navigate("home") { popUpTo("home") { inclusive = false } } },
                 onNavigateToRegister = { navController.navigate("register/user") { popUpTo("login") { inclusive = true } } },
-                onLoginSuccess = { userId, username, role ->
+                onLoginSuccess = { userId, username, role, balance ->
                     isLoggedIn = true
                     currentUserId = userId
                     currentUsername = username
                     currentUserRole = role
+                    currentBalance = balance // Wczytuje prawdziwe saldo!
                     navController.navigate("home") { popUpTo(0) }
                 }
             )
@@ -142,6 +143,7 @@ fun AppNavigation() {
                     currentUserId = 0L
                     currentUsername = ""
                     currentUserRole = "guest"
+                    currentBalance = 0.0
                     navController.navigate("home") { popUpTo(0) }
                 },
                 onEditProfileClick = { navController.navigate("edit_profile/client") },
@@ -164,6 +166,7 @@ fun AppNavigation() {
                     currentUserId = 0L
                     currentUsername = ""
                     currentUserRole = "guest"
+                    currentBalance = 0.0
                     navController.navigate("home") { popUpTo(0) }
                 },
                 onEditProfileClick = { navController.navigate("edit_profile/seller") },
@@ -186,6 +189,7 @@ fun AppNavigation() {
                     currentUserId = 0L
                     currentUsername = ""
                     currentUserRole = "guest"
+                    currentBalance = 0.0
                     navController.navigate("home") { popUpTo(0) }
                 },
                 onEditProfileClick = { navController.navigate("edit_profile/admin") },
@@ -216,7 +220,7 @@ fun AppNavigation() {
                 role = role,
                 currentBalance = currentBalance,
                 onNavigateBack = { navController.popBackStack() },
-                onBalanceChange = { newBalance -> currentBalance = newBalance }
+                onBalanceChange = { newBalance -> currentBalance = newBalance } // Zmienia wartość na całym systemie!
             )
         }
 

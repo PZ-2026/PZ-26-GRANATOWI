@@ -34,6 +34,7 @@ public class AuthService {
         }
 
         String roleName = user.getRole() != null ? user.getRole() : "BUYER";
+        BigDecimal userBalance = user.getBalance() != null ? user.getBalance() : BigDecimal.ZERO;
 
         return new LoginResponse(
                 user.getId(),
@@ -42,7 +43,8 @@ public class AuthService {
                 user.getFirstName(),
                 user.getLastName(),
                 roleName,
-                "Zalogowano pomyślnie"
+                "Zalogowano pomyślnie",
+                userBalance
         );
     }
 

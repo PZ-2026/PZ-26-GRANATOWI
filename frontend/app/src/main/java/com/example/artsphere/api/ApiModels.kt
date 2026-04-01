@@ -12,7 +12,8 @@ data class LoginResponse(
     val firstName: String?,
     val lastName: String?,
     val role: String,
-    val message: String
+    val message: String,
+    val balance: Double?
 )
 
 data class RegisterRequest(
@@ -81,4 +82,11 @@ data class ArtworkResponse(
 data class CategoryResponse(
     val id: Int,
     val name: String
+)
+
+data class TransactionResponse(
+    val title: String,
+    val amount: Double,
+    val date: String,
+    val income: Boolean
 )

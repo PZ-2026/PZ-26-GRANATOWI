@@ -80,10 +80,19 @@ fun CheckoutScreen(
                             isProcessing = true
                             coroutineScope.launch {
                                 try {
-                                    cartItems.forEach { item -> try { RetrofitClient.artworkApi.markArtworkAsSold(item.id) } catch (e: Exception) { } }
-                                    Toast.makeText(context, "Zakup udany! Zlecono wysyłkę.", Toast.LENGTH_LONG).show()
-                                    onPaymentSuccess(total)
-                                } catch (e: Exception) { } finally { isProcessing = false }
+                                    // POBIERANIE ŚRODKÓW BEZPOŚREDNIO Z BAZY
+                                    val deductResponse = RetrofitClient.authApi.deductBalance(userId, total)
+
+                                    if (deductResponse.isSuccessful) {
+                                        cartItems.forEach { item -> try { RetrofitClient.artworkApi.markArtworkAsSold(item.id) } catch (e: Exception) { } }
+                                        Toast.makeText(context, "Zakup udany! Zlecono wysyłkę.", Toast.LENGTH_LONG).show()
+                                        onPaymentSuccess(total)
+                                    } else {
+                                        Toast.makeText(context, "Transakcja odrzucona przez serwer banku.", Toast.LENGTH_LONG).show()
+                                    }
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Błąd z API.", Toast.LENGTH_SHORT).show()
+                                } finally { isProcessing = false }
                             }
                         },
                         modifier = Modifier.fillMaxWidth().height(56.dp),

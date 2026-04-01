@@ -104,3 +104,13 @@ CREATE TABLE IF NOT EXISTS addresses (
     apartment_number VARCHAR(20),
     user_id BIGINT REFERENCES users(id) ON DELETE CASCADE
 );
+
+-- 8. Historia Transakcji Portfela
+CREATE TABLE IF NOT EXISTS wallet_transactions (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_income BOOLEAN NOT NULL
+);
