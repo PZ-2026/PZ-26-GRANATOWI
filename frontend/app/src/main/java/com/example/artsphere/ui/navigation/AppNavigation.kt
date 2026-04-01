@@ -285,7 +285,13 @@ fun AppNavigation() {
         composable("artwork_add") { ArtworkFormScreen(userId = currentUserId, artworkId = null, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("seller_artworks") { popUpTo("seller_artworks") { inclusive = true } } }) }
         composable("artwork_edit/{artworkId}") { backStackEntry -> val artworkId = backStackEntry.arguments?.getString("artworkId")?.toLongOrNull(); if (artworkId != null) { ArtworkFormScreen(userId = currentUserId, artworkId = artworkId, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.navigate("seller_artworks") { popUpTo("seller_artworks") { inclusive = true } } }) } }
 
-        composable("client_orders") { OrdersScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable("client_orders") {
+            OrdersScreen(
+                userId = currentUserId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToArtwork = { artworkId -> navController.navigate("public_artwork_detail/$artworkId") }
+            )
+        }
         composable("client_support") { SupportScreen(onNavigateBack = { navController.popBackStack() }) }
         composable("client_followed") { FollowedOffersScreen(onNavigateBack = { navController.popBackStack() }) }
         composable("seller_followers") { FollowersScreen(onNavigateBack = { navController.popBackStack() }) }

@@ -26,4 +26,13 @@ interface AuthApiService {
 
     @GET("api/users/{userId}/transactions")
     suspend fun getTransactions(@Path("userId") userId: Long): Response<List<TransactionResponse>>
+
+    @POST("api/orders/checkout")
+    suspend fun createOrder(@Body request: CreateOrderRequest): Response<ResponseBody>
+
+    @GET("api/orders/user/{userId}/purchases")
+    suspend fun getUserPurchases(@Path("userId") userId: Long): Response<List<PurchaseResponse>>
+
+    @DELETE("api/orders/{orderId}")
+    suspend fun deleteOrder(@Path("orderId") orderId: Long): Response<Map<String, String>>
 }

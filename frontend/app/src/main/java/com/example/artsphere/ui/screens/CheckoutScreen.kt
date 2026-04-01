@@ -24,6 +24,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.example.artsphere.api.AddressResponse
 import com.example.artsphere.api.ArtworkResponse
+import com.example.artsphere.api.CreateOrderRequest
 import com.example.artsphere.api.RetrofitClient
 import kotlinx.coroutines.launch
 
@@ -80,11 +81,20 @@ fun CheckoutScreen(
                             isProcessing = true
                             coroutineScope.launch {
                                 try {
-                                    // POBIERANIE ŚRODKÓW BEZPOŚREDNIO Z BAZY
+                                    // POBIERANIE ŚRODKÓW BEZPOŚREDNIO Z BAZY PORTFELA
                                     val deductResponse = RetrofitClient.authApi.deductBalance(userId, total)
 
                                     if (deductResponse.isSuccessful) {
+                                        // 1. Zmieniamy status dzieł na Sprzedane
                                         cartItems.forEach { item -> try { RetrofitClient.artworkApi.markArtworkAsSold(item.id) } catch (e: Exception) { } }
+
+                                        // 2. ZAPISUJEMY ZAMÓWIENIE
+                                        try {
+                                            val orderRequest = CreateOrderRequest(userId, total, cartItems.map { it.id })
+                                            RetrofitClient.authApi.createOrder(orderRequest)
+                                        } catch (e: Exception) {
+                                        }
+
                                         Toast.makeText(context, "Zakup udany! Zlecono wysyłkę.", Toast.LENGTH_LONG).show()
                                         onPaymentSuccess(total)
                                     } else {

@@ -90,3 +90,19 @@ data class TransactionResponse(
     val date: String,
     val income: Boolean
 )
+
+data class CreateOrderRequest(
+    val userId: Long,
+    val totalPrice: Double,
+    val artworkIds: List<Long>
+)
+
+data class PurchaseResponse(
+    val orderId: Long,
+    val artworkId: Long,
+    val title: String,
+    val artist: String,
+    val sellerUsername: String,
+    val price: Double,
+    val date: String
+)
