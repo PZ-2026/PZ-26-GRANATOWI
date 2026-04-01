@@ -9,8 +9,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,31 +25,49 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.artsphere.api.ArtworkResponse
 import com.example.artsphere.api.RetrofitClient
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PublicArtworkDetailScreen(
     artworkId: Long,
+    currentUserId: Long,
     isLoggedIn: Boolean,
     role: String,
-    cartItems: List<ArtworkResponse>, // Przekazujemy koszyk z góry
+    cartItems: List<ArtworkResponse>,
     onAddToCart: (ArtworkResponse) -> Unit,
     onNavigateToCart: () -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     var artwork by remember { mutableStateOf<ArtworkResponse?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Sprawdzamy czy obraz jest już w koszyku po ID
+    // Status obserwowanego
+    var isFollowing by remember { mutableStateOf(false) }
+    var isFollowingLoading by remember { mutableStateOf(false) }
+
     val isInCart = cartItems.any { it.id == artworkId }
 
-    LaunchedEffect(artworkId) {
+    LaunchedEffect(artworkId, currentUserId) {
         try {
             val response = RetrofitClient.artworkApi.getArtworkById(artworkId)
-            if (response.isSuccessful) {
-                artwork = response.body()
+            if (response.isSuccessful && response.body() != null) {
+                val art = response.body()!!
+                artwork = art
+
+                // Jeśli zalogowany, sprawdź czy obserwuje TEGO sprzedawcę
+                if (isLoggedIn && currentUserId > 0 && art.userId > 0) {
+                    try {
+                        val followRes = RetrofitClient.authApi.checkFollow(currentUserId, art.userId)
+                        if (followRes.isSuccessful && followRes.body() != null) {
+                            isFollowing = followRes.body()!!["isFollowing"] == true
+                        }
+                    } catch (e: Exception) { }
+                }
             }
         } catch (e: Exception) { } finally { isLoading = false }
     }
@@ -90,9 +109,57 @@ fun PublicArtworkDetailScreen(
 
                 Divider()
 
-                Text(text = "Autor: ${art.artist ?: art.userUsername}", fontSize = 18.sp)
+                // --- SEKCJA AUTORA Z PRZYCISKIEM OBSERWUJ ---
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Column {
+                        Text(text = "Autor:", fontSize = 14.sp, color = Color.Gray)
+                        Text(text = art.artist ?: art.userUsername, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    }
 
-                Text(text = "Opis:", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    if (isLoggedIn && role != "guest" && currentUserId != art.userId) {
+                        OutlinedButton(
+                            onClick = {
+                                isFollowingLoading = true
+                                coroutineScope.launch {
+                                    try {
+                                        if (isFollowing) {
+                                            val res = RetrofitClient.authApi.unfollowSeller(currentUserId, art.userId)
+                                            if (res.isSuccessful) {
+                                                isFollowing = false
+                                                Toast.makeText(context, "Odobserwowano artystę", Toast.LENGTH_SHORT).show()
+                                            }
+                                        } else {
+                                            val res = RetrofitClient.authApi.followSeller(currentUserId, art.userId)
+                                            if (res.isSuccessful) {
+                                                isFollowing = true
+                                                Toast.makeText(context, "Zaczęto obserwować", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Błąd z siecią.", Toast.LENGTH_SHORT).show()
+                                    } finally {
+                                        isFollowingLoading = false
+                                    }
+                                }
+                            },
+                            enabled = !isFollowingLoading
+                        ) {
+                            if (isFollowingLoading) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                            } else if (isFollowing) {
+                                Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.Red, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Obserwujesz")
+                            } else {
+                                Icon(Icons.Default.FavoriteBorder, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Obserwuj")
+                            }
+                        }
+                    }
+                }
+
+                Text(text = "Opis:", fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(top = 8.dp))
                 Text(text = art.description ?: "Brak opisu", fontSize = 16.sp, lineHeight = 24.sp)
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -121,7 +188,6 @@ fun PublicArtworkDetailScreen(
                             Text("Sprzedane", fontSize = 18.sp)
                         }
                     } else if (isInCart) {
-                        // PRZEDMIOT JEST JUŻ W KOSZYKU
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(
                                 onClick = onNavigateToCart,
@@ -142,7 +208,6 @@ fun PublicArtworkDetailScreen(
                             }
                         }
                     } else {
-                        // NORMALNE DODAWANIE
                         Button(
                             onClick = {
                                 onAddToCart(art)

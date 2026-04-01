@@ -45,7 +45,7 @@ fun AppNavigation() {
                     currentUsername = ""
                     currentUserRole = "guest"
                     currentBalance = 0.0
-                    // Koszyk nie jest czyszczony po wylogowaniu!
+                    // Koszyk nie jest czyszczony po wylogowaniu
                 },
                 onCartClick = { navController.navigate("cart") },
                 onProfileClick = {
@@ -67,6 +67,7 @@ fun AppNavigation() {
 
             PublicArtworkDetailScreen(
                 artworkId = artworkId,
+                currentUserId = currentUserId,
                 isLoggedIn = isLoggedIn,
                 role = currentUserRole,
                 cartItems = cartItems,
@@ -118,7 +119,7 @@ fun AppNavigation() {
                     currentUserId = userId
                     currentUsername = username
                     currentUserRole = role
-                    currentBalance = balance // Wczytuje prawdziwe saldo!
+                    currentBalance = balance
                     navController.navigate("home") { popUpTo(0) }
                 }
             )
@@ -220,7 +221,7 @@ fun AppNavigation() {
                 role = role,
                 currentBalance = currentBalance,
                 onNavigateBack = { navController.popBackStack() },
-                onBalanceChange = { newBalance -> currentBalance = newBalance } // Zmienia wartość na całym systemie!
+                onBalanceChange = { newBalance -> currentBalance = newBalance }
             )
         }
 
@@ -293,7 +294,13 @@ fun AppNavigation() {
             )
         }
         composable("client_support") { SupportScreen(onNavigateBack = { navController.popBackStack() }) }
-        composable("client_followed") { FollowedOffersScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable("client_followed") {
+            FollowedOffersScreen(
+                userId = currentUserId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToArtwork = { artworkId -> navController.navigate("public_artwork_detail/$artworkId") }
+            )
+        }
         composable("seller_followers") { FollowersScreen(onNavigateBack = { navController.popBackStack() }) }
         composable("seller_sales_history") { SalesHistoryScreen(onNavigateBack = { navController.popBackStack() }) }
         composable("seller_top_fans") { TopFansScreen(onNavigateBack = { navController.popBackStack() }) }

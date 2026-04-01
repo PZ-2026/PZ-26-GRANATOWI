@@ -35,4 +35,16 @@ interface AuthApiService {
 
     @DELETE("api/orders/{orderId}")
     suspend fun deleteOrder(@Path("orderId") orderId: Long): Response<Map<String, String>>
+
+    @POST("api/follows/{userId}/{sellerId}")
+    suspend fun followSeller(@Path("userId") userId: Long, @Path("sellerId") sellerId: Long): Response<Map<String, String>>
+
+    @DELETE("api/follows/{userId}/{sellerId}")
+    suspend fun unfollowSeller(@Path("userId") userId: Long, @Path("sellerId") sellerId: Long): Response<Map<String, String>>
+
+    @GET("api/follows/{userId}/{sellerId}")
+    suspend fun checkFollow(@Path("userId") userId: Long, @Path("sellerId") sellerId: Long): Response<Map<String, Boolean>>
+
+    @GET("api/follows/{userId}/artworks")
+    suspend fun getFollowedArtworks(@Path("userId") userId: Long): Response<List<ArtworkResponse>>
 }
