@@ -56,4 +56,7 @@ interface AuthApiService {
 
     @GET("api/support/history/{userId}")
     suspend fun getSupportHistory(@Path("userId") userId: Long): Response<List<DonationHistoryResponse>>
+
+    @GET("api/users/{userId}/statistics/client")
+    suspend fun getClientStatistics(@Path("userId") userId: Long): Response<ClientStatisticsDto>
 }

@@ -123,3 +123,16 @@ data class DonationHistoryResponse(
     val artistName: String,
     val amount: Double
 )
+
+data class ClientStatisticsDto(
+    val totalSpent: Double,
+    val totalPurchases: Int,
+    val favoriteArtistsCount: Int,
+    val wishlistCount: Int,
+    val reviewsGiven: Int,
+    val averageRating: Float,
+    val spentThisMonth: Double,
+    val purchasesThisMonth: Int,
+    val memberSince: String,
+    val savedArtworks: Int
+)

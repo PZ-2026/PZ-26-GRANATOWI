@@ -273,8 +273,13 @@ fun AppNavigation() {
         }
 
         composable("seller_dashboard") { SellerDashboardScreen(onBackClick = { navController.popBackStack() }, balance = currentBalance) }
-        composable("client_dashboard") { ClientDashboardScreen(onBackClick = { navController.popBackStack() }, balance = currentBalance) }
-
+        composable("client_dashboard") {
+            ClientDashboardScreen(
+                userId = currentUserId,
+                onBackClick = { navController.popBackStack() },
+                balance = currentBalance
+            )
+        }
         composable("addresses") { AddressesScreen(userId = currentUserId, isAdmin = false, onNavigateBack = { navController.popBackStack() }, onAddAddress = { navController.navigate("address_add") }, onEditAddress = { addressId -> navController.navigate("address_edit/$addressId") }) }
         composable("addresses_admin") { AddressesScreen(userId = currentUserId, isAdmin = true, onNavigateBack = { navController.popBackStack() }, onAddAddress = { navController.navigate("address_add_admin") }, onEditAddress = { addressId -> navController.navigate("address_edit_admin/$addressId") }) }
         composable("address_add") { AddressFormScreen(userId = currentUserId, addressId = null, onNavigateBack = { navController.popBackStack() }, onSuccess = { navController.popBackStack() }) }

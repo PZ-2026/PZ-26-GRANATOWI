@@ -3,8 +3,12 @@ package com.example.artsphere.backend.service;
 import com.example.artsphere.backend.dto.LoginResponse;
 import com.example.artsphere.backend.dto.RegisterRequest;
 import com.example.artsphere.backend.dto.TransactionDto;
+import com.example.artsphere.backend.dto.ClientStatisticsDto;
+import com.example.artsphere.backend.model.Order;
 import com.example.artsphere.backend.model.User;
 import com.example.artsphere.backend.model.WalletTransaction;
+import com.example.artsphere.backend.repository.OrderRepository;
+import com.example.artsphere.backend.repository.SellerUserFollowRepository;
 import com.example.artsphere.backend.repository.UserRepository;
 import com.example.artsphere.backend.repository.WalletTransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +30,12 @@ public class UserService {
 
     @Autowired
     private WalletTransactionRepository walletTransactionRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private SellerUserFollowRepository followRepository;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -71,17 +82,13 @@ public class UserService {
         return "Twój profil został zaktualizowany!";
     }
 
-    // --- LOGIKA PORTFELA z zapisem historii ---
-
     public Double addBalance(Long userId, Double amount) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Brak użytkownika"));
         BigDecimal currentBalance = user.getBalance() != null ? user.getBalance() : BigDecimal.ZERO;
 
-        // Zmiana i zapis salda
         user.setBalance(currentBalance.add(BigDecimal.valueOf(amount)));
         userRepository.save(user);
 
-        // Tworzenie rekordu historii operacji
         WalletTransaction transaction = new WalletTransaction();
         transaction.setUser(user);
         transaction.setTitle("Wpłata na portfel");
@@ -101,11 +108,9 @@ public class UserService {
             throw new RuntimeException("Brak wystarczających środków w portfelu.");
         }
 
-        // Zmiana i zapis salda
         user.setBalance(currentBalance.subtract(toDeduct));
         userRepository.save(user);
 
-        // Tworzenie rekordu historii operacji
         WalletTransaction transaction = new WalletTransaction();
         transaction.setUser(user);
         transaction.setTitle("Wypłata z portfela / Płatność");
@@ -115,8 +120,6 @@ public class UserService {
 
         return user.getBalance().doubleValue();
     }
-
-    // --- ZWRACANIE HISTORII ---
 
     public List<TransactionDto> getUserTransactions(Long userId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
@@ -129,5 +132,53 @@ public class UserService {
                 tx.getTransactionDate().format(formatter),
                 tx.isIncome()
         )).collect(Collectors.toList());
+    }
+
+    public ClientStatisticsDto getClientStatistics(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        List<Order> orders = orderRepository.findByUserId(userId);
+
+        double totalSpent = 0.0;
+        double spentThisMonth = 0.0;
+        int purchasesThisMonth = 0;
+
+        LocalDateTime now = LocalDateTime.now();
+        for (Order o : orders) {
+            double price = o.getTotalPrice() != null ? o.getTotalPrice().doubleValue() : 0.0;
+            totalSpent += price;
+
+            if (o.getCreatedAt() != null && o.getCreatedAt().getMonth() == now.getMonth() && o.getCreatedAt().getYear() == now.getYear()) {
+                spentThisMonth += price;
+                purchasesThisMonth++;
+            }
+        }
+
+        int favArtists = followRepository.findByUserId(userId).size();
+
+        ClientStatisticsDto dto = new ClientStatisticsDto();
+        dto.setTotalSpent(totalSpent);
+        dto.setTotalPurchases(orders.size());
+        dto.setFavoriteArtistsCount(favArtists);
+        dto.setSpentThisMonth(spentThisMonth);
+        dto.setPurchasesThisMonth(purchasesThisMonth);
+
+        String memberSince = "Od zawsze";
+        if (user.getCreatedAt() != null) {
+            String month = user.getCreatedAt().getMonth().getDisplayName(
+                    java.time.format.TextStyle.FULL_STANDALONE,
+                    new java.util.Locale("pl", "PL")
+            );
+            month = month.substring(0, 1).toUpperCase() + month.substring(1);
+            int year = user.getCreatedAt().getYear();
+            memberSince = month + " " + year;
+        }
+        dto.setMemberSince(memberSince);
+
+        dto.setWishlistCount(0);
+        dto.setReviewsGiven(0);
+        dto.setAverageRating(0.0f);
+        dto.setSavedArtworks(0);
+
+        return dto;
     }
 }

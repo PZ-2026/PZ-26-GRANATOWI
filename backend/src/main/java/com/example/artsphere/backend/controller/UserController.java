@@ -48,4 +48,12 @@ public class UserController {
     public ResponseEntity<List<TransactionDto>> getTransactions(@PathVariable Long userId) {
         return ResponseEntity.ok(userService.getUserTransactions(userId));
     }
+    @GetMapping("/{userId}/statistics/client")
+    public ResponseEntity<?> getClientStats(@PathVariable Long userId) {
+        try {
+            return ResponseEntity.ok(userService.getClientStatistics(userId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Błąd statystyk"));
+        }
+    }
 }

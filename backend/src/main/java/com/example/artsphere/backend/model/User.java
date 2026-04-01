@@ -3,6 +3,7 @@ package com.example.artsphere.backend.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -24,4 +25,7 @@ public class User {
     // Zamiana z relacji na zwykły string
     @Column(name = "role")
     private String role;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }
