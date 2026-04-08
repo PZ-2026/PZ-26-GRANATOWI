@@ -319,7 +319,12 @@ fun AppNavigation() {
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable("seller_sales_history") { SalesHistoryScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable("seller_sales_history") {
+            SalesHistoryScreen(
+                sellerId = currentUserId, // ZMIANA
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
         composable("seller_top_fans") {
             TopFansScreen(
                 sellerId = currentUserId, // Przekazanie ID

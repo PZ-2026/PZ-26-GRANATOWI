@@ -154,4 +154,30 @@ public class OrderController {
 
         return ResponseEntity.ok(result);
     }
+
+    // HISTORIA SPRZEDAZY
+
+    @GetMapping("/seller/{sellerId}/sales")
+    public ResponseEntity<?> getSellerSales(@PathVariable Long sellerId) {
+        List<Sale> allSales = saleRepository.findAll();
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+        List<java.util.Map<String, Object>> result = allSales.stream()
+                .filter(s -> s.getArtwork() != null && s.getArtwork().getUser() != null && s.getArtwork().getUser().getId().equals(sellerId))
+                .sorted((s1, s2) -> s2.getSoldAt().compareTo(s1.getSoldAt())) // sortowanie od najnowszych
+                .map(s -> {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("id", "ORD-" + s.getSoldAt().getYear() + "-" + String.format("%03d", s.getId()));
+                    map.put("artworkTitle", s.getArtwork().getTitle());
+                    map.put("buyer", s.getBuyer() != null ? s.getBuyer().getUsername() : "Nieznany");
+                    map.put("price", String.format(java.util.Locale.US, "%.2f zł", s.getPrice().doubleValue()));
+                    map.put("date", s.getSoldAt().format(formatter));
+                    // w tej aplikacji sprzedaż od razu jest traktowana jako opłacona/zakończona
+                    map.put("status", "Opłacono");
+                    return map;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        return ResponseEntity.ok(result);
+    }
 }

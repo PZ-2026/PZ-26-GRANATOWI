@@ -1,14 +1,14 @@
 package com.example.artsphere.ui.screens.Seller
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,6 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.LocalShipping
+import com.example.artsphere.api.RetrofitClient
 
 // Model danych dla sprzedaży
 data class Sale(
@@ -24,18 +26,32 @@ data class Sale(
     val buyer: String,
     val price: String,
     val date: String,
-    val status: String // np. "Wysłano", "Opłacono", "Zakończono"
+    val status: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SalesHistoryScreen(onNavigateBack: () -> Unit) {
-    // Przykładowe dane
-    val sales = listOf(
-        Sale("ORD-2025-001", "Zachód słońca nad morzem", "maria_w", "1500.00 zł", "12.06.2025", "Zakończono"),
-        Sale("ORD-2025-005", "Portret kobiety", "tomek_art", "850.00 zł", "15.06.2025", "Wysłano"),
-        Sale("ORD-2025-012", "Abstrakcja nr 5", "anonimowy_kolekcjoner", "2100.00 zł", "18.06.2025", "Opłacono")
-    )
+fun SalesHistoryScreen(sellerId: Long, onNavigateBack: () -> Unit) {
+    var sales by remember { mutableStateOf<List<Sale>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(sellerId) {
+        try {
+            val response = RetrofitClient.authApi.getSellerSalesHistory(sellerId)
+            if (response.isSuccessful) {
+                sales = response.body() ?: emptyList()
+            } else {
+                errorMessage = "Błąd pobierania: ${response.code()}"
+                Log.e("SalesHistory", "Błąd API: ${response.errorBody()?.string()}")
+            }
+        } catch (e: Exception) {
+            errorMessage = "Błąd połączenia: ${e.message}"
+            Log.e("SalesHistory", "Wyjątek API", e)
+        } finally {
+            isLoading = false
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -63,12 +79,31 @@ fun SalesHistoryScreen(onNavigateBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(sales) { sale ->
-                    SaleCard(sale)
+            when {
+                isLoading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                errorMessage != null -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = errorMessage!!, color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                sales.isEmpty() -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Nie masz jeszcze żadnych sprzedaży.", color = MaterialTheme.colorScheme.secondary)
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(sales) { sale ->
+                            SaleCard(sale)
+                        }
+                    }
                 }
             }
         }
@@ -129,18 +164,18 @@ fun SaleCard(sale: Sale) {
                 }
             }
 
-            if (sale.status == "Opłacono") {
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = { /* Logika nadania przesyłki */ },
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Icon(Icons.Default.LocalShipping, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Nadaj przesyłkę")
-                }
-            }
+//            if (sale.status == "Opłacono") {
+//                Spacer(modifier = Modifier.height(8.dp))
+//                Button(
+//                    onClick = { /* Logika nadania przesyłki */ },
+//                    modifier = Modifier.fillMaxWidth(),
+//                    contentPadding = PaddingValues(0.dp)
+//                ) {
+//                    Icon(Icons.Default.LocalShipping, contentDescription = null, modifier = Modifier.size(18.dp))
+//                    Spacer(modifier = Modifier.width(8.dp))
+//                    Text("Nadaj przesyłkę")
+//                }
+//            }
         }
     }
 }
