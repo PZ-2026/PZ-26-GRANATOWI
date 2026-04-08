@@ -71,4 +71,23 @@ public class FollowController {
 
         return ResponseEntity.ok(artworks);
     }
+
+    @GetMapping("/seller/{sellerId}/followers")
+    public ResponseEntity<?> getSellerFollowers(@PathVariable Long sellerId) {
+        List<User> followers = followRepository.findBySellerId(sellerId).stream()
+                .map(SellerUserFollow::getUser)
+                .collect(Collectors.toList());
+
+        List<java.util.Map<String, Object>> result = followers.stream().map(u -> {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", u.getId());
+            map.put("username", u.getUsername());
+            map.put("firstName", u.getFirstName());
+            map.put("lastName", u.getLastName());
+            map.put("email", u.getEmail());
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
+    }
 }

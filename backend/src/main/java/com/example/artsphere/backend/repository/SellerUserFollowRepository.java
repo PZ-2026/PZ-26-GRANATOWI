@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface SellerUserFollowRepository extends JpaRepository<SellerUserFollow, Long> {
     Optional<SellerUserFollow> findByUserIdAndSellerId(Long userId, Long sellerId);
     List<SellerUserFollow> findByUserId(Long userId);
+    List<SellerUserFollow> findBySellerId(Long sellerId); // <- NOWA METODA
 }

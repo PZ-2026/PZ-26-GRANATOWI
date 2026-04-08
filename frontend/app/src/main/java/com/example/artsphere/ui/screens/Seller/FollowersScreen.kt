@@ -1,5 +1,6 @@
 package com.example.artsphere.ui.screens.Seller
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,16 +9,17 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.artsphere.api.RetrofitClient // Poprawiony import
 
-// Model na podstawie danych ze screena[cite: 8]
+// Zmieniono id na Long, by pasowało do backendu
 data class Follower(
-    val id: Int,
+    val id: Long,
     val username: String,
     val firstName: String,
     val lastName: String,
@@ -26,11 +28,28 @@ data class Follower(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FollowersScreen(onNavigateBack: () -> Unit) {
-    // Dane testowe ze screena[cite: 8]
-    val followers = listOf(
-        Follower(1, "maria_w", "Maria", "Wiśniewska", "maria@example.com")
-    )
+fun FollowersScreen(sellerId: Long, onNavigateBack: () -> Unit) {
+    var followers by remember { mutableStateOf<List<Follower>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(sellerId) {
+        try {
+            // Poprawione wywołanie authApi
+            val response = RetrofitClient.authApi.getSellerFollowers(sellerId)
+            if (response.isSuccessful) {
+                followers = response.body() ?: emptyList()
+            } else {
+                errorMessage = "Błąd pobierania: ${response.code()}"
+                Log.e("FollowersScreen", "Błąd API: ${response.errorBody()?.string()}")
+            }
+        } catch (e: Exception) {
+            errorMessage = "Błąd połączenia: ${e.message}"
+            Log.e("FollowersScreen", "Wyjątek podczas pobierania", e)
+        } finally {
+            isLoading = false
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -67,12 +86,31 @@ fun FollowersScreen(onNavigateBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(followers) { follower ->
-                    FollowerCard(follower)
+            when {
+                isLoading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                errorMessage != null -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = errorMessage!!, color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                followers.isEmpty() -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Jeszcze nikt Cię nie obserwuje.", color = MaterialTheme.colorScheme.secondary)
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(followers) { follower ->
+                            FollowerCard(follower)
+                        }
+                    }
                 }
             }
         }
@@ -91,7 +129,6 @@ fun FollowerCard(follower: Follower) {
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Ikona profilu zamiast zdjęcia
             Surface(
                 modifier = Modifier.size(48.dp),
                 shape = androidx.compose.foundation.shape.CircleShape,

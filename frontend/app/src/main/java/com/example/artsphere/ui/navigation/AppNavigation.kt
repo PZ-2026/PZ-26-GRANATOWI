@@ -313,7 +313,12 @@ fun AppNavigation() {
                 onNavigateToArtwork = { artworkId -> navController.navigate("public_artwork_detail/$artworkId") }
             )
         }
-        composable("seller_followers") { FollowersScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable("seller_followers") {
+            FollowersScreen(
+                sellerId = currentUserId, // Zmiana tutaj (przekazanie id)
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
         composable("seller_sales_history") { SalesHistoryScreen(onNavigateBack = { navController.popBackStack() }) }
         composable("seller_top_fans") { TopFansScreen(onNavigateBack = { navController.popBackStack() }) }
     }

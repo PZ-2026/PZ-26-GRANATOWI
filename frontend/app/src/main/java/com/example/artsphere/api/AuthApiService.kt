@@ -59,4 +59,7 @@ interface AuthApiService {
 
     @GET("api/users/{userId}/statistics/client")
     suspend fun getClientStatistics(@Path("userId") userId: Long): Response<ClientStatisticsDto>
+
+    @GET("api/follows/seller/{sellerId}/followers")
+    suspend fun getSellerFollowers(@Path("sellerId") sellerId: Long): Response<List<com.example.artsphere.ui.screens.Seller.Follower>>
 }
