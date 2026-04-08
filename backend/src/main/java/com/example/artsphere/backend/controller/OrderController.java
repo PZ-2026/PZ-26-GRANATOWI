@@ -35,9 +35,13 @@ public class OrderController {
     @Autowired
     private ArtworkRepository artworkRepository;
 
+    @Autowired
+    private WalletTransactionRepository walletTransactionRepository;
+
     @PostMapping("/checkout")
     public ResponseEntity<?> checkout(@RequestBody CreateOrderRequest request) {
-        User buyer = userRepository.findById(request.getUserId()).orElseThrow(() -> new RuntimeException("Brak usera"));
+        User buyer = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("Brak usera"));
 
         Order order = new Order();
         order.setUser(buyer);
@@ -50,6 +54,7 @@ public class OrderController {
         for (Long artId : request.getArtworkIds()) {
             Artwork artwork = artworkRepository.findById(artId).orElse(null);
             if (artwork != null) {
+                // 1. Zapis elementu zamówienia
                 OrderItem item = new OrderItem();
                 item.setOrder(order);
                 item.setArtwork(artwork);
@@ -57,16 +62,40 @@ public class OrderController {
                 item.setQuantity(1);
                 orderItemRepository.save(item);
 
+                // 2. Zapis do historii sprzedaży
                 Sale sale = new Sale();
                 sale.setArtwork(artwork);
                 sale.setBuyer(buyer);
                 sale.setPrice(artwork.getPrice());
                 sale.setSoldAt(LocalDateTime.now());
                 saleRepository.save(sale);
+
+                // 3. AKTUALIZACJA SALDA ARTYSTY
+                User artist = artwork.getUser();
+                if (artist != null && artwork.getPrice() != null) {
+                    BigDecimal currentBalance = artist.getBalance() != null ? artist.getBalance() : BigDecimal.ZERO;
+                    artist.setBalance(currentBalance.add(artwork.getPrice()));
+                    userRepository.save(artist);
+
+                    // 4. Dodanie wpisu do historii transakcji (dla panelu "Moje finanse")
+                    WalletTransaction tx = new WalletTransaction();
+                    tx.setUser(artist);
+                    tx.setTitle("Sprzedaż dzieła: " + artwork.getTitle());
+                    tx.setAmount(artwork.getPrice());
+                    tx.setIncome(true);
+                    // Jeśli WalletTransaction ma pole transactionDate, ustaw je:
+                    // tx.setTransactionDate(LocalDateTime.now());
+                    walletTransactionRepository.save(tx);
+                }
+
+                // 5. Zmiana statusu dzieła, aby zniknęło z dostępnych
+                artwork.setIsSold(true);
+                artwork.setStatus("SOLD");
+                artworkRepository.save(artwork);
             }
         }
 
-        return ResponseEntity.ok("Zapisano zamówienie");
+        return ResponseEntity.ok("Zapisano zamówienie i zaktualizowano saldo artysty.");
     }
 
     @GetMapping("/user/{userId}/purchases")
