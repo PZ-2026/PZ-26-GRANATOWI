@@ -1,5 +1,6 @@
 package com.example.artsphere.ui.screens.Seller
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,7 +11,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.artsphere.api.RetrofitClient
 
 data class Fan(
     val name: String,
@@ -28,14 +30,27 @@ data class Fan(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopFansScreen(onNavigateBack: () -> Unit) {
-    val fans = listOf(
-        Fan("Anna Kowalska", 5, "7 200.00 zł", "Styczeń 2024"),
-        Fan("Marek Nowak", 3, "4 150.00 zł", "Marzec 2024"),
-        Fan("Kolekcjoner_99", 2, "12 000.00 zł", "Maj 2024"),
-        Fan("Zofia Art", 2, "1 850.00 zł", "Luty 2025"),
-        Fan("Janusz_Biznesu", 1, "500.00 zł", "Czerwiec 2024")
-    )
+fun TopFansScreen(sellerId: Long, onNavigateBack: () -> Unit) {
+    var fans by remember { mutableStateOf<List<Fan>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(sellerId) {
+        try {
+            val response = RetrofitClient.authApi.getTopFans(sellerId)
+            if (response.isSuccessful) {
+                fans = response.body() ?: emptyList()
+            } else {
+                errorMessage = "Błąd pobierania: ${response.code()}"
+                Log.e("TopFansScreen", "Błąd API: ${response.errorBody()?.string()}")
+            }
+        } catch (e: Exception) {
+            errorMessage = "Błąd połączenia: ${e.message}"
+            Log.e("TopFansScreen", "Wyjątek podczas pobierania", e)
+        } finally {
+            isLoading = false
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -57,7 +72,9 @@ fun TopFansScreen(onNavigateBack: () -> Unit) {
         ) {
             // Nagłówek z ikoną pucharu
             Card(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
                 Row(
@@ -73,9 +90,28 @@ fun TopFansScreen(onNavigateBack: () -> Unit) {
                 }
             }
 
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                itemsIndexed(fans) { index, fan ->
-                    FanCard(index + 1, fan)
+            when {
+                isLoading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                errorMessage != null -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = errorMessage!!, color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                fans.isEmpty() -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Jeszcze nikt od Ciebie nie kupował.", color = MaterialTheme.colorScheme.secondary)
+                    }
+                }
+                else -> {
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        itemsIndexed(fans) { index, fan ->
+                            FanCard(index + 1, fan)
+                        }
+                    }
                 }
             }
         }

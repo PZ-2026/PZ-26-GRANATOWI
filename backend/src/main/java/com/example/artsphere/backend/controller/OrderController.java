@@ -105,4 +105,53 @@ public class OrderController {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Błąd podczas usuwania"));
         }
     }
+
+    // NAJLEPSI FANI
+
+    @GetMapping("/seller/{sellerId}/top-fans")
+    public ResponseEntity<?> getTopFans(@PathVariable Long sellerId) {
+        // Pobieramy wszystkie sprzedaże i filtrujemy te dotyczące dzieł danego sprzedawcy
+        List<Sale> sellerSales = saleRepository.findAll().stream()
+                .filter(s -> s.getArtwork() != null && s.getArtwork().getUser() != null && s.getArtwork().getUser().getId().equals(sellerId))
+                .collect(java.util.stream.Collectors.toList());
+
+        // Grupujemy sprzedaże po kupującym
+        java.util.Map<User, List<Sale>> salesByBuyer = sellerSales.stream()
+                .filter(s -> s.getBuyer() != null)
+                .collect(java.util.stream.Collectors.groupingBy(Sale::getBuyer));
+
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", new java.util.Locale("pl", "PL"));
+
+        // Tworzymy listę wyników i sortujemy po wydanej kwocie
+        List<java.util.Map<String, Object>> result = salesByBuyer.entrySet().stream()
+                .map(entry -> {
+                    User buyer = entry.getKey();
+                    List<Sale> purchases = entry.getValue();
+
+                    int count = purchases.size();
+                    double totalSpent = purchases.stream()
+                            .filter(s -> s.getPrice() != null)
+                            .mapToDouble(s -> s.getPrice().doubleValue())
+                            .sum();
+
+                    String memberSince = buyer.getCreatedAt() != null ? buyer.getCreatedAt().format(formatter) : "Nieznany";
+                    String name = (buyer.getFirstName() != null && !buyer.getFirstName().isEmpty() && buyer.getLastName() != null)
+                            ? buyer.getFirstName() + " " + buyer.getLastName()
+                            : buyer.getUsername();
+
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("name", name);
+                    map.put("purchaseCount", count);
+                    // Formatowanie na zł z kropką
+                    map.put("totalSpent", String.format(java.util.Locale.US, "%.2f zł", totalSpent));
+                    map.put("memberSince", memberSince);
+                    map.put("rawTotal", totalSpent); // Do sortowania
+
+                    return map;
+                })
+                .sorted((m1, m2) -> Double.compare((Double) m2.get("rawTotal"), (Double) m1.get("rawTotal"))) // Malejąco wg wydatków
+                .collect(java.util.stream.Collectors.toList());
+
+        return ResponseEntity.ok(result);
+    }
 }
