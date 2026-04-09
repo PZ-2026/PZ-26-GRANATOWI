@@ -210,7 +210,10 @@ fun AppNavigation() {
                 userId = currentUserId,
                 role = role,
                 onNavigateBack = { navController.popBackStack() },
-                onSaveSuccess = { navController.popBackStack() }
+                onSaveSuccess = { newName ->
+                    currentUsername = newName
+                    navController.popBackStack()
+                }
             )
         }
 

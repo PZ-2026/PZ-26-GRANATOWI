@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.artsphere.api.RetrofitClient // Poprawiony import
+import com.example.artsphere.api.RetrofitClient
 
 // Zmieniono id na Long, by pasowało do backendu
 data class Follower(
@@ -35,7 +35,6 @@ fun FollowersScreen(sellerId: Long, onNavigateBack: () -> Unit) {
 
     LaunchedEffect(sellerId) {
         try {
-            // Poprawione wywołanie authApi
             val response = RetrofitClient.authApi.getSellerFollowers(sellerId)
             if (response.isSuccessful) {
                 followers = response.body() ?: emptyList()
@@ -151,11 +150,6 @@ fun FollowerCard(follower: Follower) {
                     text = "@${follower.username}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
-                )
-                Text(
-                    text = follower.email,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

@@ -33,14 +33,14 @@ fun EditProfileScreen(
     userId: Long, // ID pobierane z nawigacji
     role: String,
     onNavigateBack: () -> Unit,
-    onSaveSuccess: () -> Unit
+    onSaveSuccess: (String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
     val (headerGradient, topBarColor) = when (role) {
         "admin" -> Pair(Brush.horizontalGradient(colors = listOf(Color(0xFFE94057), Color(0xFF8A2387))), Color.Transparent)
-        "seller" -> Pair(Brush.horizontalGradient(colors = listOf(Color(0xFF2E8B57), Color(0xFF3CB371))), Color(0xFF2E8B57))
+        "seller", "artist" -> Pair(Brush.horizontalGradient(colors = listOf(Color(0xFF2E8B57), Color(0xFF3CB371))), Color(0xFF2E8B57))
         else -> Pair(Brush.horizontalGradient(colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)), MaterialTheme.colorScheme.primary)
     }
 
@@ -152,7 +152,13 @@ fun EditProfileScreen(
                                 if (response.isSuccessful) {
                                     showSuccessCard = true
                                     delay(1000)
-                                    onSaveSuccess()
+                                    val fullName = if (firstName.isNotEmpty() || lastName.isNotEmpty()) {
+                                        "$firstName $lastName".trim()
+                                    }
+                                        else {
+                                            username
+                                    }
+                                    onSaveSuccess(fullName)
                                 } else {
                                     showErrorCard = "Ten e-mail lub nazwa są już zajęte."
                                 }
