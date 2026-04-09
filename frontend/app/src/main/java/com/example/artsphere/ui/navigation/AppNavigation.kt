@@ -272,7 +272,13 @@ fun AppNavigation() {
             }
         }
 
-        composable("seller_dashboard") { SellerDashboardScreen(onBackClick = { navController.popBackStack() }, balance = currentBalance) }
+        composable("seller_dashboard") {
+            SellerDashboardScreen(
+                userId = currentUserId, // ZMIANA TUTAJ
+                onBackClick = { navController.popBackStack() },
+                balance = currentBalance
+            )
+        }
         composable("client_dashboard") {
             ClientDashboardScreen(
                 userId = currentUserId,

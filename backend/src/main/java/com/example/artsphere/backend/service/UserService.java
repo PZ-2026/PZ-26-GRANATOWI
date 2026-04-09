@@ -181,4 +181,62 @@ public class UserService {
 
         return dto;
     }
+
+    @Autowired
+    private com.example.artsphere.backend.repository.SaleRepository saleRepository;
+
+    @Autowired
+    private com.example.artsphere.backend.repository.ArtworkRepository artworkRepository;
+
+    public com.example.artsphere.backend.dto.SellerStatisticsDto getSellerStatistics(Long sellerId) {
+        // Wszystkie dzieła wystawione przez sprzedawcę
+        List<com.example.artsphere.backend.model.Artwork> sellerArtworks = artworkRepository.findByUserId(sellerId);
+
+        // Wszystkie jego sprzedaże
+        List<com.example.artsphere.backend.model.Sale> allSales = saleRepository.findAll().stream()
+                .filter(s -> s.getArtwork() != null && s.getArtwork().getUser() != null && s.getArtwork().getUser().getId().equals(sellerId))
+                .collect(Collectors.toList());
+
+        int totalSales = allSales.size();
+        double totalRevenue = allSales.stream().mapToDouble(s -> s.getPrice() != null ? s.getPrice().doubleValue() : 0.0).sum();
+
+        int soldThisMonth = 0;
+        double revenueThisMonth = 0.0;
+        LocalDateTime now = LocalDateTime.now();
+
+        // Ze względu na specyfikę projektu, poszukajmy dzieła, które przyniosło najwięcej pieniędzy (lub zostało sprzedane)
+        String topArtworkTitle = "Brak";
+        double maxArtworkPrice = 0.0;
+
+        for (com.example.artsphere.backend.model.Sale s : allSales) {
+            if (s.getSoldAt() != null && s.getSoldAt().getMonth() == now.getMonth() && s.getSoldAt().getYear() == now.getYear()) {
+                soldThisMonth++;
+                revenueThisMonth += s.getPrice() != null ? s.getPrice().doubleValue() : 0.0;
+            }
+
+            if (s.getPrice() != null && s.getPrice().doubleValue() > maxArtworkPrice) {
+                maxArtworkPrice = s.getPrice().doubleValue();
+                topArtworkTitle = s.getArtwork() != null ? s.getArtwork().getTitle() : "Brak tytułu";
+            }
+        }
+
+        int activeListings = (int) sellerArtworks.stream().filter(a -> "AVAILABLE".equals(a.getStatus())).count();
+        int followersCount = followRepository.findBySellerId(sellerId).size();
+
+        com.example.artsphere.backend.dto.SellerStatisticsDto dto = new com.example.artsphere.backend.dto.SellerStatisticsDto();
+        dto.setTotalSales(totalSales);
+        dto.setTotalRevenue(totalRevenue);
+        dto.setAverageRating(5.0f); // W przyszłości z systemu opinii
+        dto.setFollowerCount(followersCount);
+        dto.setTotalArtworks(sellerArtworks.size());
+        dto.setActiveListings(activeListings);
+        dto.setSoldThisMonth(soldThisMonth);
+        dto.setRevenueThisMonth(revenueThisMonth);
+        dto.setTopArtworkTitle(topArtworkTitle);
+        dto.setTopArtworkSales(topArtworkTitle.equals("Brak") ? 0 : 1);
+        dto.setPendingOrders(0); // Założenie domyślne dla aplikacji (opłacone to completed)
+        dto.setCompletedOrders(totalSales);
+
+        return dto;
+    }
 }

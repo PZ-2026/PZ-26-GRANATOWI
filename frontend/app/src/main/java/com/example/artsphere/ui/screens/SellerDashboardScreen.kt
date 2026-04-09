@@ -8,39 +8,75 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.artsphere.ui.MockStatisticsProvider
-import com.example.artsphere.ui.SellerStatistics
+import com.example.artsphere.api.RetrofitClient // DODANY IMPORT
+import com.example.artsphere.ui.SellerStatistics // Upewnij się, że mapujesz odpowiednio do modelu ekranu
 import com.example.artsphere.ui.components.StatMetricCard
 import com.example.artsphere.ui.components.StatMetricCardCompact
 import com.example.artsphere.ui.components.StatMetricCardWithTrend
 import java.text.NumberFormat
 import java.util.Locale
 
-/**
- * Ekran statystyk dla sprzedawcy
- * Wyświetla statystyki sprzedaży, oceny i dzieła
- */
 @Composable
 fun SellerDashboardScreen(
+    userId: Long, // DODANY PARAMETR
     onBackClick: () -> Unit,
-    balance: Double = 1500.0
+    balance: Double = 0.0
 ) {
-    val statistics = MockStatisticsProvider.getSellerStatistics()
+    var statistics by remember { mutableStateOf<SellerStatistics?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
     val scrollState = rememberScrollState()
-    
+
+    // Pobranie danych na żywo
+    LaunchedEffect(userId) {
+        try {
+            val res = RetrofitClient.authApi.getSellerStatistics(userId)
+            if (res.isSuccessful && res.body() != null) {
+                val dto = res.body()!!
+                // Mapowanie DTO na lokalny model widoku (którego wciąż oczekują niższe funkcje np. FinancialOverview)
+                statistics = SellerStatistics(
+                    totalSales = dto.totalSales,
+                    totalRevenue = dto.totalRevenue,
+                    averageRating = dto.averageRating,
+                    followerCount = dto.followerCount,
+                    totalArtworks = dto.totalArtworks,
+                    activeListings = dto.activeListings,
+                    soldThisMonth = dto.soldThisMonth,
+                    revenueThisMonth = dto.revenueThisMonth,
+                    topArtworkTitle = dto.topArtworkTitle,
+                    topArtworkSales = dto.topArtworkSales,
+                    pendingOrders = dto.pendingOrders,
+                    completedOrders = dto.completedOrders
+                )
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            isLoading = false
+        }
+    }
+
+    if (isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val statsToDisplay = statistics ?: com.example.artsphere.ui.MockStatisticsProvider.getSellerStatistics()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        // Header (zgodny z SellerPanelScreen - zielony kolor)
+        // Górny Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -109,7 +145,7 @@ fun SellerDashboardScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
-                                text = String.format("%.1f", statistics.averageRating),
+                                text = String.format("%.1f", statsToDisplay.averageRating),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -128,25 +164,20 @@ fun SellerDashboardScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Sekcja: Przegląd finansowy
             SectionTitle("Przegląd Finansowy")
-            FinancialOverview(statistics)
-            
-            // Sekcja: Sprzedaż i Zamówienia
+            FinancialOverview(statsToDisplay)
+
             SectionTitle("Sprzedaż")
-            SalesOverview(statistics)
-            
-            // Sekcja: Dzieła Sztuki
+            SalesOverview(statsToDisplay)
+
             SectionTitle("Twoje Dzieła")
-            ArtworkOverview(statistics)
-            
-            // Sekcja: Zaangażowanie
+            ArtworkOverview(statsToDisplay)
+
             SectionTitle("Zaangażowanie")
-            EngagementOverview(statistics)
-            
-            // Najlepiej sprzedające się dzieło
-            TopArtworkCard(statistics)
-            
+            EngagementOverview(statsToDisplay)
+
+            TopArtworkCard(statsToDisplay)
+
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

@@ -56,4 +56,13 @@ public class UserController {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Błąd statystyk"));
         }
     }
+
+    @GetMapping("/{userId}/statistics/seller")
+    public ResponseEntity<?> getSellerStats(@PathVariable Long userId) {
+        try {
+            return ResponseEntity.ok(userService.getSellerStatistics(userId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", "Błąd statystyk sprzedawcy"));
+        }
+    }
 }

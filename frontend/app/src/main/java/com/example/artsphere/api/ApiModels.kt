@@ -136,3 +136,18 @@ data class ClientStatisticsDto(
     val memberSince: String,
     val savedArtworks: Int
 )
+
+data class SellerStatisticsDto(
+    val totalSales: Int,
+    val totalRevenue: Double,
+    val averageRating: Float,
+    val followerCount: Int,
+    val totalArtworks: Int,
+    val activeListings: Int,
+    val soldThisMonth: Int,
+    val revenueThisMonth: Double,
+    val topArtworkTitle: String,
+    val topArtworkSales: Int,
+    val pendingOrders: Int,
+    val completedOrders: Int
+)
