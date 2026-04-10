@@ -13,11 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.artsphere.api.AdminUserResponse
-import com.example.artsphere.api.ArtworkResponse
-import com.example.artsphere.api.RetrofitClient
-import com.example.artsphere.api.UpdateUserRoleRequest
-import com.example.artsphere.api.UpdateUserStatusRequest
+import com.example.artsphere.api.*
 import com.example.artsphere.ui.UserInfo
 import com.example.artsphere.ui.screens.*
 import com.example.artsphere.ui.screens.Client.FollowedOffersScreen
@@ -403,11 +399,102 @@ fun AppNavigation() {
         }
 
         composable("admin_sellers") {
+            val coroutineScope = rememberCoroutineScope()
+            val context = LocalContext.current
+            var refreshTrigger by remember { mutableIntStateOf(0) }
             var selectedSeller by remember { mutableStateOf<com.example.artsphere.ui.SellerInfo?>(null) }
-            if (selectedSeller == null) {
-                AdminSellersScreen(onBackClick = { navController.popBackStack() }, onSellerClick = { seller -> selectedSeller = seller })
-            } else {
-                AdminSellerDetailScreen(seller = selectedSeller!!, onBackClick = { selectedSeller = null }, onEditClick = { }, onDeleteClick = { selectedSeller = null }, onToggleStatusClick = { selectedSeller = selectedSeller!!.copy(isActive = !selectedSeller!!.isActive) }, onToggleVerificationClick = { selectedSeller = selectedSeller!!.copy(isVerified = !selectedSeller!!.isVerified) })
+            var isEditingSeller by remember { mutableStateOf(false) }
+
+            BackHandler(enabled = selectedSeller != null && !isEditingSeller) {
+                selectedSeller = null
+            }
+
+            BackHandler(enabled = isEditingSeller) {
+                isEditingSeller = false
+            }
+
+            if (selectedSeller == null && !isEditingSeller) {
+                AdminSellersScreen(
+                    refreshTrigger = refreshTrigger,
+                    onBackClick = { navController.popBackStack() },
+                    onSellerClick = { seller -> selectedSeller = seller }
+                )
+            } else if (selectedSeller != null && !isEditingSeller) {
+                AdminSellerDetailScreen(
+                    seller = selectedSeller!!,
+                    onBackClick = { selectedSeller = null },
+                    onEditClick = { isEditingSeller = true },
+                    onDeleteClick = {
+                        val current = selectedSeller
+                        if (current != null) {
+                            coroutineScope.launch {
+                                try {
+                                    val response = RetrofitClient.adminApi.deleteUser(current.id)
+                                    if (response.isSuccessful) {
+                                        selectedSeller = null
+                                        refreshTrigger++
+                                        Toast.makeText(context, "Sprzedawca został usunięty", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Błąd usuwania", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    },
+                    onToggleStatusClick = {
+                        val current = selectedSeller
+                        if (current != null) {
+                            coroutineScope.launch {
+                                try {
+                                    val response = RetrofitClient.adminApi.updateUserStatus(
+                                        current.id,
+                                        UpdateUserStatusRequest(active = !current.isActive)
+                                    )
+                                    if (response.isSuccessful && response.body() != null) {
+                                        val updated = response.body()!!
+                                        selectedSeller = current.copy(isActive = updated.active ?: true)
+                                        refreshTrigger++
+                                        Toast.makeText(context, "Status zmieniony", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Błąd zmiany statusu", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    },
+                    onToggleVerificationClick = {
+                        val current = selectedSeller
+                        if (current != null) {
+                            coroutineScope.launch {
+                                try {
+                                    val response = RetrofitClient.adminApi.verifySeller(
+                                        current.id,
+                                        UpdateUserVerificationRequest(verified = !current.isVerified)
+                                    )
+                                    if (response.isSuccessful && response.body() != null) {
+                                        val updated = response.body()!!
+                                        selectedSeller = current.copy(isVerified = updated.verified ?: false)
+                                        refreshTrigger++
+                                        Toast.makeText(context, if (selectedSeller!!.isVerified) "Zweryfikowano" else "Cofnięto weryfikację", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Błąd weryfikacji", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    }
+                )
+            } else if (isEditingSeller) {
+                EditProfileScreen(
+                    userId = selectedSeller!!.id,
+                    role = "seller",
+                    onNavigateBack = { isEditingSeller = false },
+                    onSaveSuccess = {
+                        refreshTrigger++
+                        isEditingSeller = false
+                        selectedSeller = null // Refresh from list
+                    }
+                )
             }
         }
 

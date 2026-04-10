@@ -11,6 +11,9 @@ interface AdminApiService {
     @GET("api/admin/users")
     suspend fun getAllUsers(): Response<List<AdminUserResponse>>
 
+    @GET("api/admin/sellers")
+    suspend fun getAllSellers(): Response<List<AdminSellerResponse>>
+
     @PATCH("api/admin/users/{userId}/role")
     suspend fun updateUserRole(
         @Path("userId") userId: Long,
@@ -21,6 +24,12 @@ interface AdminApiService {
     suspend fun updateUserStatus(
         @Path("userId") userId: Long,
         @Body request: UpdateUserStatusRequest
+    ): Response<AdminUserResponse>
+
+    @PATCH("api/admin/users/{userId}/verify")
+    suspend fun verifySeller(
+        @Path("userId") userId: Long,
+        @Body request: UpdateUserVerificationRequest
     ): Response<AdminUserResponse>
 
     @DELETE("api/admin/users/{userId}")

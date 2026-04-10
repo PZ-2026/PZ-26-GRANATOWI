@@ -1,9 +1,13 @@
 package com.example.artsphere.backend.controller;
 
+import com.example.artsphere.backend.dto.AdminSellerResponse;
 import com.example.artsphere.backend.dto.AdminUserResponse;
 import com.example.artsphere.backend.dto.UpdateUserRoleRequest;
 import com.example.artsphere.backend.dto.UpdateUserStatusRequest;
 import com.example.artsphere.backend.model.User;
+import com.example.artsphere.backend.repository.ArtworkRepository;
+import com.example.artsphere.backend.repository.SaleRepository;
+import com.example.artsphere.backend.repository.SellerUserFollowRepository;
 import com.example.artsphere.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,6 +32,15 @@ public class AdminController {
     private UserRepository userRepository;
 
     @Autowired
+    private ArtworkRepository artworkRepository;
+
+    @Autowired
+    private SaleRepository saleRepository;
+
+    @Autowired
+    private SellerUserFollowRepository followRepository;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -38,7 +51,6 @@ public class AdminController {
         int updated = 0;
         
         for (User user : users) {
-            // Zahashuj tylko jeśli hasło nie wygląda na hash BCrypt
             if (!user.getPassword().startsWith("$2a$") && !user.getPassword().startsWith("$2b$")) {
                 String plainPassword = user.getPassword();
                 user.setPassword(passwordEncoder.encode(plainPassword));
@@ -53,38 +65,19 @@ public class AdminController {
         return result;
     }
     
-    @GetMapping("/check-passwords")
-    public Map<String, Object> checkPasswords() {
-        List<User> users = userRepository.findAll();
-        Map<String, Object> result = new HashMap<>();
-        
-        for (User user : users) {
-            Map<String, String> userInfo = new HashMap<>();
-            userInfo.put("email", user.getEmail());
-            userInfo.put("passwordIsHashed", user.getPassword().startsWith("$2a$") ? "YES" : "NO");
-            userInfo.put("passwordPreview", user.getPassword().substring(0, Math.min(30, user.getPassword().length())));
-            result.put(user.getUsername(), userInfo);
-        }
-        
-        return result;
-    }
-    
-    @GetMapping("/get-full-hashes")
-    public Map<String, String> getFullHashes() {
-        List<User> users = userRepository.findAll();
-        Map<String, String> result = new HashMap<>();
-        
-        for (User user : users) {
-            result.put(user.getEmail(), user.getPassword());
-        }
-        
-        return result;
-    }
-
     @GetMapping("/users")
     public ResponseEntity<List<AdminUserResponse>> getAllUsers() {
         List<AdminUserResponse> response = userRepository.findAll().stream()
                 .map(this::toAdminUserResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/sellers")
+    public ResponseEntity<List<AdminSellerResponse>> getAllSellers() {
+        List<AdminSellerResponse> response = userRepository.findAll().stream()
+                .filter(u -> "ARTIST".equals(u.getRole()))
+                .map(this::toAdminSellerResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(response);
     }
@@ -126,6 +119,29 @@ public class AdminController {
                 .<ResponseEntity<?>>map(user -> {
                     user.setIsActive(request.getActive());
                     User saved = userRepository.save(user);
+                    return ResponseEntity.ok(toAdminUserResponse(saved));
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Nie znaleziono użytkownika")));
+    }
+
+    @PatchMapping("/users/{userId}/verify")
+    public ResponseEntity<?> verifySeller(
+            @PathVariable Long userId,
+            @RequestBody Map<String, Boolean> request
+    ) {
+        Boolean verify = request.get("verified");
+        if (verify == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Status weryfikacji jest wymagany"));
+        }
+
+        return userRepository.findById(userId)
+                .<ResponseEntity<?>>map(user -> {
+                    user.setIsVerified(verify);
+                    User saved = userRepository.save(user);
+                    if ("ARTIST".equals(saved.getRole())) {
+                        return ResponseEntity.ok(toAdminSellerResponse(saved));
+                    }
                     return ResponseEntity.ok(toAdminUserResponse(saved));
                 })
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -174,7 +190,34 @@ public class AdminController {
                 user.getRole(),
                 user.getBalance() != null ? user.getBalance().doubleValue() : 0.0,
                 user.getCreatedAt(),
-                !Boolean.FALSE.equals(user.getIsActive())
+                !Boolean.FALSE.equals(user.getIsActive()),
+                !Boolean.FALSE.equals(user.getIsVerified())
+        );
+    }
+
+    private AdminSellerResponse toAdminSellerResponse(User user) {
+        int followers = followRepository.findBySellerId(user.getId()).size();
+        int artworksCount = artworkRepository.findByUserId(user.getId()).size();
+        
+        double totalRevenue = saleRepository.findAll().stream()
+                .filter(s -> s.getArtwork() != null && s.getArtwork().getUser() != null && s.getArtwork().getUser().getId().equals(user.getId()))
+                .mapToDouble(s -> s.getPrice() != null ? s.getPrice().doubleValue() : 0.0)
+                .sum();
+
+        return new AdminSellerResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getRole(),
+                user.getCreatedAt(),
+                !Boolean.FALSE.equals(user.getIsActive()),
+                !Boolean.FALSE.equals(user.getIsVerified()),
+                followers,
+                artworksCount,
+                totalRevenue,
+                5.0f // Average rating placeholder
         );
     }
 

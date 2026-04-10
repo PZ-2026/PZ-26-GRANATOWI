@@ -161,7 +161,24 @@ data class AdminUserResponse(
     val role: String,
     val balance: Double,
     val createdAt: String?,
-    val active: Boolean?
+    val active: Boolean?,
+    val verified: Boolean?
+)
+
+data class AdminSellerResponse(
+    val id: Long,
+    val username: String,
+    val email: String,
+    val firstName: String?,
+    val lastName: String?,
+    val role: String,
+    val createdAt: String?,
+    val active: Boolean?,
+    val verified: Boolean?,
+    val followerCount: Int,
+    val totalArtworks: Int,
+    val totalRevenue: Double,
+    val averageRating: Float
 )
 
 data class UpdateUserRoleRequest(
@@ -170,4 +187,8 @@ data class UpdateUserRoleRequest(
 
 data class UpdateUserStatusRequest(
     val active: Boolean
+)
+
+data class UpdateUserVerificationRequest(
+    val verified: Boolean
 )
