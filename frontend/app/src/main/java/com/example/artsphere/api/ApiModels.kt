@@ -151,3 +151,23 @@ data class SellerStatisticsDto(
     val pendingOrders: Int,
     val completedOrders: Int
 )
+
+data class AdminUserResponse(
+    val id: Long,
+    val username: String,
+    val email: String,
+    val firstName: String?,
+    val lastName: String?,
+    val role: String,
+    val balance: Double,
+    val createdAt: String?,
+    val active: Boolean?
+)
+
+data class UpdateUserRoleRequest(
+    val role: String
+)
+
+data class UpdateUserStatusRequest(
+    val active: Boolean
+)

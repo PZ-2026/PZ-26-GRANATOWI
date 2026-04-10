@@ -2,6 +2,7 @@ package com.example.artsphere.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -35,12 +36,16 @@ fun AdminUserDetailScreen(
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
     onToggleStatusClick: () -> Unit = {},
-    onChangeRoleClick: () -> Unit = {}
+    onChangeRoleClick: (String) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showToggleStatusDialog by remember { mutableStateOf(false) }
     var showRoleDialog by remember { mutableStateOf(false) }
+    var selectedRole by remember { mutableStateOf(normalizeRole(user.role)) }
+    LaunchedEffect(user.id, user.role) {
+        selectedRole = normalizeRole(user.role)
+    }
     
     val adminGradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFE94057), Color(0xFF8A2387))
@@ -448,23 +453,24 @@ fun AdminUserDetailScreen(
                     Text("Wybierz nową rolę dla użytkownika ${user.username}:")
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    listOf(
-                        Triple("BUYER", "Kupujący", Icons.Default.ShoppingBag),
-                        Triple("SELLER", "Sprzedawca", Icons.Default.Storefront),
-                        Triple("ADMIN", "Administrator", Icons.Default.Shield)
-                    ).forEach { (role, name, icon) ->
+                     listOf(
+                         Triple("BUYER", "Kupujący", Icons.Default.ShoppingBag),
+                        Triple("ARTIST", "Sprzedawca", Icons.Default.Storefront),
+                         Triple("ADMIN", "Administrator", Icons.Default.Shield)
+                     ).forEach { (role, name, icon) ->
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                                .padding(vertical = 4.dp)
+                                .clickable { selectedRole = role },
                             shape = RoundedCornerShape(8.dp),
-                            color = if (user.role == role) 
+                            color = if (selectedRole == role)
                                 getRoleColor(role).copy(alpha = 0.1f) 
                             else 
                                 Color.Transparent,
                             border = androidx.compose.foundation.BorderStroke(
                                 width = 1.dp,
-                                color = if (user.role == role) getRoleColor(role) else Color.LightGray
+                                color = if (selectedRole == role) getRoleColor(role) else Color.LightGray
                             )
                         ) {
                             Row(
@@ -480,7 +486,7 @@ fun AdminUserDetailScreen(
                                 )
                                 Text(
                                     name,
-                                    fontWeight = if (user.role == role) FontWeight.Bold else FontWeight.Normal
+                                    fontWeight = if (selectedRole == role) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
                         }
@@ -490,7 +496,7 @@ fun AdminUserDetailScreen(
             confirmButton = {
                 Button(onClick = {
                     showRoleDialog = false
-                    onChangeRoleClick()
+                    onChangeRoleClick(selectedRole)
                 }) {
                     Text("Zmień rolę")
                 }
@@ -574,30 +580,34 @@ fun InfoRow(
  * Pomocnicze funkcje (współdzielone z AdminUsersScreen)
  */
 private fun getRoleColor(role: String): Color {
-    return when (role) {
+    return when (normalizeRole(role)) {
         "ADMIN" -> Color(0xFFE94057)
-        "SELLER" -> Color(0xFFFF9800)
+        "ARTIST" -> Color(0xFFFF9800)
         "BUYER" -> Color(0xFF2196F3)
         else -> Color.Gray
     }
 }
 
 private fun getRoleIcon(role: String): androidx.compose.ui.graphics.vector.ImageVector {
-    return when (role) {
+    return when (normalizeRole(role)) {
         "ADMIN" -> Icons.Default.Shield
-        "SELLER" -> Icons.Default.Storefront
+        "ARTIST" -> Icons.Default.Storefront
         "BUYER" -> Icons.Default.ShoppingBag
         else -> Icons.Default.Person
     }
 }
 
 private fun getRoleName(role: String): String {
-    return when (role) {
+    return when (normalizeRole(role)) {
         "ADMIN" -> "Administrator"
-        "SELLER" -> "Sprzedawca"
+        "ARTIST" -> "Sprzedawca"
         "BUYER" -> "Kupujący"
         else -> role
     }
+}
+
+private fun normalizeRole(role: String): String {
+    return if (role.equals("SELLER", ignoreCase = true)) "ARTIST" else role.uppercase()
 }
 
 private fun formatCurrency(amount: Double): String {

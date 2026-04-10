@@ -29,6 +29,10 @@ public class AuthService {
 
         User user = userOpt.get();
 
+        if (Boolean.FALSE.equals(user.getIsActive())) {
+            throw new RuntimeException("Konto jest nieaktywne");
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Nieprawidłowy e-mail lub hasło");
         }

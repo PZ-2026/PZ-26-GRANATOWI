@@ -11,7 +11,7 @@ object RetrofitClient {
     // Zmień na adres IP komputera z backendem, np. "http://192.168.1.105:8080/"
     // Dla emulatora Android Studio użyj: "http://10.0.2.2:8080/"
     // Dla prawdziwego urządzenia użyj IP komputera w tej samej sieci
-    private const val BASE_URL = "http://192.168.17.116:8080/"
+    private const val BASE_URL = "http://192.168.17.106:8080/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -33,4 +33,5 @@ object RetrofitClient {
     val authApi: AuthApiService = retrofit.create(AuthApiService::class.java)
     val addressApi: AddressApiService = retrofit.create(AddressApiService::class.java)
     val artworkApi: ArtworkApiService = retrofit.create(ArtworkApiService::class.java)
+    val adminApi: AdminApiService = retrofit.create(AdminApiService::class.java)
 }

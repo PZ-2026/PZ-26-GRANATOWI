@@ -28,4 +28,7 @@ public class User {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
 }

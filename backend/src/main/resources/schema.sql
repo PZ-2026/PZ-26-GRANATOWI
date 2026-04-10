@@ -8,8 +8,12 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) NOT NULL, -- 'ADMIN', 'ARTIST', 'BUYER'
     balance DECIMAL(15,2) DEFAULT 0.00,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE
 );
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
+UPDATE users SET is_active = TRUE WHERE is_active IS NULL;
 
 -- 2. Moduł Sprzedawcy
 CREATE TABLE IF NOT EXISTS seller_descriptions (

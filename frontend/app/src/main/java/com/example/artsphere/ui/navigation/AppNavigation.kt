@@ -1,10 +1,24 @@
 package com.example.artsphere.ui.navigation
 
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.artsphere.api.AdminUserResponse
 import com.example.artsphere.api.ArtworkResponse
+import com.example.artsphere.api.RetrofitClient
+import com.example.artsphere.api.UpdateUserRoleRequest
+import com.example.artsphere.api.UpdateUserStatusRequest
+import com.example.artsphere.ui.UserInfo
 import com.example.artsphere.ui.screens.*
 import com.example.artsphere.ui.screens.Client.FollowedOffersScreen
 import com.example.artsphere.ui.screens.Client.OrdersScreen
@@ -12,6 +26,7 @@ import com.example.artsphere.ui.screens.Client.SupportScreen
 import com.example.artsphere.ui.screens.Seller.FollowersScreen
 import com.example.artsphere.ui.screens.Seller.SalesHistoryScreen
 import com.example.artsphere.ui.screens.Seller.TopFansScreen
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppNavigation() {
@@ -231,11 +246,150 @@ fun AppNavigation() {
         composable("admin_dashboard") { AdminDashboardScreen(onBackClick = { navController.popBackStack() }) }
 
         composable("admin_users") {
-            var selectedUser by remember { mutableStateOf<com.example.artsphere.ui.UserInfo?>(null) }
-            if (selectedUser == null) {
-                AdminUsersScreen(onBackClick = { navController.popBackStack() }, onUserClick = { user -> selectedUser = user })
-            } else {
-                AdminUserDetailScreen(user = selectedUser!!, onBackClick = { selectedUser = null }, onEditClick = { }, onDeleteClick = { selectedUser = null }, onToggleStatusClick = { selectedUser = selectedUser!!.copy(isActive = !selectedUser!!.isActive) }, onChangeRoleClick = { })
+            val coroutineScope = rememberCoroutineScope()
+            val context = LocalContext.current
+            var refreshTrigger by remember { mutableIntStateOf(0) }
+            var selectedUser by remember { mutableStateOf<UserInfo?>(null) }
+            var isEditingUser by remember { mutableStateOf(false) }
+            val alpha by animateFloatAsState(if (selectedUser == null && !isEditingUser) 1f else 0f, label = "screen_alpha")
+            val detailAlpha by animateFloatAsState(if (selectedUser != null && !isEditingUser) 1f else 0f, label = "detail_alpha")
+            val editAlpha by animateFloatAsState(if (isEditingUser) 1f else 0f, label = "edit_alpha")
+
+            BackHandler(enabled = selectedUser != null && !isEditingUser) {
+                selectedUser = null
+            }
+
+            BackHandler(enabled = isEditingUser) {
+                isEditingUser = false
+            }
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (selectedUser == null && !isEditingUser) {
+                    Box(modifier = Modifier.fillMaxSize().alpha(alpha)) {
+                        AdminUsersScreen(
+                            refreshTrigger = refreshTrigger,
+                            onBackClick = { navController.popBackStack() },
+                            onUserClick = { user -> selectedUser = user }
+                        )
+                    }
+                }
+
+                if (selectedUser != null && !isEditingUser) {
+                    Box(modifier = Modifier.fillMaxSize().alpha(detailAlpha)) {
+                        AdminUserDetailScreen(
+                            user = selectedUser!!,
+                            onBackClick = { selectedUser = null },
+                            onEditClick = { isEditingUser = true },
+                            onDeleteClick = {
+                                val current = selectedUser
+                                if (current != null) {
+                                    coroutineScope.launch {
+                                        try {
+                                            val response = RetrofitClient.adminApi.deleteUser(current.id)
+                                            if (response.isSuccessful) {
+                                                selectedUser = null
+                                                refreshTrigger++
+                                                Toast.makeText(context, "Użytkownik został usunięty", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Log.e("AdminUsers", "Delete user failed: ${response.code()}")
+                                                Toast.makeText(context, "Nie udało się usunąć użytkownika", Toast.LENGTH_SHORT).show()
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e("AdminUsers", "Delete user exception: ${e.message}", e)
+                                            Toast.makeText(context, "Błąd usuwania użytkownika", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            },
+                            onToggleStatusClick = {
+                                val current = selectedUser
+                                if (current != null) {
+                                    coroutineScope.launch {
+                                        try {
+                                            val response = RetrofitClient.adminApi.updateUserStatus(
+                                                current.id,
+                                                UpdateUserStatusRequest(active = !current.isActive)
+                                            )
+                                            if (response.isSuccessful && response.body() != null) {
+                                                val updated = response.body()!!
+                                                selectedUser = current.copy(
+                                                    role = normalizeRoleForApi(updated.role),
+                                                    isActive = updated.active ?: true
+                                                )
+                                                refreshTrigger++
+                                                Toast.makeText(context, if (selectedUser?.isActive == true) "Konto aktywowane" else "Konto dezaktywowane", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Log.e("AdminUsers", "Update status failed: ${response.code()}")
+                                                Toast.makeText(context, "Nie udało się zmienić statusu konta", Toast.LENGTH_SHORT).show()
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e("AdminUsers", "Update status exception: ${e.message}", e)
+                                            Toast.makeText(context, "Błąd zmiany statusu konta", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            },
+                            onChangeRoleClick = { role ->
+                                val current = selectedUser
+                                if (current != null) {
+                                    coroutineScope.launch {
+                                        try {
+                                            val response = RetrofitClient.adminApi.updateUserRole(
+                                                current.id,
+                                                UpdateUserRoleRequest(role = role)
+                                            )
+                                            if (response.isSuccessful && response.body() != null) {
+                                                val updated = response.body()!!
+                                                selectedUser = current.copy(
+                                                    role = normalizeRoleForApi(updated.role),
+                                                    isActive = updated.active ?: true
+                                                )
+                                                refreshTrigger++
+                                                Toast.makeText(context, "Rola została zaktualizowana", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                Log.e("AdminUsers", "Update role failed: ${response.code()}")
+                                                Toast.makeText(context, "Nie udało się zmienić roli", Toast.LENGTH_SHORT).show()
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e("AdminUsers", "Update role exception: ${e.message}", e)
+                                            Toast.makeText(context, "Błąd zmiany roli", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+
+                if (isEditingUser) {
+                    Box(modifier = Modifier.fillMaxSize().alpha(editAlpha)) {
+                        EditProfileScreen(
+                            userId = selectedUser!!.id,
+                            role = normalizeRoleForApi(selectedUser!!.role).lowercase(),
+                            onNavigateBack = { isEditingUser = false },
+                            onSaveSuccess = {
+                                coroutineScope.launch {
+                                    try {
+                                        val response = RetrofitClient.adminApi.getAllUsers()
+                                        val refreshed = response.body()?.firstOrNull { it.id == selectedUser?.id }
+                                        if (response.isSuccessful && refreshed != null) {
+                                            selectedUser = refreshed.toUserInfo()
+                                            refreshTrigger++
+                                            Toast.makeText(context, "Dane użytkownika zapisane", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            Toast.makeText(context, "Nie udało się odświeżyć danych", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("AdminUsers", "Refresh after edit exception: ${e.message}", e)
+                                        Toast.makeText(context, "Błąd połączenia podczas odświeżania", Toast.LENGTH_SHORT).show()
+                                    } finally {
+                                        isEditingUser = false
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
             }
         }
 
@@ -341,4 +495,23 @@ fun AppNavigation() {
             )
         }
     }
+}
+
+private fun normalizeRoleForApi(role: String): String {
+    return if (role.equals("SELLER", ignoreCase = true)) "ARTIST" else role.uppercase()
+}
+
+private fun AdminUserResponse.toUserInfo(): UserInfo {
+    return UserInfo(
+        id = id,
+        username = username,
+        email = email,
+        firstName = firstName ?: "",
+        lastName = lastName ?: "",
+        role = normalizeRoleForApi(role),
+        balance = balance,
+        registrationDate = createdAt?.replace("T", " ")?.substringBefore(".") ?: "Brak danych",
+        isActive = active ?: true,
+        lastLogin = null
+    )
 }
