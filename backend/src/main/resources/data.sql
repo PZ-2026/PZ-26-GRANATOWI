@@ -2,17 +2,17 @@
 -- 1. UŻYTKOWNICY (Bez tabeli roles - rola jako string)
 -- Hasła (BCrypt): admin123, artist123, buyer123
 -- ==========================================================
-INSERT INTO users (id, username, first_name, last_name, email, password, role, balance) VALUES
+INSERT INTO users (id, username, first_name, last_name, email, password, role, balance, is_verified) VALUES
 -- Admin
-(1, 'admin_boss', 'Robert', 'Gie', 'admin@gmail.com', '$2a$10$QKF1lCALKVYAYcQqKFM.XON5/0jo4wNjaVc./seo/foE59Kk46oc6', 'ADMIN', 0.00),
+(1, 'admin_boss', 'Robert', 'Gie', 'admin@gmail.com', '$2a$10$QKF1lCALKVYAYcQqKFM.XON5/0jo4wNjaVc./seo/foE59Kk46oc6', 'ADMIN', 0.00, TRUE),
 -- Sprzedawcy (ARTIST)
-(2, 'vincent_v', 'Vincent', 'van Gogh', 'artist1@art.pl', '$2a$10$0H2LUr1P9YTYzkEs5ZWVbea.Q.iIo56tDykg240GErzFHdgZGL16K', 'ARTIST', 500.00),
-(3, 'anna_art', 'Anna', 'Nowak', 'artist2@art.pl', '$2a$10$0H2LUr1P9YTYzkEs5ZWVbea.Q.iIo56tDykg240GErzFHdgZGL16K', 'ARTIST', 1200.00),
-(4, 'sculptor_max', 'Maksymilian', 'Rzeźbiarz', 'artist3@art.pl', '$2a$10$0H2LUr1P9YTYzkEs5ZWVbea.Q.iIo56tDykg240GErzFHdgZGL16K', 'ARTIST', 0.00),
+(2, 'vincent_v', 'Vincent', 'van Gogh', 'artist1@art.pl', '$2a$10$0H2LUr1P9YTYzkEs5ZWVbea.Q.iIo56tDykg240GErzFHdgZGL16K', 'ARTIST', 500.00, TRUE),
+(3, 'anna_art', 'Anna', 'Nowak', 'artist2@art.pl', '$2a$10$0H2LUr1P9YTYzkEs5ZWVbea.Q.iIo56tDykg240GErzFHdgZGL16K', 'ARTIST', 1200.00, FALSE),
+(4, 'sculptor_max', 'Maksymilian', 'Rzeźbiarz', 'artist3@art.pl', '$2a$10$0H2LUr1P9YTYzkEs5ZWVbea.Q.iIo56tDykg240GErzFHdgZGL16K', 'ARTIST', 0.00, TRUE),
 -- Kupujący (BUYER)
-(5, 'jan_kowalski', 'Jan', 'Kowalski', 'buyer1@gmail.pl', '$2a$10$gBNvBS5dAfIrNoDdVFDphe2THId1ACcJ2scXaL8bMycngvy8SARSO', 'BUYER', 3000.00),
-(6, 'marta_k', 'Marta', 'Kwiatkowska', 'buyer2@gmail.pl', '$2a$10$gBNvBS5dAfIrNoDdVFDphe2THId1ACcJ2scXaL8bMycngvy8SARSO', 'BUYER', 1500.00),
-(7, 'piotr_t', 'Piotr', 'Tester', 'buyer3@gmail.pl', '$2a$10$gBNvBS5dAfIrNoDdVFDphe2THId1ACcJ2scXaL8bMycngvy8SARSO', 'BUYER', 500.00)
+(5, 'jan_kowalski', 'Jan', 'Kowalski', 'buyer1@gmail.pl', '$2a$10$gBNvBS5dAfIrNoDdVFDphe2THId1ACcJ2scXaL8bMycngvy8SARSO', 'BUYER', 3000.00, FALSE),
+(6, 'marta_k', 'Marta', 'Kwiatkowska', 'buyer2@gmail.pl', '$2a$10$gBNvBS5dAfIrNoDdVFDphe2THId1ACcJ2scXaL8bMycngvy8SARSO', 'BUYER', 1500.00, FALSE),
+(7, 'piotr_t', 'Piotr', 'Tester', 'buyer3@gmail.pl', '$2a$10$gBNvBS5dAfIrNoDdVFDphe2THId1ACcJ2scXaL8bMycngvy8SARSO', 'BUYER', 500.00, FALSE)
 ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================================
