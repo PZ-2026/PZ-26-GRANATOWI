@@ -20,4 +20,10 @@ public interface ArtworkRepository extends JpaRepository<Artwork, Long> {
     
     // Znajdź dzieła według kategorii
     List<Artwork> findByCategoryId(Integer categoryId);
+
+    // Liczba dzieł w danej kategorii
+    int countByCategoryId(Integer categoryId);
+
+    // Liczba sprzedanych dzieł w danej kategorii
+    int countByCategoryIdAndIsSoldTrue(Integer categoryId);
 }

@@ -143,6 +143,7 @@ data class CategoryInfo(
     val parentName: String?,
     val isActive: Boolean,
     val artworkCount: Int,
+    val soldArtworkCount: Int = 0,
     val createdDate: String,
     val lastModified: String,
     val displayOrder: Int,

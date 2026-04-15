@@ -192,3 +192,9 @@ data class UpdateUserStatusRequest(
 data class UpdateUserVerificationRequest(
     val verified: Boolean
 )
+
+data class UpdateCategoryRequest(
+    val name: String,
+    val description: String?,
+    val parentId: Long?
+)

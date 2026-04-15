@@ -32,7 +32,16 @@ CREATE TABLE IF NOT EXISTS seller_user_follows (
 -- 3. Kategorie i Dzieła
 CREATE TABLE IF NOT EXISTS categories (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    slug VARCHAR(100),
+    parent_id INTEGER REFERENCES categories(id),
+    is_active BOOLEAN DEFAULT TRUE,
+    display_order INTEGER DEFAULT 0,
+    icon_name VARCHAR(50),
+    color VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS artworks (

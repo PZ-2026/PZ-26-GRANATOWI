@@ -45,7 +45,7 @@ public class ArtworkService {
 
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll().stream()
-                .map(category -> new CategoryResponse(category.getId(), category.getName()))
+                .map(this::convertToCategoryResponse)
                 .collect(Collectors.toList());
     }
 
@@ -142,7 +142,7 @@ public class ArtworkService {
                 artwork.getPrice(),
                 artwork.getIsPriceless() != null && artwork.getIsPriceless(),
                 artwork.getArtist(),
-                artwork.getImagePath(),
+                artwork.getImagePath(), // Poprawione z setImagePath() na getImagePath()
                 artwork.getWidth(),
                 artwork.getHeight(),
                 artwork.getDepth(),
@@ -152,8 +152,31 @@ public class ArtworkService {
                 artwork.getCategory() != null ? artwork.getCategory().getName() : null,
                 artwork.getIsSold() != null && artwork.getIsSold(),
                 artwork.getStatus(),
-                artwork.getCreatedAt(), // LocalDateTime z powrotem bez modyfikacji!
-                null // Brak updated_at w bazie, wysyłamy null
+                artwork.getCreatedAt(),
+                null
+        );
+    }
+
+    private CategoryResponse convertToCategoryResponse(Category category) {
+        int artworkCount = artworkRepository.countByCategoryId(category.getId());
+        // Zliczanie sprzedanych dzieł w kategorii
+        int soldCount = artworkRepository.countByCategoryIdAndIsSoldTrue(category.getId());
+        
+        return new CategoryResponse(
+                category.getId(),
+                category.getName(),
+                category.getDescription(),
+                category.getSlug(),
+                category.getParent() != null ? category.getParent().getId() : null,
+                category.getParent() != null ? category.getParent().getName() : null,
+                category.getIsActive(),
+                artworkCount,
+                soldCount,
+                category.getCreatedAt(),
+                category.getUpdatedAt(),
+                category.getDisplayOrder(),
+                category.getIconName(),
+                category.getColor()
         );
     }
 

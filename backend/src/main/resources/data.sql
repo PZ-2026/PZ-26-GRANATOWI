@@ -27,19 +27,25 @@ ON CONFLICT (id) DO NOTHING;
 -- ==========================================================
 -- 3. KATEGORIE
 -- ==========================================================
-INSERT INTO categories (id, name) VALUES
-(1, 'Obraz'), (2, 'Rzeźba'), (3, 'Grafika'), (4, 'Fotografia')
+INSERT INTO categories (id, name, description, slug, parent_id, is_active, display_order, icon_name, color) VALUES
+(1, 'Malarstwo', 'Wszystkie rodzaje dzieł malarskich', 'malarstwo', null, true, 1, 'palette', '#E91E63'),
+(2, 'Malarstwo olejne', 'Klasyczne malarstwo olejne', 'malarstwo-olejne', 1, true, 1, 'brush', '#E91E63'),
+(3, 'Akwarele', 'Delikatne malarstwo akwarelowe', 'akwarele', 1, true, 2, 'water_drop', '#2196F3'),
+(4, 'Rzeźba', 'Trójwymiarowe dzieła sztuki', 'rzezba', null, true, 2, 'sculpture', '#795548'),
+(5, 'Rzeźba kamienna', 'Klasyczne rzeźby z kamienia', 'rzezba-kamienna', 4, true, 1, 'architecture', '#795548'),
+(6, 'Grafika', 'Grafika artystyczna i użytkowa', 'grafika', null, true, 3, 'draw', '#4CAF50'),
+(7, 'Fotografia', 'Fotografia artystyczna', 'fotografia', null, true, 4, 'camera_alt', '#9C27B0')
 ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================================
 -- 4. DZIEŁA SZTUKI (Artworks)
 -- ==========================================================
 INSERT INTO artworks (id, title, description, price, is_priceless, artist, category_id, user_id, status) VALUES
-(1, 'Gwiaździsta Noc', 'Opis klasyka', 1200.00, false, 'Vincent van Gogh', 1, 2, 'AVAILABLE'),
-(2, 'Słoneczniki', 'Bukiet w wazonie', 900.00, false, 'Vincent van Gogh', 1, 2, 'SOLD'),
-(3, 'Neon City', 'Grafika komputerowa', 450.00, false, 'Anna Nowak', 3, 3, 'AVAILABLE'),
-(4, 'Kamienna Twarz', 'Rzeźba z piaskowca', 2100.00, false, 'Maksymilian Rzeźbiarz', 2, 4, 'AVAILABLE'),
-(5, 'Bez tytułu', 'Eksperyment rzeźbiarski', null, true, 'Maksymilian Rzeźbiarz', 2, 4, 'AVAILABLE')
+(1, 'Gwiaździsta Noc', 'Opis klasyka', 1200.00, false, 'Vincent van Gogh', 2, 2, 'AVAILABLE'),
+(2, 'Słoneczniki', 'Bukiet w wazonie', 900.00, false, 'Vincent van Gogh', 2, 2, 'SOLD'),
+(3, 'Neon City', 'Grafika komputerowa', 450.00, false, 'Anna Nowak', 6, 3, 'AVAILABLE'),
+(4, 'Kamienna Twarz', 'Rzeźba z piaskowca', 2100.00, false, 'Maksymilian Rzeźbiarz', 5, 4, 'AVAILABLE'),
+(5, 'Bez tytułu', 'Eksperyment rzeźbiarski', null, true, 'Maksymilian Rzeźbiarz', 4, 4, 'AVAILABLE')
 ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================================

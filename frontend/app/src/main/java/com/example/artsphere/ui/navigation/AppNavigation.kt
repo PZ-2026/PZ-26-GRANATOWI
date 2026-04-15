@@ -7,6 +7,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
@@ -360,7 +362,7 @@ fun AppNavigation() {
                 if (isEditingUser) {
                     Box(modifier = Modifier.fillMaxSize().alpha(editAlpha)) {
                         EditProfileScreen(
-                            userId = selectedUser!!.id,
+                            userId = currentUserId,
                             role = normalizeRoleForApi(selectedUser!!.role).lowercase(),
                             onNavigateBack = { isEditingUser = false },
                             onSaveSuccess = {
@@ -508,11 +510,28 @@ fun AppNavigation() {
         }
 
         composable("admin_categories") {
-            var selectedCategory by remember { mutableStateOf<com.example.artsphere.ui.CategoryInfo?>(null) }
+            var refreshTrigger by remember { mutableIntStateOf(0) }
+            var selectedCategory by remember { mutableStateOf<com.example.artsphere.api.CategoryBackendResponse?>(null) }
+
+            BackHandler(enabled = selectedCategory != null) {
+                selectedCategory = null
+            }
+
             if (selectedCategory == null) {
-                AdminCategoriesScreen(onBackClick = { navController.popBackStack() }, onCategoryClick = { category -> selectedCategory = category })
+                AdminCategoriesScreen(
+                    refreshTrigger = refreshTrigger,
+                    onBackClick = { navController.popBackStack() },
+                    onCategoryClick = { info -> selectedCategory = info }
+                )
             } else {
-                AdminCategoryDetailScreen(category = selectedCategory!!, onBackClick = { selectedCategory = null }, onEditClick = { }, onDeleteClick = { selectedCategory = null }, onToggleStatusClick = { selectedCategory = selectedCategory!!.copy(isActive = !selectedCategory!!.isActive) }, onManageSubcategoriesClick = { })
+                AdminCategoryDetailScreen(
+                    category = selectedCategory!!,
+                    onBack = { selectedCategory = null },
+                    onRefresh = {
+                        refreshTrigger++
+                        selectedCategory = null
+                    }
+                )
             }
         }
 

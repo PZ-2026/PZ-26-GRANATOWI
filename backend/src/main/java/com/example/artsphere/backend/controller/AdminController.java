@@ -4,8 +4,10 @@ import com.example.artsphere.backend.dto.AdminSellerResponse;
 import com.example.artsphere.backend.dto.AdminUserResponse;
 import com.example.artsphere.backend.dto.UpdateUserRoleRequest;
 import com.example.artsphere.backend.dto.UpdateUserStatusRequest;
+import com.example.artsphere.backend.model.Category;
 import com.example.artsphere.backend.model.User;
 import com.example.artsphere.backend.repository.ArtworkRepository;
+import com.example.artsphere.backend.repository.CategoryRepository;
 import com.example.artsphere.backend.repository.SaleRepository;
 import com.example.artsphere.backend.repository.SellerUserFollowRepository;
 import com.example.artsphere.backend.repository.UserRepository;
@@ -17,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,9 @@ public class AdminController {
 
     @Autowired
     private ArtworkRepository artworkRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @Autowired
     private SaleRepository saleRepository;
@@ -178,6 +184,115 @@ public class AdminController {
 
         userRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "Użytkownik został usunięty"));
+    }
+
+    // CATEGORY MANAGEMENT
+    @PostMapping("/categories")
+    public ResponseEntity<?> createCategory(@RequestBody Map<String, Object> request) {
+        try {
+            Category category = new Category();
+            category.setName((String) request.get("name"));
+            category.setDescription((String) request.get("description"));
+            category.setSlug(generateSlug((String) request.get("name")));
+            category.setIsActive(true);
+            category.setCreatedAt(LocalDateTime.now());
+            category.setUpdatedAt(LocalDateTime.now());
+            category.setDisplayOrder(0);
+
+            if (request.get("parentId") != null) {
+                Integer parentId = Integer.valueOf(request.get("parentId").toString());
+                category.setParent(categoryRepository.findById(parentId).orElse(null));
+            }
+
+            categoryRepository.save(category);
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/categories/{categoryId}/status")
+    public ResponseEntity<?> updateCategoryStatus(
+            @PathVariable Integer categoryId,
+            @RequestBody Map<String, Boolean> request
+    ) {
+        Boolean isActive = request.get("isActive");
+        if (isActive == null) return ResponseEntity.badRequest().body("Status is required");
+
+        return categoryRepository.findById(categoryId)
+                .map(cat -> {
+                    cat.setIsActive(isActive);
+                    cat.setUpdatedAt(LocalDateTime.now());
+                    categoryRepository.save(cat);
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/categories/{categoryId}")
+    public ResponseEntity<?> updateCategory(
+            @PathVariable Integer categoryId,
+            @RequestBody Map<String, Object> request
+    ) {
+        return categoryRepository.findById(categoryId)
+                .map(cat -> {
+                    if (request.containsKey("name")) {
+                        String name = (String) request.get("name");
+                        cat.setName(name);
+                        cat.setSlug(generateSlug(name));
+                    }
+                    if (request.containsKey("description")) {
+                        cat.setDescription((String) request.get("description"));
+                    }
+                    if (request.containsKey("parentId")) {
+                        Object pId = request.get("parentId");
+                        if (pId == null) {
+                            cat.setParent(null);
+                        } else {
+                            Integer parentId = Integer.valueOf(pId.toString());
+                            cat.setParent(categoryRepository.findById(parentId).orElse(null));
+                        }
+                    }
+                    cat.setUpdatedAt(LocalDateTime.now());
+                    categoryRepository.save(cat);
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/categories/{categoryId}/detach")
+    public ResponseEntity<?> detachCategory(@PathVariable Integer categoryId) {
+        return categoryRepository.findById(categoryId)
+                .map(cat -> {
+                    cat.setParent(null);
+                    cat.setUpdatedAt(LocalDateTime.now());
+                    categoryRepository.save(cat);
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/categories/{categoryId}")
+    public ResponseEntity<?> deleteCategory(@PathVariable Integer categoryId) {
+        if (!categoryRepository.existsById(categoryId)) return ResponseEntity.notFound().build();
+        try {
+            categoryRepository.deleteById(categoryId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Nie można usunąć kategorii. Upewnij się, że nie ma przypisanych dzieł.");
+        }
+    }
+
+    @GetMapping("/categories/{categoryId}/subcategories")
+    public ResponseEntity<List<Category>> getSubcategories(@PathVariable Integer categoryId) {
+        return ResponseEntity.ok(categoryRepository.findByParentId(categoryId));
+    }
+
+    private String generateSlug(String name) {
+        if (name == null) return "";
+        return name.toLowerCase()
+                .replaceAll("[^a-z0-9\\s]", "")
+                .replaceAll("\\s+", "-");
     }
 
     private AdminUserResponse toAdminUserResponse(User user) {
