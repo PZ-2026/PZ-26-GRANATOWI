@@ -37,6 +37,12 @@ public class ArtworkService {
         return artworks.stream().map(this::convertToResponse).collect(Collectors.toList());
     }
 
+    public List<ArtworkResponse> getAllArtworks() {
+        return artworkRepository.findAll().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
     public ArtworkResponse getArtworkById(Long artworkId) {
         Artwork artwork = artworkRepository.findById(artworkId)
                 .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));
@@ -90,7 +96,8 @@ public class ArtworkService {
         Artwork artwork = artworkRepository.findById(artworkId)
                 .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));
 
-        if (!artwork.getUser().getId().equals(userId)) {
+        // If userId is provided, check ownership. If null (admin), bypass.
+        if (userId != null && !artwork.getUser().getId().equals(userId)) {
             throw new RuntimeException("Brak uprawnień do edycji tego dzieła");
         }
 
@@ -127,7 +134,7 @@ public class ArtworkService {
         Artwork artwork = artworkRepository.findById(artworkId)
                 .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));
 
-        if (!artwork.getUser().getId().equals(userId)) {
+        if (userId != null && !artwork.getUser().getId().equals(userId)) {
             throw new RuntimeException("Brak uprawnień do usunięcia tego dzieła");
         }
 
@@ -142,7 +149,7 @@ public class ArtworkService {
                 artwork.getPrice(),
                 artwork.getIsPriceless() != null && artwork.getIsPriceless(),
                 artwork.getArtist(),
-                artwork.getImagePath(), // Poprawione z setImagePath() na getImagePath()
+                artwork.getImagePath(),
                 artwork.getWidth(),
                 artwork.getHeight(),
                 artwork.getDepth(),
@@ -159,7 +166,6 @@ public class ArtworkService {
 
     private CategoryResponse convertToCategoryResponse(Category category) {
         int artworkCount = artworkRepository.countByCategoryId(category.getId());
-        // Zliczanie sprzedanych dzieł w kategorii
         int soldCount = artworkRepository.countByCategoryIdAndIsSoldTrue(category.getId());
         
         return new CategoryResponse(
@@ -180,7 +186,6 @@ public class ArtworkService {
         );
     }
 
-    // Oznacza dzieło jako sprzedane
     public void markAsSold(Long artworkId) {
         Artwork artwork = artworkRepository.findById(artworkId)
                 .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));

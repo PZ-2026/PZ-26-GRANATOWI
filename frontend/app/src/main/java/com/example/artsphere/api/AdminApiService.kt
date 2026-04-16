@@ -17,6 +17,15 @@ interface AdminApiService {
     @GET("api/admin/sellers")
     suspend fun getAllSellers(): Response<List<AdminSellerResponse>>
 
+    @GET("api/admin/artworks")
+    suspend fun getAllArtworks(): Response<List<ArtworkResponse>>
+
+    @PATCH("api/admin/artworks/{artworkId}/status")
+    suspend fun updateArtworkStatus(
+        @Path("artworkId") artworkId: Long,
+        @Body request: Map<String, String>
+    ): Response<Unit>
+
     @PATCH("api/admin/users/{userId}/role")
     suspend fun updateUserRole(
         @Path("userId") userId: Long,
@@ -37,6 +46,9 @@ interface AdminApiService {
 
     @DELETE("api/admin/users/{userId}")
     suspend fun deleteUser(@Path("userId") userId: Long): Response<Unit>
+
+    @DELETE("api/admin/artworks/{artworkId}")
+    suspend fun deleteArtwork(@Path("artworkId") artworkId: Long): Response<Unit>
 
     // Category endpoints
     @GET("api/artworks/categories")

@@ -2,6 +2,7 @@ package com.example.artsphere.backend.controller;
 
 import com.example.artsphere.backend.dto.AdminSellerResponse;
 import com.example.artsphere.backend.dto.AdminUserResponse;
+import com.example.artsphere.backend.dto.ArtworkResponse;
 import com.example.artsphere.backend.dto.UpdateUserRoleRequest;
 import com.example.artsphere.backend.dto.UpdateUserStatusRequest;
 import com.example.artsphere.backend.model.Category;
@@ -11,6 +12,7 @@ import com.example.artsphere.backend.repository.CategoryRepository;
 import com.example.artsphere.backend.repository.SaleRepository;
 import com.example.artsphere.backend.repository.SellerUserFollowRepository;
 import com.example.artsphere.backend.repository.UserRepository;
+import com.example.artsphere.backend.service.ArtworkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.HttpStatus;
@@ -45,6 +47,9 @@ public class AdminController {
 
     @Autowired
     private SellerUserFollowRepository followRepository;
+
+    @Autowired
+    private ArtworkService artworkService;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -184,6 +189,41 @@ public class AdminController {
 
         userRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "Użytkownik został usunięty"));
+    }
+
+    // ARTWORK MANAGEMENT
+    @GetMapping("/artworks")
+    public ResponseEntity<List<ArtworkResponse>> getAllArtworks() {
+        return ResponseEntity.ok(artworkService.getAllArtworks());
+    }
+
+    @PatchMapping("/artworks/{artworkId}/status")
+    public ResponseEntity<?> updateArtworkStatus(@PathVariable Long artworkId, @RequestBody Map<String, String> request) {
+        String status = request.get("status");
+        if (status == null) return ResponseEntity.badRequest().body("Status is required");
+        
+        return artworkRepository.findById(artworkId)
+                .map(artwork -> {
+                    artwork.setStatus(status);
+                    if ("SOLD".equalsIgnoreCase(status)) {
+                        artwork.setIsSold(true);
+                    } else if ("AVAILABLE".equalsIgnoreCase(status)) {
+                        artwork.setIsSold(false);
+                    }
+                    artworkRepository.save(artwork);
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/artworks/{artworkId}")
+    public ResponseEntity<?> deleteArtwork(@PathVariable Long artworkId) {
+        return artworkRepository.findById(artworkId)
+                .map(artwork -> {
+                    artworkService.deleteArtwork(artworkId, null); // null bypasses ownership check
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // CATEGORY MANAGEMENT

@@ -1,7 +1,6 @@
 package com.example.artsphere.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,8 +19,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.artsphere.api.ArtworkResponse
+import com.example.artsphere.api.RetrofitClient
 import com.example.artsphere.ui.ArtworkInfo
-import com.example.artsphere.ui.MockStatisticsProvider
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -32,10 +32,14 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminArtworksScreen(
+    refreshTrigger: Int = 0,
     onBackClick: () -> Unit = {},
     onArtworkClick: (ArtworkInfo) -> Unit = {}
 ) {
-    val artworks = remember { MockStatisticsProvider.getMockArtworks() }
+    var artworks by remember { mutableStateOf<List<ArtworkInfo>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf("") }
+    
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     var selectedStatus by remember { mutableStateOf<String?>(null) }
@@ -44,6 +48,23 @@ fun AdminArtworksScreen(
     val adminGradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFE94057), Color(0xFF8A2387))
     )
+    
+    LaunchedEffect(refreshTrigger) {
+        isLoading = true
+        errorMessage = ""
+        try {
+            val response = RetrofitClient.adminApi.getAllArtworks()
+            if (response.isSuccessful && response.body() != null) {
+                artworks = response.body()!!.map { it.toArtworkInfo() }
+            } else {
+                errorMessage = "Nie udało się pobrać dzieł (${response.code()})"
+            }
+        } catch (e: Exception) {
+            errorMessage = "Błąd połączenia: ${e.message}"
+        } finally {
+            isLoading = false
+        }
+    }
     
     // Filtrowanie dzieł
     val filteredArtworks = artworks.filter { artwork ->
@@ -62,7 +83,6 @@ fun AdminArtworksScreen(
     val totalFiltered = filteredArtworks.size
     val availableArtworks = filteredArtworks.count { it.status == "AVAILABLE" }
     val soldArtworks = filteredArtworks.count { it.status == "SOLD" }
-    val hiddenArtworks = filteredArtworks.count { it.status == "HIDDEN" }
     
     // Wszystkie kategorie
     val allCategories = artworks.mapNotNull { it.category }.distinct().sorted()
@@ -139,204 +159,234 @@ fun AdminArtworksScreen(
                         color = Color.White.copy(alpha = 0.9f),
                         fontSize = 14.sp
                     )
-                    
-                    Spacer(modifier = Modifier.height(6.dp))
-                    
-                    Text(
-                        "💡 Kliknij na statystykę aby filtrować",
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 12.sp,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-                    )
                 }
             }
             
-            // Statystyki skrócone - klikalne filtry
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                ArtworkStatCard(
-                    value = totalFiltered.toString(),
-                    label = "Wszystkie",
-                    icon = Icons.Default.Brush,
-                    color = Color(0xFF6650a4),
-                    modifier = Modifier.weight(1f),
-                    isSelected = selectedStatus == null,
-                    onClick = { 
-                        selectedStatus = null
-                    }
-                )
-                ArtworkStatCard(
-                    value = availableArtworks.toString(),
-                    label = "Dostępne",
-                    icon = Icons.Default.Visibility,
-                    color = Color(0xFF4CAF50),
-                    modifier = Modifier.weight(1f),
-                    isSelected = selectedStatus == "AVAILABLE",
-                    onClick = { 
-                        selectedStatus = "AVAILABLE"
-                    }
-                )
-                ArtworkStatCard(
-                    value = soldArtworks.toString(),
-                    label = "Sprzedane",
-                    icon = Icons.Default.Sell,
-                    color = Color(0xFFFF9800),
-                    modifier = Modifier.weight(1f),
-                    isSelected = selectedStatus == "SOLD",
-                    onClick = { 
-                        selectedStatus = "SOLD"
-                    }
-                )
-            }
-            
-            // Pasek wyszukiwania
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                placeholder = { Text("Szukaj dzieła, artysty...") },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = "Szukaj")
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Wyczyść")
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                )
-            )
-            
-            // Panel filtrów
-            if (showFilterMenu) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            "Filtry",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // Filtr kategorii
-                        Text("Kategoria:", fontSize = 14.sp, color = Color.Gray)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FilterChip(
-                                selected = selectedCategory == null,
-                                onClick = { selectedCategory = null },
-                                label = { Text("Wszystkie") }
-                            )
-                            allCategories.take(3).forEach { category ->
-                                FilterChip(
-                                    selected = selectedCategory == category,
-                                    onClick = { selectedCategory = if (selectedCategory == category) null else category },
-                                    label = { Text(category) }
-                                )
-                            }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // Filtr statusu
-                        Text("Status:", fontSize = 14.sp, color = Color.Gray)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FilterChip(
-                                selected = selectedStatus == null,
-                                onClick = { selectedStatus = null },
-                                label = { Text("Wszystkie") }
-                            )
-                            FilterChip(
-                                selected = selectedStatus == "AVAILABLE",
-                                onClick = { selectedStatus = if (selectedStatus == "AVAILABLE") null else "AVAILABLE" },
-                                label = { Text("Dostępne") }
-                            )
-                            FilterChip(
-                                selected = selectedStatus == "SOLD",
-                                onClick = { selectedStatus = if (selectedStatus == "SOLD") null else "SOLD" },
-                                label = { Text("Sprzedane") }
-                            )
-                        }
-                    }
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
-            }
-            
-            // Informacja o liczbie wyników
-            Text(
-                "Znaleziono: $totalFiltered ${if (totalFiltered == 1) "dzieło" else if (totalFiltered < 5) "dzieła" else "dzieł"}",
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                fontSize = 13.sp,
-                color = Color.Gray
-            )
-            
-            // Lista dzieł
-            if (filteredArtworks.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            Icons.Default.SearchOff,
-                            contentDescription = null,
-                            tint = Color.Gray,
-                            modifier = Modifier.size(64.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            "Nie znaleziono dzieł",
-                            fontSize = 16.sp,
-                            color = Color.Gray
-                        )
+            } else if (errorMessage.isNotEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Error, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.error)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(errorMessage, color = MaterialTheme.colorScheme.error)
                     }
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                // Statystyki skrócone - klikalne filtry
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(filteredArtworks) { artwork ->
-                        ArtworkCard(
-                            artwork = artwork,
-                            onClick = { onArtworkClick(artwork) }
-                        )
+                    ArtworkStatCard(
+                        value = totalFiltered.toString(),
+                        label = "Wszystkie",
+                        icon = Icons.Default.Brush,
+                        color = Color(0xFF6650a4),
+                        modifier = Modifier.weight(1f),
+                        isSelected = selectedStatus == null,
+                        onClick = { 
+                            selectedStatus = null
+                        }
+                    )
+                    ArtworkStatCard(
+                        value = availableArtworks.toString(),
+                        label = "Dostępne",
+                        icon = Icons.Default.Visibility,
+                        color = Color(0xFF4CAF50),
+                        modifier = Modifier.weight(1f),
+                        isSelected = selectedStatus == "AVAILABLE",
+                        onClick = { 
+                            selectedStatus = "AVAILABLE"
+                        }
+                    )
+                    ArtworkStatCard(
+                        value = soldArtworks.toString(),
+                        label = "Sprzedane",
+                        icon = Icons.Default.Sell,
+                        color = Color(0xFFFF9800),
+                        modifier = Modifier.weight(1f),
+                        isSelected = selectedStatus == "SOLD",
+                        onClick = { 
+                            selectedStatus = "SOLD"
+                        }
+                    )
+                }
+                
+                // Pasek wyszukiwania
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    placeholder = { Text("Szukaj dzieła, artysty...") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = "Szukaj")
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Wyczyść")
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White
+                    )
+                )
+                
+                // Panel filtrów
+                if (showFilterMenu) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                "Filtry",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            // Filtr kategorii
+                            Text("Kategoria:", fontSize = 14.sp, color = Color.Gray)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            var expanded by remember { mutableStateOf(false) }
+                            ExposedDropdownMenuBox(
+                                expanded = expanded,
+                                onExpandedChange = { expanded = !expanded },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedCategory ?: "Wszystkie",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White
+                                    )
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false },
+                                    modifier = Modifier.background(Color.White)
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Wszystkie") },
+                                        onClick = {
+                                            selectedCategory = null
+                                            expanded = false
+                                        }
+                                    )
+                                    allCategories.forEach { category ->
+                                        DropdownMenuItem(
+                                            text = { Text(category) },
+                                            onClick = {
+                                                selectedCategory = category
+                                                expanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            // Filtr statusu
+                            Text("Status:", fontSize = 14.sp, color = Color.Gray)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                FilterChip(
+                                    selected = selectedStatus == null,
+                                    onClick = { selectedStatus = null },
+                                    label = { Text("Wszystkie") }
+                                )
+                                FilterChip(
+                                    selected = selectedStatus == "AVAILABLE",
+                                    onClick = { selectedStatus = if (selectedStatus == "AVAILABLE") null else "AVAILABLE" },
+                                    label = { Text("Dostępne") }
+                                )
+                                FilterChip(
+                                    selected = selectedStatus == "SOLD",
+                                    onClick = { selectedStatus = if (selectedStatus == "SOLD") null else "SOLD" },
+                                    label = { Text("Sprzedane") }
+                                )
+                            }
+                        }
                     }
-                    
-                    // Spacer na końcu
-                    item {
-                        Spacer(modifier = Modifier.height(16.dp))
+                }
+                
+                // Informacja o liczbie wyników
+                Text(
+                    "Znaleziono: $totalFiltered ${if (totalFiltered == 1) "dzieło" else if (totalFiltered < 5) "dzieła" else "dzieł"}",
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    fontSize = 13.sp,
+                    color = Color.Gray
+                )
+                
+                // Lista dzieł
+                if (filteredArtworks.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                Icons.Default.SearchOff,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                "Nie znaleziono dzieł",
+                                fontSize = 16.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(filteredArtworks) { artwork ->
+                            ArtworkCard(
+                                artwork = artwork,
+                                onClick = { onArtworkClick(artwork) }
+                            )
+                        }
+                        
+                        // Spacer na końcu
+                        item {
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
                     }
                 }
             }
@@ -480,9 +530,9 @@ fun ArtworkCard(
                 
                 Spacer(modifier = Modifier.height(4.dp))
                 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     // Kategoria
                     if (artwork.category != null) {
@@ -593,4 +643,26 @@ private fun getStatusName(status: String): String {
 private fun formatCurrency(amount: Double): String {
     val formatter = NumberFormat.getCurrencyInstance(Locale("pl", "PL"))
     return formatter.format(amount)
+}
+
+fun ArtworkResponse.toArtworkInfo(): ArtworkInfo {
+    return ArtworkInfo(
+        id = id,
+        title = title,
+        artist = artist,
+        description = description,
+        price = price,
+        isPriceless = isPriceless,
+        category = categoryName,
+        imagePath = imagePath,
+        width = width,
+        height = height,
+        depth = depth,
+        sellerId = userId,
+        sellerUsername = userUsername,
+        isSold = isSold,
+        status = status,
+        createdAt = createdAt?.replace("T", " ")?.substringBefore(".") ?: "Brak danych",
+        views = 0
+    )
 }

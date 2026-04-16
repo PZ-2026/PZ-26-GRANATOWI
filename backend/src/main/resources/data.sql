@@ -40,12 +40,12 @@ ON CONFLICT (id) DO NOTHING;
 -- ==========================================================
 -- 4. DZIEŁA SZTUKI (Artworks)
 -- ==========================================================
-INSERT INTO artworks (id, title, description, price, is_priceless, artist, category_id, user_id, status) VALUES
-(1, 'Gwiaździsta Noc', 'Opis klasyka', 1200.00, false, 'Vincent van Gogh', 2, 2, 'AVAILABLE'),
-(2, 'Słoneczniki', 'Bukiet w wazonie', 900.00, false, 'Vincent van Gogh', 2, 2, 'SOLD'),
-(3, 'Neon City', 'Grafika komputerowa', 450.00, false, 'Anna Nowak', 6, 3, 'AVAILABLE'),
-(4, 'Kamienna Twarz', 'Rzeźba z piaskowca', 2100.00, false, 'Maksymilian Rzeźbiarz', 5, 4, 'AVAILABLE'),
-(5, 'Bez tytułu', 'Eksperyment rzeźbiarski', null, true, 'Maksymilian Rzeźbiarz', 4, 4, 'AVAILABLE')
+INSERT INTO artworks (id, title, description, price, is_priceless, artist, category_id, user_id, status, width, height, depth) VALUES
+(1, 'Gwiaździsta Noc', 'Opis klasyka', 1200.00, false, 'Vincent van Gogh', 2, 2, 'AVAILABLE', 92.0, 73.0, 2.5),
+(2, 'Słoneczniki', 'Bukiet w wazonie', 900.00, false, 'Vincent van Gogh', 2, 2, 'SOLD', 91.0, 72.0, 2.0),
+(3, 'Neon City', 'Grafika komputerowa', 450.00, false, 'Anna Nowak', 6, 3, 'AVAILABLE', 50.0, 50.0, 0.1),
+(4, 'Kamienna Twarz', 'Rzeźba z piaskowca', 2100.00, false, 'Maksymilian Rzeźbiarz', 5, 4, 'AVAILABLE', 30.0, 45.0, 25.0),
+(5, 'Bez tytułu', 'Eksperyment rzeźbiarski', null, true, 'Maksymilian Rzeźbiarz', 4, 4, 'AVAILABLE', 20.0, 60.0, 20.0)
 ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================================

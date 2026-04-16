@@ -29,22 +29,26 @@ import androidx.compose.ui.unit.sp
 import com.example.artsphere.api.ArtworkResponse
 import com.example.artsphere.api.RetrofitClient
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchSection(onArtworkClick: (Long) -> Unit) {
     val focusManager = LocalFocusManager.current
     var searchQuery by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
 
     var artworks by remember { mutableStateOf<List<ArtworkResponse>>(emptyList()) }
+    var categories by remember { mutableStateOf<List<String>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
 
-    // Pobieranie wszystkich dostępnych dzieł z backendu przy załadowaniu komponentu
+    // Pobieranie danych z backendu
     LaunchedEffect(Unit) {
         isLoading = true
         try {
-            val response = RetrofitClient.artworkApi.getAllAvailableArtworks()
-            if (response.isSuccessful && response.body() != null) {
-                artworks = response.body()!!
+            val artRes = RetrofitClient.artworkApi.getAllAvailableArtworks()
+            if (artRes.isSuccessful && artRes.body() != null) {
+                artworks = artRes.body()!!
+                categories = artworks.mapNotNull { it.categoryName }.distinct().sorted()
             } else {
                 errorMessage = "Nie udało się załadować dzieł."
             }
@@ -55,10 +59,12 @@ fun SearchSection(onArtworkClick: (Long) -> Unit) {
         }
     }
 
-    // Filtrowanie listy na podstawie wyszukiwarki
+    // Filtrowanie listy
     val filteredArtworks = artworks.filter {
-        it.title.contains(searchQuery, ignoreCase = true) ||
+        val matchesSearch = it.title.contains(searchQuery, ignoreCase = true) ||
                 (it.artist?.contains(searchQuery, ignoreCase = true) ?: false)
+        val matchesCategory = selectedCategory == null || it.categoryName == selectedCategory
+        matchesSearch && matchesCategory
     }
 
     Column(
@@ -76,17 +82,60 @@ fun SearchSection(onArtworkClick: (Long) -> Unit) {
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Szukaj obrazów, rzeźb, artystów...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Icon") },
-            singleLine = true,
-            shape = MaterialTheme.shapes.medium,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
-        )
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier.weight(1f),
+                placeholder = { Text("Szukaj...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+            )
+
+            // Dropdown dla kategorii
+            var expanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded },
+                modifier = Modifier.weight(0.8f)
+            ) {
+                OutlinedTextField(
+                    value = selectedCategory ?: "Kategorie",
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Wszystkie") },
+                        onClick = {
+                            selectedCategory = null
+                            expanded = false
+                        }
+                    )
+                    categories.forEach { category ->
+                        DropdownMenuItem(
+                            text = { Text(category) },
+                            onClick = {
+                                selectedCategory = category
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -99,12 +148,11 @@ fun SearchSection(onArtworkClick: (Long) -> Unit) {
         } else if (filteredArtworks.isEmpty()) {
             Text("Brak wyników do wyświetlenia.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            // Wyświetlanie dzieł w siatce
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.heightIn(max = 600.dp) // Wysokość siatki, aby dało się przewijać stronę
+                modifier = Modifier.heightIn(max = 1000.dp) 
             ) {
                 items(filteredArtworks) { artwork ->
                     PublicArtworkCard(artwork = artwork, onClick = { onArtworkClick(artwork.id) })
@@ -124,7 +172,6 @@ fun PublicArtworkCard(artwork: ArtworkResponse, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column {
-            // Domyślny obrazek (Szare tło)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -134,7 +181,7 @@ fun PublicArtworkCard(artwork: ArtworkResponse, onClick: () -> Unit) {
             ) {
                 Icon(
                     imageVector = Icons.Default.Image,
-                    contentDescription = "Brak zdjęcia",
+                    contentDescription = null,
                     tint = Color.Gray,
                     modifier = Modifier.size(48.dp)
                 )
@@ -144,24 +191,37 @@ fun PublicArtworkCard(artwork: ArtworkResponse, onClick: () -> Unit) {
                 Text(
                     text = artwork.title,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
+                )
+                
+                // Kategoria i autor pod spodem
+                Text(
+                    text = artwork.categoryName ?: "Inne",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = artwork.artist ?: "Nieznany artysta",
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color.Gray,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                
                 Spacer(modifier = Modifier.height(8.dp))
 
-                if (artwork.isPriceless) {
-                    Text(text = "Bezcenny", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                } else {
-                    Text(text = "${String.format("%.2f", artwork.price ?: 0.0)} zł", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                }
+                val priceText = if (artwork.isPriceless) "Bezcenny" 
+                               else "${String.format("%.2f", artwork.price ?: 0.0)} zł"
+                
+                Text(
+                    text = priceText, 
+                    fontWeight = FontWeight.Bold, 
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 14.sp
+                )
             }
         }
     }
