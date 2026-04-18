@@ -198,3 +198,21 @@ data class UpdateCategoryRequest(
     val description: String?,
     val parentId: Long?
 )
+
+data class AdminDashboardStatsDto(
+    val totalUsers: Int = 0,
+    val totalSellers: Int = 0,
+    val totalBuyers: Int = 0,
+    val totalTransactionValue: Double = 0.0,
+    val averageOrderValue: Double = 0.0,
+    val newUsersThisMonth: Int = 0,
+    val totalArtworks: Int = 0,
+    val activeListings: Int = 0,
+    val soldArtworks: Int = 0,
+    val pendingOrders: Int = 0,
+    val completedOrders: Int = 0,
+    val totalOrders: Int = 0,
+    val platformRevenue: Double = 0.0,
+    val totalCategories: Int = 0,
+    val averageUserBalance: Double = 0.0
+)

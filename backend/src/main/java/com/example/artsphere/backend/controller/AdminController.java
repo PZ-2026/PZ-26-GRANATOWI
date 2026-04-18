@@ -5,6 +5,7 @@ import com.example.artsphere.backend.dto.AdminUserResponse;
 import com.example.artsphere.backend.dto.ArtworkResponse;
 import com.example.artsphere.backend.dto.UpdateUserRoleRequest;
 import com.example.artsphere.backend.dto.UpdateUserStatusRequest;
+import com.example.artsphere.backend.dto.AdminDashboardStatsDto;
 import com.example.artsphere.backend.model.Category;
 import com.example.artsphere.backend.model.User;
 import com.example.artsphere.backend.repository.ArtworkRepository;
@@ -13,6 +14,7 @@ import com.example.artsphere.backend.repository.SaleRepository;
 import com.example.artsphere.backend.repository.SellerUserFollowRepository;
 import com.example.artsphere.backend.repository.UserRepository;
 import com.example.artsphere.backend.service.ArtworkService;
+import com.example.artsphere.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.HttpStatus;
@@ -50,6 +52,9 @@ public class AdminController {
 
     @Autowired
     private ArtworkService artworkService;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -382,5 +387,15 @@ public class AdminController {
             return "ARTIST";
         }
         return normalized;
+    }
+
+    @GetMapping("/statistics/dashboard")
+    public ResponseEntity<AdminDashboardStatsDto> getDashboardStatistics() {
+        try {
+            AdminDashboardStatsDto stats = userService.getAdminDashboardStatistics();
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

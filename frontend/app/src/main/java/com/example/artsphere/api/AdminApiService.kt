@@ -81,6 +81,9 @@ interface AdminApiService {
 
     @GET("api/admin/categories/{categoryId}/subcategories")
     suspend fun getSubcategories(@Path("categoryId") categoryId: Long): Response<List<CategoryBackendResponse>>
+
+    @GET("api/admin/statistics/dashboard")
+    suspend fun getAdminDashboardStatistics(): Response<AdminDashboardStatsDto>
 }
 
 data class CategoryBackendResponse(

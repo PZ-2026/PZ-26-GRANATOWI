@@ -4,6 +4,7 @@ import com.example.artsphere.backend.dto.LoginResponse;
 import com.example.artsphere.backend.dto.RegisterRequest;
 import com.example.artsphere.backend.dto.TransactionDto;
 import com.example.artsphere.backend.dto.ClientStatisticsDto;
+import com.example.artsphere.backend.dto.AdminDashboardStatsDto;
 import com.example.artsphere.backend.model.Order;
 import com.example.artsphere.backend.model.User;
 import com.example.artsphere.backend.model.WalletTransaction;
@@ -238,5 +239,74 @@ public class UserService {
         dto.setCompletedOrders(totalSales);
 
         return dto;
+    }
+    
+    /**
+     * Pobiera statystyki dla panelu administratora
+     */
+    public AdminDashboardStatsDto getAdminDashboardStatistics() {
+        AdminDashboardStatsDto stats = new AdminDashboardStatsDto();
+        
+        // === UŻYTKOWNICY ===
+        List<User> allUsers = userRepository.findAll();
+        stats.setTotalUsers(allUsers.size());
+        
+        long sellers = allUsers.stream().filter(u -> "ARTIST".equals(u.getRole())).count();
+        long buyers = allUsers.stream().filter(u -> "BUYER".equals(u.getRole())).count();
+        stats.setTotalSellers((int) sellers);
+        stats.setTotalBuyers((int) buyers);
+        
+        // Nowi użytkownicy w tym miesiącu
+        LocalDateTime now = LocalDateTime.now();
+        long newUsersMonth = allUsers.stream()
+                .filter(u -> u.getCreatedAt() != null 
+                    && u.getCreatedAt().getMonth() == now.getMonth() 
+                    && u.getCreatedAt().getYear() == now.getYear())
+                .count();
+        stats.setNewUsersThisMonth((int) newUsersMonth);
+        
+        // === DZIEŁA SZTUKI ===
+        List<com.example.artsphere.backend.model.Artwork> allArtworks = artworkRepository.findAll();
+        stats.setTotalArtworks(allArtworks.size());
+        
+        long activeListings = allArtworks.stream().filter(a -> "AVAILABLE".equals(a.getStatus())).count();
+        long soldArtworks = allArtworks.stream().filter(a -> Boolean.TRUE.equals(a.getIsSold())).count();
+        stats.setActiveListings((int) activeListings);
+        stats.setSoldArtworks((int) soldArtworks);
+        
+        // === ZAMÓWIENIA ===
+        List<Order> allOrders = orderRepository.findAll();
+        stats.setTotalOrders(allOrders.size());
+        
+        long pendingOrders = allOrders.stream().filter(o -> "PENDING".equals(o.getStatus())).count();
+        long completedOrders = allOrders.stream().filter(o -> "COMPLETED".equals(o.getStatus())).count();
+        stats.setPendingOrders((int) pendingOrders);
+        stats.setCompletedOrders((int) completedOrders);
+        
+        // === TRANSAKCJE ===
+        double totalTransactionValue = allOrders.stream()
+                .mapToDouble(o -> o.getTotalPrice() != null ? o.getTotalPrice().doubleValue() : 0.0)
+                .sum();
+        stats.setTotalTransactionValue(totalTransactionValue);
+        
+        double averageOrderValue = allOrders.size() > 0 ? totalTransactionValue / allOrders.size() : 0.0;
+        stats.setAverageOrderValue(averageOrderValue);
+        
+        // Przychody platformy (suma wszystkich transakcji)
+        List<com.example.artsphere.backend.model.Sale> allSales = saleRepository.findAll();
+        double platformRevenue = allSales.stream()
+                .mapToDouble(s -> s.getPrice() != null ? s.getPrice().doubleValue() : 0.0)
+                .sum();
+        stats.setPlatformRevenue(platformRevenue);
+        
+        // === DODATKOWE ===
+        // Średnie saldo użytkowników
+        double averageBalance = allUsers.stream()
+                .mapToDouble(u -> u.getBalance() != null ? u.getBalance().doubleValue() : 0.0)
+                .average()
+                .orElse(0.0);
+        stats.setAverageUserBalance(averageBalance);
+        
+        return stats;
     }
 }

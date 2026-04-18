@@ -2,15 +2,12 @@ package com.example.artsphere.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -18,10 +15,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.artsphere.ui.AdminStatistics
-import com.example.artsphere.ui.MockStatisticsProvider
+import com.example.artsphere.api.AdminDashboardStatsDto
+import com.example.artsphere.api.RetrofitClient
 import com.example.artsphere.ui.components.StatMetricCard
 import com.example.artsphere.ui.components.StatMetricCardCompact
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -33,8 +31,30 @@ import java.util.Locale
 fun AdminDashboardScreen(
     onBackClick: () -> Unit
 ) {
-    val statistics = MockStatisticsProvider.getAdminStatistics()
+    var statistics by remember { mutableStateOf<AdminDashboardStatsDto?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+    
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            try {
+                val response = RetrofitClient.adminApi.getAdminDashboardStatistics()
+                
+                if (response.isSuccessful) {
+                    statistics = response.body()
+                    errorMessage = null
+                } else {
+                    errorMessage = "Błąd podczas ładowania danych: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                errorMessage = "Błąd: ${e.message}"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
     
     Column(
         modifier = Modifier
@@ -89,33 +109,102 @@ fun AdminDashboardScreen(
         }
         
         // Content
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Sekcja: Użytkownicy
-            SectionTitle("Użytkownicy")
-            UserStatisticsGrid(statistics)
-            
-            // Sekcja: Transakcje
-            SectionTitle("Transakcje i Przychody")
-            TransactionStatisticsGrid(statistics)
-            
-            // Sekcja: Dzieła Sztuki
-            SectionTitle("Dzieła Sztuki")
-            ArtworkStatisticsGrid(statistics)
-            
-            // Sekcja: Zamówienia
-            SectionTitle("Zamówienia")
-            OrderStatisticsRow(statistics)
-            
-            Spacer(modifier = Modifier.height(16.dp))
+            when {
+                isLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                errorMessage != null -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Error,
+                            contentDescription = "Błąd",
+                            modifier = Modifier.size(64.dp),
+                            tint = Color.Red
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Błąd podczas ładowania danych",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = errorMessage ?: "",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                        Button(onClick = {
+                            isLoading = true
+                            coroutineScope.launch {
+                                try {
+                                    val response = RetrofitClient.adminApi.getAdminDashboardStatistics()
+                                    
+                                    if (response.isSuccessful) {
+                                        statistics = response.body()
+                                        errorMessage = null
+                                    } else {
+                                        errorMessage = "Błąd: ${response.code()}"
+                                    }
+                                } catch (e: Exception) {
+                                    errorMessage = "Błąd: ${e.message}"
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
+                        }) {
+                            Text("Spróbuj ponownie")
+                        }
+                    }
+                }
+                statistics != null -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Sekcja: Użytkownicy
+                        SectionTitle("Użytkownicy")
+                        UserStatisticsGrid(statistics!!)
+                        
+                        // Sekcja: Transakcje
+                        SectionTitle("Transakcje i Przychody")
+                        TransactionStatisticsGrid(statistics!!)
+                        
+                        // Sekcja: Dzieła Sztuki
+                        SectionTitle("Dzieła Sztuki")
+                        ArtworkStatisticsGrid(statistics!!)
+                        
+                        // Sekcja: Zamówienia
+                        SectionTitle("Zamówienia")
+                        OrderStatisticsRow(statistics!!)
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+                else -> {
+                    Text(
+                        text = "Brak danych",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
         }
     }
 }
+
 
 @Composable
 private fun SectionTitle(title: String) {
@@ -129,7 +218,7 @@ private fun SectionTitle(title: String) {
 }
 
 @Composable
-private fun UserStatisticsGrid(stats: AdminStatistics) {
+private fun UserStatisticsGrid(stats: AdminDashboardStatsDto) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -181,7 +270,7 @@ private fun UserStatisticsGrid(stats: AdminStatistics) {
 }
 
 @Composable
-private fun TransactionStatisticsGrid(stats: AdminStatistics) {
+private fun TransactionStatisticsGrid(stats: AdminDashboardStatsDto) {
     val formatter = NumberFormat.getCurrencyInstance(Locale("pl", "PL")).apply {
         maximumFractionDigits = 0
     }
@@ -215,19 +304,19 @@ private fun TransactionStatisticsGrid(stats: AdminStatistics) {
         )
         
         StatMetricCard(
-            value = stats.completedOrders.toString(),
-            label = "Zrealizowane zamówienia",
-            icon = Icons.Default.CheckCircle,
+            value = stats.platformRevenue.toString().substringBefore(".").toDoubleOrNull()?.toInt().toString() + " zł",
+            label = "Przychód platformy",
+            icon = Icons.Default.MonetizationOn,
             modifier = Modifier.weight(1f),
-            backgroundColor = Color(0xFFE8F5E9),
-            iconColor = Color(0xFF4CAF50),
-            valueColor = Color(0xFF4CAF50)
+            backgroundColor = Color(0xFFFFF8E1),
+            iconColor = Color(0xFFFBC02D),
+            valueColor = Color(0xFFFBC02D)
         )
     }
 }
 
 @Composable
-private fun ArtworkStatisticsGrid(stats: AdminStatistics) {
+private fun ArtworkStatisticsGrid(stats: AdminDashboardStatsDto) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -252,28 +341,74 @@ private fun ArtworkStatisticsGrid(stats: AdminStatistics) {
             valueColor = Color(0xFF03A9F4)
         )
     }
+    
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        StatMetricCard(
+            value = stats.soldArtworks.toString(),
+            label = "Sprzedane dzieła",
+            icon = Icons.Default.CheckCircle,
+            modifier = Modifier.weight(1f),
+            backgroundColor = Color(0xFFE8F5E9),
+            iconColor = Color(0xFF4CAF50),
+            valueColor = Color(0xFF4CAF50)
+        )
+        
+        StatMetricCard(
+            value = stats.totalCategories.toString(),
+            label = "Kategorie",
+            icon = Icons.Default.Category,
+            modifier = Modifier.weight(1f),
+            backgroundColor = Color(0xFFFCE4EC),
+            iconColor = Color(0xFFEC407A),
+            valueColor = Color(0xFFEC407A)
+        )
+    }
 }
 
 @Composable
-private fun OrderStatisticsRow(stats: AdminStatistics) {
+private fun OrderStatisticsRow(stats: AdminDashboardStatsDto) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         StatMetricCardCompact(
+            value = stats.totalOrders.toString(),
+            label = "Wszystkie zamówienia",
+            icon = Icons.Default.ShoppingBag,
+            modifier = Modifier.weight(1f),
+            backgroundColor = Color(0xFFE3F2FD)
+        )
+        
+        StatMetricCardCompact(
             value = stats.pendingOrders.toString(),
-            label = "Oczekujące zamówienia",
+            label = "Oczekujące",
             icon = Icons.Default.HourglassEmpty,
             modifier = Modifier.weight(1f),
             backgroundColor = Color(0xFFFFF9C4)
         )
-        
+    }
+    
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         StatMetricCardCompact(
             value = stats.completedOrders.toString(),
             label = "Zakończone",
             icon = Icons.Default.Done,
             modifier = Modifier.weight(1f),
             backgroundColor = Color(0xFFC8E6C9)
+        )
+        
+        StatMetricCardCompact(
+            value = String.format("%.2f zł", stats.averageUserBalance),
+            label = "Średnie saldo użyt.",
+            icon = Icons.Default.AccountBalance,
+            modifier = Modifier.weight(1f),
+            backgroundColor = Color(0xFFE0F2F1)
         )
     }
 }
