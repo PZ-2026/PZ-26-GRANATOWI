@@ -2,17 +2,29 @@ package com.example.artsphere.backend.controller;
 
 import com.example.artsphere.backend.dto.AdminSellerResponse;
 import com.example.artsphere.backend.dto.AdminUserResponse;
+import com.example.artsphere.backend.dto.AdminOrderResponse;
+import com.example.artsphere.backend.dto.AdminOrderStatusHistoryResponse;
 import com.example.artsphere.backend.dto.ArtworkResponse;
 import com.example.artsphere.backend.dto.UpdateUserRoleRequest;
 import com.example.artsphere.backend.dto.UpdateUserStatusRequest;
 import com.example.artsphere.backend.dto.AdminDashboardStatsDto;
+import com.example.artsphere.backend.model.Address;
+import com.example.artsphere.backend.model.Artwork;
 import com.example.artsphere.backend.model.Category;
+import com.example.artsphere.backend.model.Order;
+import com.example.artsphere.backend.model.OrderItem;
+import com.example.artsphere.backend.model.OrderStatusHistory;
 import com.example.artsphere.backend.model.User;
+import com.example.artsphere.backend.model.WalletTransaction;
 import com.example.artsphere.backend.repository.ArtworkRepository;
 import com.example.artsphere.backend.repository.CategoryRepository;
+import com.example.artsphere.backend.repository.OrderItemRepository;
+import com.example.artsphere.backend.repository.OrderRepository;
+import com.example.artsphere.backend.repository.OrderStatusHistoryRepository;
 import com.example.artsphere.backend.repository.SaleRepository;
 import com.example.artsphere.backend.repository.SellerUserFollowRepository;
 import com.example.artsphere.backend.repository.UserRepository;
+import com.example.artsphere.backend.repository.WalletTransactionRepository;
 import com.example.artsphere.backend.service.ArtworkService;
 import com.example.artsphere.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +35,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +69,18 @@ public class AdminController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+
+    @Autowired
+    private OrderStatusHistoryRepository orderStatusHistoryRepository;
+
+    @Autowired
+    private WalletTransactionRepository walletTransactionRepository;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -333,11 +359,280 @@ public class AdminController {
         return ResponseEntity.ok(categoryRepository.findByParentId(categoryId));
     }
 
+    @GetMapping("/orders")
+    public ResponseEntity<List<AdminOrderResponse>> getAllOrders() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+        List<AdminOrderResponse> response = orderRepository.findAllByOrderByCreatedAtDesc().stream()
+                .flatMap(order -> {
+                    List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+                    return items.stream().map(item -> toAdminOrderResponse(order, item, formatter));
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/orders/{orderId}/status")
+    @Transactional
+    public ResponseEntity<?> updateOrderStatus(
+            @PathVariable Long orderId,
+            @RequestBody Map<String, String> request
+    ) {
+        String status = request.get("status");
+        if (status == null || status.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Status zamówienia jest wymagany"));
+        }
+
+        String normalizedStatus = status.trim().toUpperCase();
+        if (!Set.of("PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED").contains(normalizedStatus)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Nieprawidłowy status zamówienia"));
+        }
+
+        return orderRepository.findById(orderId)
+                .<ResponseEntity<?>>map(order -> {
+                    if ("CANCELLED".equals(order.getStatus()) && !"CANCELLED".equals(normalizedStatus)) {
+                        return ResponseEntity.badRequest().body(Map.of("error", "Anulowanego zamówienia nie można ponownie aktywować"));
+                    }
+
+                    if (normalizedStatus.equalsIgnoreCase(order.getStatus())) {
+                        return ResponseEntity.ok(Map.of("message", "Status zamówienia pozostaje bez zmian"));
+                    }
+
+                    if ("CANCELLED".equals(normalizedStatus)) {
+                        applyCancellation(order);
+                        return ResponseEntity.ok(Map.of("message", "Zamówienie zostało anulowane"));
+                    }
+
+                    order.setStatus(normalizedStatus);
+                    if (order.getPaymentStatus() == null) {
+                        order.setPaymentStatus("PAID");
+                    }
+                    order.setUpdatedAt(LocalDateTime.now());
+                    orderRepository.save(order);
+                    appendStatusHistory(order, normalizedStatus, order.getUpdatedAt());
+                    return ResponseEntity.ok(Map.of("message", "Status zamówienia został zaktualizowany"));
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Nie znaleziono zamówienia")));
+    }
+
+    @PatchMapping("/orders/{orderId}/cancel")
+    @Transactional
+    public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {
+        return orderRepository.findById(orderId)
+                .<ResponseEntity<?>>map(order -> {
+                    if ("CANCELLED".equals(order.getStatus())) {
+                        return ResponseEntity.badRequest().body(Map.of("error", "Zamówienie jest już anulowane"));
+                    }
+                    applyCancellation(order);
+                    return ResponseEntity.ok(Map.of("message", "Zamówienie zostało anulowane"));
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Nie znaleziono zamówienia")));
+    }
+
     private String generateSlug(String name) {
         if (name == null) return "";
         return name.toLowerCase()
                 .replaceAll("[^a-z0-9\\s]", "")
                 .replaceAll("\\s+", "-");
+    }
+
+    private AdminOrderResponse toAdminOrderResponse(Order order, OrderItem item, DateTimeFormatter formatter) {
+        User buyer = order.getUser();
+        User seller = item.getArtwork() != null ? item.getArtwork().getUser() : null;
+        Address shippingAddress = order.getShippingAddress();
+
+        String orderStatus = normalizeOrderStatus(order.getStatus());
+        String paymentStatus = resolvePaymentStatus(order.getPaymentStatus(), order.getStatus());
+
+        String orderDate = order.getCreatedAt() != null
+                ? order.getCreatedAt().format(formatter)
+                : "-";
+
+        String actualDelivery = "DELIVERED".equals(orderStatus) && order.getUpdatedAt() != null
+                ? order.getUpdatedAt().format(formatter)
+                : null;
+
+        Integer quantity = item.getQuantity() != null ? item.getQuantity() : 1;
+        double unitPrice = item.getPrice() != null ? item.getPrice().doubleValue() : 0.0;
+        double lineTotal = unitPrice * quantity;
+        double totalAmount = order.getTotalPrice() != null ? order.getTotalPrice().doubleValue() : lineTotal;
+
+        List<AdminOrderStatusHistoryResponse> statusHistory = orderStatusHistoryRepository
+                .findByOrderIdOrderByChangedAtAsc(order.getId())
+                .stream()
+                .map(history -> new AdminOrderStatusHistoryResponse(
+                        history.getStatus(),
+                        history.getChangedAt() != null ? history.getChangedAt().format(formatter) : orderDate
+                ))
+                .collect(Collectors.toList());
+
+        if (statusHistory.isEmpty()) {
+            statusHistory = List.of(new AdminOrderStatusHistoryResponse(orderStatus, orderDate));
+        }
+
+        return new AdminOrderResponse(
+                order.getId(),
+                formatOrderNumber(order),
+                buyer != null ? buyer.getId() : null,
+                buyer != null ? getDisplayName(buyer) : "Nieznany kupujący",
+                buyer != null ? buyer.getEmail() : "-",
+                seller != null ? seller.getId() : null,
+                seller != null ? getDisplayName(seller) : "Nieznany sprzedawca",
+                item.getArtwork() != null ? item.getArtwork().getId() : null,
+                item.getArtwork() != null ? item.getArtwork().getTitle() : "Nieznane dzieło",
+                item.getArtwork() != null ? item.getArtwork().getImagePath() : null,
+                quantity,
+                unitPrice,
+                totalAmount,
+                orderStatus,
+                orderDate,
+                order.getPaymentMethod() != null ? order.getPaymentMethod() : "Portfel ArtSphere",
+                paymentStatus,
+                formatStreetAddress(shippingAddress),
+                shippingAddress != null ? emptyIfNull(shippingAddress.getCity()) : "Brak danych",
+                shippingAddress != null ? emptyIfNull(shippingAddress.getPostalCode()) : "Brak danych",
+                "Polska",
+                null,
+                null,
+                actualDelivery,
+                null,
+                statusHistory
+        );
+    }
+
+    private String formatOrderNumber(Order order) {
+        int year = order.getCreatedAt() != null ? order.getCreatedAt().getYear() : LocalDateTime.now().getYear();
+        return String.format("ORD-%d-%06d", year, order.getId());
+    }
+
+    private String getDisplayName(User user) {
+        String first = user.getFirstName() != null ? user.getFirstName().trim() : "";
+        String last = user.getLastName() != null ? user.getLastName().trim() : "";
+        String full = (first + " " + last).trim();
+        return full.isEmpty() ? user.getUsername() : full;
+    }
+
+    private String normalizeOrderStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return "PENDING";
+        }
+
+        String normalized = status.trim().toUpperCase();
+        return switch (normalized) {
+            case "PAID" -> "PROCESSING";
+            case "COMPLETED" -> "DELIVERED";
+            default -> normalized;
+        };
+    }
+
+    private String resolvePaymentStatus(String paymentStatus, String legacyStatus) {
+        if (paymentStatus != null && !paymentStatus.isBlank()) {
+            return paymentStatus.trim().toUpperCase();
+        }
+
+        if (legacyStatus == null) {
+            return "PENDING";
+        }
+
+        String normalized = legacyStatus.trim().toUpperCase();
+        if ("PAID".equals(normalized)) {
+            return "PAID";
+        }
+        if ("CANCELLED".equals(normalized)) {
+            return "REFUNDED";
+        }
+        return "PENDING";
+    }
+
+    private String formatStreetAddress(Address address) {
+        if (address == null) {
+            return "Brak danych";
+        }
+        String apartment = address.getApartmentNumber() != null && !address.getApartmentNumber().isBlank()
+                ? "/" + address.getApartmentNumber().trim()
+                : "";
+        return String.format(
+                "%s %s%s",
+                emptyIfNull(address.getStreet()),
+                emptyIfNull(address.getHouseNumber()),
+                apartment
+        ).trim();
+    }
+
+    private String emptyIfNull(String value) {
+        return value == null ? "" : value;
+    }
+
+    private void applyCancellation(Order order) {
+        LocalDateTime now = LocalDateTime.now();
+        User buyer = order.getUser();
+        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+
+        if ("PAID".equals(resolvePaymentStatus(order.getPaymentStatus(), order.getStatus()))
+                && buyer != null
+                && order.getTotalPrice() != null) {
+            BigDecimal buyerBalance = buyer.getBalance() != null ? buyer.getBalance() : BigDecimal.ZERO;
+            buyer.setBalance(buyerBalance.add(order.getTotalPrice()));
+            userRepository.save(buyer);
+
+            WalletTransaction buyerTx = new WalletTransaction();
+            buyerTx.setUser(buyer);
+            buyerTx.setTitle("Zwrot środków za anulowanie zamówienia " + formatOrderNumber(order));
+            buyerTx.setAmount(order.getTotalPrice());
+            buyerTx.setIncome(true);
+            walletTransactionRepository.save(buyerTx);
+        }
+
+        for (OrderItem item : items) {
+            Artwork artwork = item.getArtwork();
+            if (artwork == null) {
+                continue;
+            }
+
+            BigDecimal amount = item.getPrice() != null
+                    ? item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity() != null ? item.getQuantity() : 1))
+                    : BigDecimal.ZERO;
+
+            User seller = artwork.getUser();
+            if (seller != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal sellerBalance = seller.getBalance() != null ? seller.getBalance() : BigDecimal.ZERO;
+                seller.setBalance(sellerBalance.subtract(amount));
+                userRepository.save(seller);
+
+                WalletTransaction sellerTx = new WalletTransaction();
+                sellerTx.setUser(seller);
+                sellerTx.setTitle("Zwrot po anulowaniu zamówienia " + formatOrderNumber(order) + " (" + artwork.getTitle() + ")");
+                sellerTx.setAmount(amount);
+                sellerTx.setIncome(false);
+                walletTransactionRepository.save(sellerTx);
+            }
+
+            artwork.setIsSold(false);
+            artwork.setStatus("AVAILABLE");
+            artworkRepository.save(artwork);
+
+            if (buyer != null) {
+                saleRepository.findTopByArtworkIdAndBuyerIdOrderBySoldAtDesc(artwork.getId(), buyer.getId())
+                        .ifPresent(saleRepository::delete);
+            }
+        }
+
+        order.setStatus("CANCELLED");
+        order.setPaymentStatus("PAID".equals(resolvePaymentStatus(order.getPaymentStatus(), order.getStatus())) ? "REFUNDED" : "PENDING");
+        order.setUpdatedAt(now);
+        orderRepository.save(order);
+        appendStatusHistory(order, "CANCELLED", now);
+    }
+
+    private void appendStatusHistory(Order order, String status, LocalDateTime changedAt) {
+        OrderStatusHistory history = new OrderStatusHistory();
+        history.setOrder(order);
+        history.setStatus(status);
+        history.setChangedAt(changedAt != null ? changedAt : LocalDateTime.now());
+        orderStatusHistoryRepository.save(history);
     }
 
     private AdminUserResponse toAdminUserResponse(User user) {

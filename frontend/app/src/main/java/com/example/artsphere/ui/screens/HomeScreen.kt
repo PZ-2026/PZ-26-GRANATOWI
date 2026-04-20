@@ -48,7 +48,7 @@ fun HomeScreen(
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
-            contentPadding = PaddingValues(bottom = 32.dp)
+            contentPadding = PaddingValues(bottom = 72.dp)
         ) {
             item {
                 HeroSection(

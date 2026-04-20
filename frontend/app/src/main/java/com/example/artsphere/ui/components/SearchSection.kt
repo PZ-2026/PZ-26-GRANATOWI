@@ -158,6 +158,7 @@ fun SearchSection(onArtworkClick: (Long) -> Unit) {
                     PublicArtworkCard(artwork = artwork, onClick = { onArtworkClick(artwork.id) })
                 }
             }
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }

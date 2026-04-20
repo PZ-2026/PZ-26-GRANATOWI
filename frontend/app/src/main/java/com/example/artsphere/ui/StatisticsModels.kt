@@ -105,6 +105,11 @@ data class SellerInfo(
 )
 
 // ========== ORDER MANAGEMENT ==========
+data class OrderStatusHistoryEntry(
+    val status: String,
+    val date: String
+)
+
 data class OrderInfo(
     val id: Long,
     val orderNumber: String,
@@ -130,7 +135,8 @@ data class OrderInfo(
     val trackingNumber: String?,
     val estimatedDelivery: String?,
     val actualDelivery: String?,
-    val notes: String?
+    val notes: String?,
+    val statusHistory: List<OrderStatusHistoryEntry> = emptyList()
 )
 
 // ========== CATEGORY MANAGEMENT ==========

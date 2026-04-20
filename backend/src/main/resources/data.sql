@@ -45,7 +45,12 @@ INSERT INTO artworks (id, title, description, price, is_priceless, artist, categ
 (2, 'Słoneczniki', 'Bukiet w wazonie', 900.00, false, 'Vincent van Gogh', 2, 2, 'SOLD', 91.0, 72.0, 2.0),
 (3, 'Neon City', 'Grafika komputerowa', 450.00, false, 'Anna Nowak', 6, 3, 'AVAILABLE', 50.0, 50.0, 0.1),
 (4, 'Kamienna Twarz', 'Rzeźba z piaskowca', 2100.00, false, 'Maksymilian Rzeźbiarz', 5, 4, 'AVAILABLE', 30.0, 45.0, 25.0),
-(5, 'Bez tytułu', 'Eksperyment rzeźbiarski', null, true, 'Maksymilian Rzeźbiarz', 4, 4, 'AVAILABLE', 20.0, 60.0, 20.0)
+(5, 'Bez tytułu', 'Eksperyment rzeźbiarski', null, true, 'Maksymilian Rzeźbiarz', 4, 4, 'AVAILABLE', 20.0, 60.0, 20.0),
+(6, 'Mglisty Poranek', 'Pejzaż w chłodnej tonacji.', 780.00, false, 'Anna Nowak', 3, 3, 'AVAILABLE', 60.0, 45.0, 1.8),
+(7, 'Stalowy Rytm', 'Nowoczesna rzeźba industrialna.', 1650.00, false, 'Maksymilian Rzeźbiarz', 4, 4, 'AVAILABLE', 35.0, 70.0, 28.0),
+(8, 'Złote Pole', 'Impresja inspirowana latem.', 990.00, false, 'Vincent van Gogh', 2, 2, 'AVAILABLE', 88.0, 68.0, 2.1),
+(9, 'Most o Świcie', 'Grafika cyfrowa z motywem miejskim.', 520.00, false, 'Anna Nowak', 6, 3, 'AVAILABLE', 55.0, 55.0, 0.2),
+(10, 'Kamienny Ogród', 'Rzeźba ogrodowa z granitu.', 2400.00, false, 'Maksymilian Rzeźbiarz', 5, 4, 'AVAILABLE', 42.0, 80.0, 30.0)
 ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================================
@@ -69,9 +74,17 @@ INSERT INTO carts (id, user_id) VALUES (1, 5), (2, 6) ON CONFLICT (id) DO NOTHIN
 INSERT INTO cart_items (id, artwork_id, quantity, cart_id) VALUES (1, 1, 1, 1) ON CONFLICT (id) DO NOTHING;
 
 -- Zamówienie zrealizowane (Jan kupił Słoneczniki)
-INSERT INTO orders (id, user_id, total_price, status) VALUES (1, 5, 900.00, 'PAID') ON CONFLICT (id) DO NOTHING;
+INSERT INTO orders (id, user_id, total_price, status, payment_status, payment_method, shipping_address_id)
+VALUES (1, 5, 900.00, 'DELIVERED', 'PAID', 'Portfel ArtSphere', 3)
+ON CONFLICT (id) DO NOTHING;
 INSERT INTO order_items (id, artwork_id, quantity, price, order_id) VALUES (1, 2, 1, 900.00, 1) ON CONFLICT (id) DO NOTHING;
 INSERT INTO sales (id, price, artwork_id, user_id) VALUES (1, 900.00, 2, 5) ON CONFLICT (id) DO NOTHING;
+INSERT INTO order_status_history (id, order_id, status, changed_at) VALUES
+(1, 1, 'PENDING', CURRENT_TIMESTAMP - INTERVAL '3 day'),
+(2, 1, 'PROCESSING', CURRENT_TIMESTAMP - INTERVAL '2 day'),
+(3, 1, 'SHIPPED', CURRENT_TIMESTAMP - INTERVAL '1 day'),
+(4, 1, 'DELIVERED', CURRENT_TIMESTAMP - INTERVAL '12 hour')
+ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================================
 -- 7. ADRESY
@@ -98,4 +111,5 @@ SELECT setval('seller_user_follows_id_seq', (SELECT COALESCE(MAX(id), 1) FROM se
 SELECT setval('donations_id_seq', (SELECT COALESCE(MAX(id), 1) FROM donations));
 SELECT setval('cart_items_id_seq', (SELECT COALESCE(MAX(id), 1) FROM cart_items));
 SELECT setval('order_items_id_seq', (SELECT COALESCE(MAX(id), 1) FROM order_items));
+SELECT setval('order_status_history_id_seq', (SELECT COALESCE(MAX(id), 1) FROM order_status_history));
 SELECT setval('sales_id_seq', (SELECT COALESCE(MAX(id), 1) FROM sales));

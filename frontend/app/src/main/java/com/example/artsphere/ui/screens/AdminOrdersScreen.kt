@@ -13,33 +13,54 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.artsphere.ui.MockStatisticsProvider
+import com.example.artsphere.api.RetrofitClient
 import com.example.artsphere.ui.OrderInfo
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AdminOrdersScreen(
+    refreshTrigger: Int = 0,
     onBackClick: () -> Unit,
     onOrderClick: (OrderInfo) -> Unit
 ) {
-    val orders = remember { MockStatisticsProvider.getMockOrders() }
+    val coroutineScope = rememberCoroutineScope()
+    var orders by remember { mutableStateOf<List<OrderInfo>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var hasError by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedStatusFilter by remember { mutableStateOf("ALL") }
     var selectedPaymentFilter by remember { mutableStateOf("ALL") }
     var selectedStatFilter by remember { mutableStateOf("ALL") }
     var showFilters by remember { mutableStateOf(false) }
+
+    LaunchedEffect(refreshTrigger) {
+        isLoading = true
+        hasError = false
+        try {
+            val response = RetrofitClient.adminApi.getAllOrders()
+            if (response.isSuccessful && response.body() != null) {
+                orders = response.body()!!
+            } else {
+                hasError = true
+            }
+        } catch (e: Exception) {
+            hasError = true
+        } finally {
+            isLoading = false
+        }
+    }
     
     // Filtrowanie zamówień
-    val filteredOrders = remember(searchQuery, selectedStatusFilter, selectedPaymentFilter, selectedStatFilter) {
+    val filteredOrders = remember(orders, searchQuery, selectedStatusFilter, selectedPaymentFilter, selectedStatFilter) {
         orders.filter { order ->
             val matchesSearch = searchQuery.isEmpty() || 
                 order.orderNumber.contains(searchQuery, ignoreCase = true) ||
@@ -340,9 +361,10 @@ fun AdminOrdersScreen(
                             
                             // Filtr statusu
                             Text("Status zamówienia:", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                            Row(
+                            FlowRow(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 FilterChip(
                                     selected = selectedStatusFilter == "ALL",
@@ -359,11 +381,6 @@ fun AdminOrdersScreen(
                                     onClick = { selectedStatusFilter = "PROCESSING" },
                                     label = { Text("W realizacji", fontSize = 12.sp) }
                                 )
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
                                 FilterChip(
                                     selected = selectedStatusFilter == "SHIPPED",
                                     onClick = { selectedStatusFilter = "SHIPPED" },
@@ -385,9 +402,10 @@ fun AdminOrdersScreen(
                             
                             // Filtr płatności
                             Text("Status płatności:", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                            Row(
+                            FlowRow(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 FilterChip(
                                     selected = selectedPaymentFilter == "ALL",
@@ -418,23 +436,14 @@ fun AdminOrdersScreen(
             // Informacja o liczbie wyników
             item {
                 Text(
-                    "Znaleziono: ${filteredOrders.size} zamówień",
+                    if (isLoading) "Ładowanie zamówień..." else "Znaleziono: ${filteredOrders.size} zamówień",
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
             }
-            
-            // Lista zamówień
-            items(filteredOrders) { order ->
-                OrderCard(
-                    order = order,
-                    onClick = { onOrderClick(order) }
-                )
-            }
-            
-            // Komunikat gdy brak wyników
-            if (filteredOrders.isEmpty()) {
+
+            if (isLoading) {
                 item {
                     Box(
                         modifier = Modifier
@@ -442,27 +451,81 @@ fun AdminOrdersScreen(
                             .padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        CircularProgressIndicator()
+                    }
+                }
+            } else if (hasError) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Nie udało się pobrać zamówień", color = Color.Gray)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(onClick = {
+                                coroutineScope.launch {
+                                    isLoading = true
+                                    hasError = false
+                                    try {
+                                        val response = RetrofitClient.adminApi.getAllOrders()
+                                        if (response.isSuccessful && response.body() != null) {
+                                            orders = response.body()!!
+                                        } else {
+                                            hasError = true
+                                        }
+                                    } catch (_: Exception) {
+                                        hasError = true
+                                    } finally {
+                                        isLoading = false
+                                    }
+                                }
+                            }) {
+                                Text("Spróbuj ponownie")
+                            }
+                        }
+                    }
+                }
+            } else {
+                items(filteredOrders) { order ->
+                    OrderCard(
+                        order = order,
+                        onClick = { onOrderClick(order) }
+                    )
+                }
+
+                if (filteredOrders.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                Icons.Default.SearchOff,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = Color.Gray
-                            )
-                            Text(
-                                "Nie znaleziono zamówień",
-                                fontSize = 16.sp,
-                                color = Color.Gray
-                            )
-                            if (searchQuery.isNotEmpty()) {
-                                Text(
-                                    "Spróbuj zmienić kryteria wyszukiwania",
-                                    fontSize = 14.sp,
-                                    color = Color.LightGray
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.SearchOff,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
+                                    tint = Color.Gray
                                 )
+                                Text(
+                                    "Nie znaleziono zamówień",
+                                    fontSize = 16.sp,
+                                    color = Color.Gray
+                                )
+                                if (searchQuery.isNotEmpty()) {
+                                    Text(
+                                        "Spróbuj zmienić kryteria wyszukiwania",
+                                        fontSize = 14.sp,
+                                        color = Color.LightGray
+                                    )
+                                }
                             }
                         }
                     }

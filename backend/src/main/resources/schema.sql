@@ -81,9 +81,16 @@ CREATE TABLE IF NOT EXISTS orders (
     user_id BIGINT REFERENCES users(id),
     total_price DECIMAL(15,2),
     status VARCHAR(50),
+    payment_method VARCHAR(100),
+    payment_status VARCHAR(50),
+    shipping_address_id BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(100);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_address_id BIGINT;
 
 CREATE TABLE IF NOT EXISTS order_items (
     id BIGSERIAL PRIMARY KEY,
@@ -91,6 +98,13 @@ CREATE TABLE IF NOT EXISTS order_items (
     quantity INTEGER,
     price DECIMAL(15,2),
     order_id BIGINT REFERENCES orders(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS order_status_history (
+    id BIGSERIAL PRIMARY KEY,
+    order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    status VARCHAR(50) NOT NULL,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS sales (

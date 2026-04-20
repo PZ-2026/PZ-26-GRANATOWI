@@ -23,6 +23,16 @@ public class Order {
 
     private String status;
 
+    @Column(name = "payment_method")
+    private String paymentMethod;
+
+    @Column(name = "payment_status")
+    private String paymentStatus;
+
+    @ManyToOne
+    @JoinColumn(name = "shipping_address_id")
+    private Address shippingAddress;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 

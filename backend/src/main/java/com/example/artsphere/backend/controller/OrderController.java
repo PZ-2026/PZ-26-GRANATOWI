@@ -38,18 +38,44 @@ public class OrderController {
     @Autowired
     private WalletTransactionRepository walletTransactionRepository;
 
+    @Autowired
+    private AddressRepository addressRepository;
+
+    @Autowired
+    private OrderStatusHistoryRepository orderStatusHistoryRepository;
+
     @PostMapping("/checkout")
     public ResponseEntity<?> checkout(@RequestBody CreateOrderRequest request) {
         User buyer = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("Brak usera"));
 
+        Address shippingAddress = null;
+        if (request.getAddressId() != null) {
+            shippingAddress = addressRepository.findById(request.getAddressId())
+                    .filter(address -> address.getUser() != null && address.getUser().getId().equals(buyer.getId()))
+                    .orElseThrow(() -> new RuntimeException("Nieprawidłowy adres dostawy"));
+        }
+
         Order order = new Order();
         order.setUser(buyer);
         order.setTotalPrice(BigDecimal.valueOf(request.getTotalPrice()));
-        order.setStatus("PAID");
+        order.setStatus("PENDING");
+        order.setPaymentStatus("PAID");
+        order.setPaymentMethod(
+                request.getPaymentMethod() != null && !request.getPaymentMethod().isBlank()
+                        ? request.getPaymentMethod()
+                        : "Portfel ArtSphere"
+        );
+        order.setShippingAddress(shippingAddress);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
+
+        OrderStatusHistory initialHistory = new OrderStatusHistory();
+        initialHistory.setOrder(order);
+        initialHistory.setStatus("PENDING");
+        initialHistory.setChangedAt(order.getCreatedAt());
+        orderStatusHistoryRepository.save(initialHistory);
 
         for (Long artId : request.getArtworkIds()) {
             Artwork artwork = artworkRepository.findById(artId).orElse(null);

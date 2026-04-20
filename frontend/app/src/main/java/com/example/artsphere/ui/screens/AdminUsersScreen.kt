@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -68,7 +70,7 @@ import com.example.artsphere.ui.UserInfo
 import java.text.NumberFormat
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AdminUsersScreen(
     refreshTrigger: Int = 0,
@@ -258,7 +260,10 @@ fun AdminUsersScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Text("Rola użytkownika:", fontSize = 14.sp, color = Color.Gray)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
                                 FilterChip(selected = selectedRole == null, onClick = { selectedRole = null }, label = { Text("Wszystkie") })
                                 FilterChip(selected = selectedRole == "BUYER", onClick = { selectedRole = if (selectedRole == "BUYER") null else "BUYER" }, label = { Text("Kupujący") })
                                 FilterChip(selected = selectedRole == "ARTIST", onClick = { selectedRole = if (selectedRole == "ARTIST") null else "ARTIST" }, label = { Text("Sprzedawcy") })

@@ -23,8 +23,7 @@ fun AdminOrderDetailScreen(
     order: OrderInfo,
     onBackClick: () -> Unit,
     onChangeStatusClick: (String) -> Unit,
-    onCancelOrderClick: () -> Unit,
-    onSendMessageClick: () -> Unit
+    onCancelOrderClick: () -> Unit
 ) {
     var showStatusDialog by remember { mutableStateOf(false) }
     var showCancelDialog by remember { mutableStateOf(false) }
@@ -221,40 +220,20 @@ fun AdminOrderDetailScreen(
                     title = "HISTORIA STATUSU",
                     icon = Icons.Default.History
                 ) {
+                    val statusHistory = if (order.statusHistory.isNotEmpty()) {
+                        order.statusHistory
+                    } else {
+                        listOf(com.example.artsphere.ui.OrderStatusHistoryEntry(order.status, order.orderDate))
+                    }
+
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        StatusHistoryItem(
-                            status = "PENDING",
-                            date = order.orderDate,
-                            isActive = order.status == "PENDING"
-                        )
-                        if (order.status in listOf("PROCESSING", "SHIPPED", "DELIVERED")) {
+                        statusHistory.forEachIndexed { index, history ->
                             StatusHistoryItem(
-                                status = "PROCESSING",
-                                date = order.orderDate, // Placeholder - w prawdziwej aplikacji byłyby różne daty
-                                isActive = order.status == "PROCESSING"
-                            )
-                        }
-                        if (order.status in listOf("SHIPPED", "DELIVERED")) {
-                            StatusHistoryItem(
-                                status = "SHIPPED",
-                                date = order.orderDate,
-                                isActive = order.status == "SHIPPED"
-                            )
-                        }
-                        if (order.status == "DELIVERED") {
-                            StatusHistoryItem(
-                                status = "DELIVERED",
-                                date = order.actualDelivery ?: order.orderDate,
-                                isActive = true
-                            )
-                        }
-                        if (order.status == "CANCELLED") {
-                            StatusHistoryItem(
-                                status = "CANCELLED",
-                                date = order.orderDate,
-                                isActive = true
+                                status = history.status,
+                                date = history.date,
+                                isActive = index == statusHistory.lastIndex
                             )
                         }
                     }
@@ -306,21 +285,6 @@ fun AdminOrderDetailScreen(
                             Icon(Icons.Default.Edit, "Zmień status", modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Zmień status", fontSize = 16.sp)
-                        }
-                        
-                        OutlinedButton(
-                            onClick = onSendMessageClick,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color(0xFF4CAF50)
-                            )
-                        ) {
-                            Icon(Icons.Default.Message, "Wyślij wiadomość", modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Wyślij wiadomość", fontSize = 16.sp)
                         }
                         
                         if (order.status != "CANCELLED") {

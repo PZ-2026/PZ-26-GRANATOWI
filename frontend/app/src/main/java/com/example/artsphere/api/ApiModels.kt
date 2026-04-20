@@ -94,7 +94,9 @@ data class TransactionResponse(
 data class CreateOrderRequest(
     val userId: Long,
     val totalPrice: Double,
-    val artworkIds: List<Long>
+    val artworkIds: List<Long>,
+    val addressId: Long? = null,
+    val paymentMethod: String = "Portfel ArtSphere"
 )
 
 data class PurchaseResponse(

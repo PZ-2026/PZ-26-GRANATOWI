@@ -8,4 +8,6 @@ public class CreateOrderRequest {
     private Long userId;
     private Double totalPrice;
     private List<Long> artworkIds;
+    private Long addressId;
+    private String paymentMethod;
 }

@@ -569,11 +569,70 @@ fun AppNavigation() {
         }
 
         composable("admin_orders") {
+            val coroutineScope = rememberCoroutineScope()
+            val context = LocalContext.current
+            var refreshTrigger by remember { mutableIntStateOf(0) }
             var selectedOrder by remember { mutableStateOf<com.example.artsphere.ui.OrderInfo?>(null) }
             if (selectedOrder == null) {
-                AdminOrdersScreen(onBackClick = { navController.popBackStack() }, onOrderClick = { order -> selectedOrder = order })
+                AdminOrdersScreen(
+                    refreshTrigger = refreshTrigger,
+                    onBackClick = { navController.popBackStack() },
+                    onOrderClick = { order -> selectedOrder = order }
+                )
             } else {
-                AdminOrderDetailScreen(order = selectedOrder!!, onBackClick = { selectedOrder = null }, onChangeStatusClick = { newStatus -> selectedOrder = selectedOrder!!.copy(status = newStatus) }, onCancelOrderClick = { selectedOrder = selectedOrder!!.copy(status = "CANCELLED", paymentStatus = if (selectedOrder!!.paymentStatus == "PAID") "REFUNDED" else "PENDING") }, onSendMessageClick = { })
+                AdminOrderDetailScreen(
+                    order = selectedOrder!!,
+                    onBackClick = { selectedOrder = null },
+                    onChangeStatusClick = { newStatus ->
+                        val current = selectedOrder
+                        if (current != null) {
+                            coroutineScope.launch {
+                                try {
+                                    val response = RetrofitClient.adminApi.updateOrderStatus(
+                                        current.id,
+                                        mapOf("status" to newStatus)
+                                    )
+                                    if (response.isSuccessful) {
+                                        val allOrders = RetrofitClient.adminApi.getAllOrders().body()
+                                        val refreshed = allOrders
+                                            ?.firstOrNull { it.id == current.id && it.artworkId == current.artworkId }
+                                            ?: allOrders?.firstOrNull { it.id == current.id }
+                                        selectedOrder = refreshed ?: current.copy(status = newStatus)
+                                        refreshTrigger++
+                                        Toast.makeText(context, "Status zamówienia zaktualizowany", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Nie udało się zaktualizować statusu", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Błąd zmiany statusu", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    },
+                    onCancelOrderClick = {
+                        val current = selectedOrder
+                        if (current != null) {
+                            coroutineScope.launch {
+                                try {
+                                    val response = RetrofitClient.adminApi.cancelOrder(current.id)
+                                    if (response.isSuccessful) {
+                                        val allOrders = RetrofitClient.adminApi.getAllOrders().body()
+                                        val refreshed = allOrders
+                                            ?.firstOrNull { it.id == current.id && it.artworkId == current.artworkId }
+                                            ?: allOrders?.firstOrNull { it.id == current.id }
+                                        selectedOrder = refreshed ?: current.copy(status = "CANCELLED", paymentStatus = "REFUNDED")
+                                        refreshTrigger++
+                                        Toast.makeText(context, "Zamówienie anulowane", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Nie udało się anulować zamówienia", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Błąd anulowania zamówienia", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    }
+                )
             }
         }
 

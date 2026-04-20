@@ -9,6 +9,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import com.example.artsphere.api.UpdateCategoryRequest
+import com.example.artsphere.ui.OrderInfo
 
 interface AdminApiService {
     @GET("api/admin/users")
@@ -19,6 +20,18 @@ interface AdminApiService {
 
     @GET("api/admin/artworks")
     suspend fun getAllArtworks(): Response<List<ArtworkResponse>>
+
+    @GET("api/admin/orders")
+    suspend fun getAllOrders(): Response<List<OrderInfo>>
+
+    @PATCH("api/admin/orders/{orderId}/status")
+    suspend fun updateOrderStatus(
+        @Path("orderId") orderId: Long,
+        @Body request: Map<String, String>
+    ): Response<Map<String, String>>
+
+    @PATCH("api/admin/orders/{orderId}/cancel")
+    suspend fun cancelOrder(@Path("orderId") orderId: Long): Response<Map<String, String>>
 
     @PATCH("api/admin/artworks/{artworkId}/status")
     suspend fun updateArtworkStatus(

@@ -90,7 +90,13 @@ fun CheckoutScreen(
 
                                         // 2. ZAPISUJEMY ZAMÓWIENIE
                                         try {
-                                            val orderRequest = CreateOrderRequest(userId, total, cartItems.map { it.id })
+                                            val orderRequest = CreateOrderRequest(
+                                                userId = userId,
+                                                totalPrice = total,
+                                                artworkIds = cartItems.map { it.id },
+                                                addressId = selectedAddress?.id,
+                                                paymentMethod = "Portfel ArtSphere"
+                                            )
                                             RetrofitClient.authApi.createOrder(orderRequest)
                                         } catch (e: Exception) {
                                         }
