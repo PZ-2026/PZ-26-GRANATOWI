@@ -17,10 +17,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.artsphere.api.ClientStatisticsDto
 import com.example.artsphere.api.RetrofitClient
+import com.example.artsphere.ui.components.ReportDialog
 import com.example.artsphere.ui.components.StatMetricCard
 import com.example.artsphere.ui.components.StatMetricCardCompact
 import com.example.artsphere.ui.components.StatMetricCardWithTrend
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
@@ -31,6 +36,8 @@ fun ClientDashboardScreen(
 ) {
     var statistics by remember { mutableStateOf<ClientStatisticsDto?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    var showPurchaseReportDialog by remember { mutableStateOf(false) }
+    var showTransactionReportDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
     LaunchedEffect(userId) {
@@ -38,6 +45,42 @@ fun ClientDashboardScreen(
             val res = RetrofitClient.authApi.getClientStatistics(userId)
             if (res.isSuccessful) statistics = res.body()
         } catch (e: Exception) { } finally { isLoading = false }
+    }
+
+    // Dialog raportu zakupów
+    if (showPurchaseReportDialog) {
+        ReportDialog(
+            title = "Raport zakupów",
+            onDismiss = { showPurchaseReportDialog = false },
+            onGenerateReport = { dateFrom, dateTo ->
+                {
+                    val response = RetrofitClient.reportApi.getClientPurchaseReport(
+                        userId = userId,
+                        dateFrom = dateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                        dateTo = dateTo.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                    )
+                    if (response.isSuccessful) response.body() else null
+                }
+            }
+        )
+    }
+
+    // Dialog raportu transakcji
+    if (showTransactionReportDialog) {
+        ReportDialog(
+            title = "Raport transakcji",
+            onDismiss = { showTransactionReportDialog = false },
+            onGenerateReport = { dateFrom, dateTo ->
+                {
+                    val response = RetrofitClient.reportApi.getClientTransactionsReport(
+                        userId = userId,
+                        dateFrom = dateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                        dateTo = dateTo.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                    )
+                    if (response.isSuccessful) response.body() else null
+                }
+            }
+        )
     }
 
     Column(
@@ -118,8 +161,47 @@ fun ClientDashboardScreen(
                     ActivityOverview(stats)
                 }
 
+                // Sekcja raportów
+                Column {
+                    SectionTitle("Generuj raporty PDF")
+                    ReportButtons(
+                        onPurchaseReportClick = { showPurchaseReportDialog = true },
+                        onTransactionReportClick = { showTransactionReportDialog = true }
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun ReportButtons(
+    onPurchaseReportClick: () -> Unit,
+    onTransactionReportClick: () -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Button(
+            onClick = onPurchaseReportClick,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6650a4))
+        ) {
+            Icon(Icons.Default.ShoppingBag, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Raport zakupów", fontSize = 14.sp)
+        }
+
+        Button(
+            onClick = onTransactionReportClick,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0))
+        ) {
+            Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Raport transakcji portfela", fontSize = 14.sp)
         }
     }
 }

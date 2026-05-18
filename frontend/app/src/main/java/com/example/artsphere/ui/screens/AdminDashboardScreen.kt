@@ -3,6 +3,7 @@ package com.example.artsphere.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,10 +18,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.artsphere.api.AdminDashboardStatsDto
 import com.example.artsphere.api.RetrofitClient
+import com.example.artsphere.ui.components.ReportDialog
 import com.example.artsphere.ui.components.StatMetricCard
 import com.example.artsphere.ui.components.StatMetricCardCompact
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
@@ -34,6 +38,8 @@ fun AdminDashboardScreen(
     var statistics by remember { mutableStateOf<AdminDashboardStatsDto?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showUserActivityReportDialog by remember { mutableStateOf(false) }
+    var showCommissionReportDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     
@@ -190,7 +196,59 @@ fun AdminDashboardScreen(
                         // Sekcja: Zamówienia
                         SectionTitle("Zamówienia")
                         OrderStatisticsRow(statistics!!)
-                        
+
+                        // Sekcja: Generowanie raportów PDF
+                        SectionTitle("Generuj raporty PDF")
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = "Raporty administracyjne",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
+                                )
+                                Button(
+                                    onClick = { showUserActivityReportDialog = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF8A2387)
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.People,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Raport aktywności użytkowników PDF")
+                                }
+                                Button(
+                                    onClick = { showCommissionReportDialog = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFE94057)
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.MonetizationOn,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Raport prowizji systemowych PDF")
+                                }
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
@@ -202,6 +260,40 @@ fun AdminDashboardScreen(
                 }
             }
         }
+    }
+
+    // Dialog raportu aktywności użytkowników
+    if (showUserActivityReportDialog) {
+        ReportDialog(
+            title = "Raport aktywności użytkowników",
+            onDismiss = { showUserActivityReportDialog = false },
+            onGenerateReport = { dateFrom, dateTo ->
+                {
+                    val response = RetrofitClient.reportApi.getAdminUserActivityReport(
+                        dateFrom = dateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                        dateTo = dateTo.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                    )
+                    if (response.isSuccessful) response.body() else null
+                }
+            }
+        )
+    }
+
+    // Dialog raportu prowizji systemowych
+    if (showCommissionReportDialog) {
+        ReportDialog(
+            title = "Raport prowizji systemowych",
+            onDismiss = { showCommissionReportDialog = false },
+            onGenerateReport = { dateFrom, dateTo ->
+                {
+                    val response = RetrofitClient.reportApi.getAdminCommissionReport(
+                        dateFrom = dateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                        dateTo = dateTo.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                    )
+                    if (response.isSuccessful) response.body() else null
+                }
+            }
+        )
     }
 }
 

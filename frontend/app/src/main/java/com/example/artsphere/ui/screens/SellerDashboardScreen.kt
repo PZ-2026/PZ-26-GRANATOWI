@@ -15,12 +15,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.artsphere.api.RetrofitClient // DODANY IMPORT
-import com.example.artsphere.ui.SellerStatistics // Upewnij się, że mapujesz odpowiednio do modelu ekranu
+import com.example.artsphere.api.RetrofitClient
+import com.example.artsphere.ui.SellerStatistics
+import com.example.artsphere.ui.components.ReportDialog
 import com.example.artsphere.ui.components.StatMetricCard
 import com.example.artsphere.ui.components.StatMetricCardCompact
 import com.example.artsphere.ui.components.StatMetricCardWithTrend
 import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
@@ -31,6 +34,7 @@ fun SellerDashboardScreen(
 ) {
     var statistics by remember { mutableStateOf<SellerStatistics?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    var showSalesReportDialog by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
     // Pobranie danych na żywo
@@ -178,8 +182,63 @@ fun SellerDashboardScreen(
 
             TopArtworkCard(statsToDisplay)
 
+            // Sekcja: Generowanie raportów PDF
+            SectionTitle("Generuj raporty PDF")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Raporty sprzedaży",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                    Button(
+                        onClick = { showSalesReportDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2E8B57)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Raport sprzedaży PDF")
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    // Dialog raportu sprzedaży
+    if (showSalesReportDialog) {
+        ReportDialog(
+            title = "Raport sprzedaży",
+            onDismiss = { showSalesReportDialog = false },
+            onGenerateReport = { dateFrom, dateTo ->
+                {
+                    val response = RetrofitClient.reportApi.getSellerSalesReport(
+                        sellerId = userId,
+                        dateFrom = dateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                        dateTo = dateTo.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                    )
+                    if (response.isSuccessful) response.body() else null
+                }
+            }
+        )
     }
 }
 
