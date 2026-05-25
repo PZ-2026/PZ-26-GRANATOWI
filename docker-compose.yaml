@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # --- BAZA DANYCH POSTGRES ---
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: kontener_postgres
+    environment:
+      POSTGRES_DB: artsphere_db         # Dokładnie taka nazwa jak u Ciebie
+      POSTGRES_USER: postgres           # Dokładnie taki użytkownik jak u Ciebie
+      POSTGRES_PASSWORD: student        # Dokładnie takie hasło jak u Ciebie
+    ports:
+      - "5432:5432"                     # Port wyciągnięty na Twój komputer (możesz się łączyć przez pgAdmin/DBeaver na localhost:5432)
+    volumes:
+      - artsphere_data:/var/lib/postgresql/data
+    networks:
+      - artsphere-network
+
+  # --- BACKEND (SPRING BOOT) ---
+  spring-backend:
+    build: ./backend                    # Folder, w którym znajduje się Twój Dockerfile
+    container_name: kontener_spring
+    ports:
+      - "8080:8080"
+    environment:
+      # Docker nadpisze poniższe właściwości z Twojego application.properties:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/artsphere_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=student
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_SQL_INIT_MODE=always
+    depends_on:
+      - postgres-db
+    networks:
+      - artsphere-network
+
+volumes:
+  artsphere_data:
+
+networks:
+  artsphere-network:
+    driver: bridge
