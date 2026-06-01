@@ -27,6 +27,9 @@ class AuthServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private com.example.artsphere.backend.logging.AuthFileLogger authFileLogger;
+
     @InjectMocks
     private AuthService authService;
 
