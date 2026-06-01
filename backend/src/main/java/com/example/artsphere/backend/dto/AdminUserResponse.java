@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * DTO danych użytkownika dla panelu admina.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

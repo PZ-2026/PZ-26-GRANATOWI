@@ -3,6 +3,9 @@ package com.example.artsphere.backend.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+/**
+ * Encja relacji obserwowania sprzedawcy.
+ */
 @Entity
 @Table(name = "seller_user_follows")
 @Data

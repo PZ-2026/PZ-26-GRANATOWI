@@ -44,6 +44,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Kontroler REST obsługujący operacje administracyjne.
+ */
 @RestController
 @RequestMapping("/api/admin")
 @CrossOrigin(origins = "*")
@@ -87,6 +90,12 @@ public class AdminController {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    /**
+     * Endpoint administracyjny do jednorazowego haszowania haseł użytkowników,
+     * które są jeszcze zapisane w formie jawnej.
+     *
+     * @return mapa z komunikatem i liczbą wszystkich użytkowników.
+     */
     @PostMapping("/hash-passwords")
     public Map<String, String> hashAllPasswords() {
         List<User> users = userRepository.findAll();
@@ -107,6 +116,11 @@ public class AdminController {
         return result;
     }
     
+    /**
+     * Endpoint zwracający listę wszystkich użytkowników w formacie dla panelu admina.
+     *
+     * @return lista użytkowników w formacie {@link AdminUserResponse}.
+     */
     @GetMapping("/users")
     public ResponseEntity<List<AdminUserResponse>> getAllUsers() {
         List<AdminUserResponse> response = userRepository.findAll().stream()
@@ -115,6 +129,11 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Endpoint zwracający listę sprzedawców (ARTIST) w formacie dla panelu admina.
+     *
+     * @return lista sprzedawców w formacie {@link AdminSellerResponse}.
+     */
     @GetMapping("/sellers")
     public ResponseEntity<List<AdminSellerResponse>> getAllSellers() {
         List<AdminSellerResponse> response = userRepository.findAll().stream()
@@ -124,6 +143,13 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Endpoint aktualizujący rolę użytkownika.
+     *
+     * @param userId identyfikator użytkownika w ścieżce URL.
+     * @param request obiekt z nową rolą użytkownika.
+     * @return zaktualizowany użytkownik lub komunikat błędu walidacji.
+     */
     @PatchMapping("/users/{userId}/role")
     public ResponseEntity<?> updateUserRole(
             @PathVariable Long userId,
@@ -148,6 +174,13 @@ public class AdminController {
                         .body(Map.of("error", "Nie znaleziono użytkownika")));
     }
 
+    /**
+     * Endpoint aktualizujący aktywność konta użytkownika.
+     *
+     * @param userId identyfikator użytkownika w ścieżce URL.
+     * @param request obiekt z flagą aktywności.
+     * @return zaktualizowany użytkownik lub komunikat błędu.
+     */
     @PatchMapping("/users/{userId}/status")
     public ResponseEntity<?> updateUserStatus(
             @PathVariable Long userId,
@@ -167,6 +200,13 @@ public class AdminController {
                         .body(Map.of("error", "Nie znaleziono użytkownika")));
     }
 
+    /**
+     * Endpoint ustawiający status weryfikacji sprzedawcy.
+     *
+     * @param userId identyfikator użytkownika w ścieżce URL.
+     * @param request mapa z flagą "verified".
+     * @return zaktualizowany użytkownik/sprzedawca lub błąd walidacji.
+     */
     @PatchMapping("/users/{userId}/verify")
     public ResponseEntity<?> verifySeller(
             @PathVariable Long userId,
@@ -190,6 +230,13 @@ public class AdminController {
                         .body(Map.of("error", "Nie znaleziono użytkownika")));
     }
 
+    /**
+     * Endpoint usuwający użytkownika wraz z powiązanymi danymi.
+     * Wykonuje ręczne czyszczenie zależności w tabelach.
+     *
+     * @param userId identyfikator użytkownika w ścieżce URL.
+     * @return komunikat o usunięciu lub błąd, gdy użytkownik nie istnieje.
+     */
     @DeleteMapping("/users/{userId}")
     @Transactional
     public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
@@ -223,11 +270,23 @@ public class AdminController {
     }
 
     // ARTWORK MANAGEMENT
+    /**
+     * Endpoint administracyjny zwracający wszystkie dzieła.
+     *
+     * @return lista dzieł w formacie {@link ArtworkResponse}.
+     */
     @GetMapping("/artworks")
     public ResponseEntity<List<ArtworkResponse>> getAllArtworks() {
         return ResponseEntity.ok(artworkService.getAllArtworks());
     }
 
+    /**
+     * Endpoint administracyjny aktualizujący status dzieła.
+     *
+     * @param artworkId identyfikator dzieła w ścieżce URL.
+     * @param request mapa z nowym statusem dzieła.
+     * @return odpowiedź potwierdzająca aktualizację lub błąd.
+     */
     @PatchMapping("/artworks/{artworkId}/status")
     public ResponseEntity<?> updateArtworkStatus(@PathVariable Long artworkId, @RequestBody Map<String, String> request) {
         String status = request.get("status");
@@ -247,6 +306,12 @@ public class AdminController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Endpoint administracyjny usuwający dzieło.
+     *
+     * @param artworkId identyfikator dzieła w ścieżce URL.
+     * @return odpowiedź potwierdzająca usunięcie lub błąd.
+     */
     @DeleteMapping("/artworks/{artworkId}")
     public ResponseEntity<?> deleteArtwork(@PathVariable Long artworkId) {
         return artworkRepository.findById(artworkId)
@@ -258,6 +323,12 @@ public class AdminController {
     }
 
     // CATEGORY MANAGEMENT
+    /**
+     * Endpoint administracyjny tworzący nową kategorię.
+     *
+     * @param request mapa z polami kategorii (name, description, parentId).
+     * @return odpowiedź z kodem 201 lub błąd walidacji.
+     */
     @PostMapping("/categories")
     public ResponseEntity<?> createCategory(@RequestBody Map<String, Object> request) {
         try {
@@ -282,6 +353,13 @@ public class AdminController {
         }
     }
 
+    /**
+     * Endpoint administracyjny aktualizujący status aktywności kategorii.
+     *
+     * @param categoryId identyfikator kategorii w ścieżce URL.
+     * @param request mapa z flagą "isActive".
+     * @return odpowiedź potwierdzająca aktualizację lub błąd.
+     */
     @PatchMapping("/categories/{categoryId}/status")
     public ResponseEntity<?> updateCategoryStatus(
             @PathVariable Integer categoryId,
@@ -300,6 +378,13 @@ public class AdminController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Endpoint administracyjny aktualizujący dane kategorii.
+     *
+     * @param categoryId identyfikator kategorii w ścieżce URL.
+     * @param request mapa z polami do aktualizacji (name, description, parentId).
+     * @return odpowiedź potwierdzająca aktualizację lub błąd.
+     */
     @PutMapping("/categories/{categoryId}")
     public ResponseEntity<?> updateCategory(
             @PathVariable Integer categoryId,
@@ -331,6 +416,12 @@ public class AdminController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Endpoint administracyjny odłączający kategorię od nadrzędnej.
+     *
+     * @param categoryId identyfikator kategorii w ścieżce URL.
+     * @return odpowiedź potwierdzająca aktualizację lub błąd.
+     */
     @PatchMapping("/categories/{categoryId}/detach")
     public ResponseEntity<?> detachCategory(@PathVariable Integer categoryId) {
         return categoryRepository.findById(categoryId)
@@ -343,6 +434,12 @@ public class AdminController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * Endpoint administracyjny usuwający kategorię.
+     *
+     * @param categoryId identyfikator kategorii w ścieżce URL.
+     * @return odpowiedź potwierdzająca usunięcie lub błąd.
+     */
     @DeleteMapping("/categories/{categoryId}")
     public ResponseEntity<?> deleteCategory(@PathVariable Integer categoryId) {
         if (!categoryRepository.existsById(categoryId)) return ResponseEntity.notFound().build();
@@ -354,11 +451,23 @@ public class AdminController {
         }
     }
 
+    /**
+     * Endpoint zwracający podkategorie dla wskazanej kategorii.
+     *
+     * @param categoryId identyfikator kategorii nadrzędnej.
+     * @return lista podkategorii.
+     */
     @GetMapping("/categories/{categoryId}/subcategories")
     public ResponseEntity<List<Category>> getSubcategories(@PathVariable Integer categoryId) {
         return ResponseEntity.ok(categoryRepository.findByParentId(categoryId));
     }
 
+    /**
+     * Endpoint administracyjny zwracający wszystkie zamówienia
+     * zmapowane na format panelu admina.
+     *
+     * @return lista zamówień w formacie {@link AdminOrderResponse}.
+     */
     @GetMapping("/orders")
     public ResponseEntity<List<AdminOrderResponse>> getAllOrders() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
@@ -373,6 +482,14 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Endpoint administracyjny aktualizujący status zamówienia.
+     * Obsługuje także anulowanie zamówienia z pełnym skutkiem finansowym.
+     *
+     * @param orderId identyfikator zamówienia w ścieżce URL.
+     * @param request mapa z nowym statusem zamówienia.
+     * @return komunikat o wyniku operacji lub błąd walidacji.
+     */
     @PatchMapping("/orders/{orderId}/status")
     @Transactional
     public ResponseEntity<?> updateOrderStatus(
@@ -417,6 +534,12 @@ public class AdminController {
                         .body(Map.of("error", "Nie znaleziono zamówienia")));
     }
 
+    /**
+     * Endpoint administracyjny anulujący zamówienie.
+     *
+     * @param orderId identyfikator zamówienia w ścieżce URL.
+     * @return komunikat o anulowaniu lub błąd walidacji.
+     */
     @PatchMapping("/orders/{orderId}/cancel")
     @Transactional
     public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {
@@ -432,6 +555,13 @@ public class AdminController {
                         .body(Map.of("error", "Nie znaleziono zamówienia")));
     }
 
+    /**
+     * Generuje uproszczony slug z nazwy kategorii.
+     * Usuwa znaki specjalne i zastępuje spacje myślnikami.
+     *
+     * @param name nazwa kategorii do znormalizowania.
+     * @return slug w formacie przyjaznym dla URL.
+     */
     private String generateSlug(String name) {
         if (name == null) return "";
         return name.toLowerCase()
@@ -439,6 +569,14 @@ public class AdminController {
                 .replaceAll("\\s+", "-");
     }
 
+    /**
+     * Mapuje zamówienie i pozycję zamówienia na obiekt odpowiedzi dla panelu admina.
+     *
+     * @param order zamówienie źródłowe.
+     * @param item pozycja zamówienia powiązana z dziełem.
+     * @param formatter formatter daty używany do prezentacji pól czasowych.
+     * @return obiekt {@link AdminOrderResponse} z pełnymi danymi wiersza.
+     */
     private AdminOrderResponse toAdminOrderResponse(Order order, OrderItem item, DateTimeFormatter formatter) {
         User buyer = order.getUser();
         User seller = item.getArtwork() != null ? item.getArtwork().getUser() : null;
@@ -503,11 +641,24 @@ public class AdminController {
         );
     }
 
+    /**
+     * Buduje czytelny numer zamówienia w formacie ORD-YYYY-XXXXXX.
+     *
+     * @param order zamówienie, z którego pobierany jest rok i identyfikator.
+     * @return sformatowany numer zamówienia.
+     */
     private String formatOrderNumber(Order order) {
         int year = order.getCreatedAt() != null ? order.getCreatedAt().getYear() : LocalDateTime.now().getYear();
         return String.format("ORD-%d-%06d", year, order.getId());
     }
 
+    /**
+     * Wyznacza nazwę wyświetlaną użytkownika.
+     * Preferuje imię i nazwisko, a gdy brak — nazwę użytkownika.
+     *
+     * @param user użytkownik, którego nazwa ma zostać wyświetlona.
+     * @return tekst do wyświetlenia jako nazwa użytkownika.
+     */
     private String getDisplayName(User user) {
         String first = user.getFirstName() != null ? user.getFirstName().trim() : "";
         String last = user.getLastName() != null ? user.getLastName().trim() : "";
@@ -515,6 +666,12 @@ public class AdminController {
         return full.isEmpty() ? user.getUsername() : full;
     }
 
+    /**
+     * Normalizuje status zamówienia do wartości używanej w panelu.
+     *
+     * @param status status źródłowy z bazy danych.
+     * @return znormalizowany status zamówienia.
+     */
     private String normalizeOrderStatus(String status) {
         if (status == null || status.isBlank()) {
             return "PENDING";
@@ -528,6 +685,13 @@ public class AdminController {
         };
     }
 
+    /**
+     * Wyznacza status płatności na podstawie bieżącego pola i starego statusu zamówienia.
+     *
+     * @param paymentStatus wartość statusu płatności (może być pusta).
+     * @param legacyStatus status zamówienia używany jako fallback.
+     * @return znormalizowany status płatności.
+     */
     private String resolvePaymentStatus(String paymentStatus, String legacyStatus) {
         if (paymentStatus != null && !paymentStatus.isBlank()) {
             return paymentStatus.trim().toUpperCase();
@@ -547,6 +711,12 @@ public class AdminController {
         return "PENDING";
     }
 
+    /**
+     * Składa adres uliczny z ulicy, numeru domu i numeru mieszkania.
+     *
+     * @param address adres źródłowy.
+     * @return sformatowany adres uliczny lub "Brak danych".
+     */
     private String formatStreetAddress(Address address) {
         if (address == null) {
             return "Brak danych";
@@ -562,10 +732,23 @@ public class AdminController {
         ).trim();
     }
 
+    /**
+     * Zwraca pusty łańcuch znaków, gdy wartość jest null.
+     *
+     * @param value wartość wejściowa.
+     * @return wartość niepusta lub pusty łańcuch.
+     */
     private String emptyIfNull(String value) {
         return value == null ? "" : value;
     }
 
+    /**
+     * Zastosowuje skutki anulowania zamówienia:
+     * zwraca środki kupującemu, koryguje saldo sprzedawcy,
+     * aktualizuje dzieła i czyści wpis sprzedaży.
+     *
+     * @param order zamówienie do anulowania.
+     */
     private void applyCancellation(Order order) {
         LocalDateTime now = LocalDateTime.now();
         User buyer = order.getUser();
@@ -627,6 +810,13 @@ public class AdminController {
         appendStatusHistory(order, "CANCELLED", now);
     }
 
+    /**
+     * Dodaje wpis do historii statusów zamówienia.
+     *
+     * @param order zamówienie, którego historia ma zostać uzupełniona.
+     * @param status nowy status zamówienia.
+     * @param changedAt czas zmiany statusu (gdy null, ustawiany jest czas bieżący).
+     */
     private void appendStatusHistory(Order order, String status, LocalDateTime changedAt) {
         OrderStatusHistory history = new OrderStatusHistory();
         history.setOrder(order);
@@ -635,6 +825,12 @@ public class AdminController {
         orderStatusHistoryRepository.save(history);
     }
 
+    /**
+     * Mapuje użytkownika na obiekt odpowiedzi dla panelu admina.
+     *
+     * @param user encja użytkownika.
+     * @return obiekt {@link AdminUserResponse}.
+     */
     private AdminUserResponse toAdminUserResponse(User user) {
         return new AdminUserResponse(
                 user.getId(),
@@ -650,6 +846,13 @@ public class AdminController {
         );
     }
 
+    /**
+     * Mapuje sprzedawcę na obiekt odpowiedzi dla panelu admina,
+     * uzupełniając statystyki sprzedażowe i liczbę obserwujących.
+     *
+     * @param user encja sprzedawcy.
+     * @return obiekt {@link AdminSellerResponse}.
+     */
     private AdminSellerResponse toAdminSellerResponse(User user) {
         int followers = followRepository.findBySellerId(user.getId()).size();
         int artworksCount = artworkRepository.findByUserId(user.getId()).size();
@@ -676,6 +879,12 @@ public class AdminController {
         );
     }
 
+    /**
+     * Normalizuje rolę użytkownika, w tym mapuje SELLER na ARTIST.
+     *
+     * @param role rola podana w żądaniu.
+     * @return znormalizowana rola.
+     */
     private String normalizeRole(String role) {
         String normalized = role.trim().toUpperCase();
         if ("SELLER".equals(normalized)) {
@@ -684,6 +893,11 @@ public class AdminController {
         return normalized;
     }
 
+    /**
+     * Endpoint zwracający statystyki na potrzeby panelu administratora.
+     *
+     * @return statystyki administracyjne lub błąd serwera.
+     */
     @GetMapping("/statistics/dashboard")
     public ResponseEntity<AdminDashboardStatsDto> getDashboardStatistics() {
         try {

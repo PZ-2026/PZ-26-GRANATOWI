@@ -3,6 +3,9 @@ package com.example.artsphere.backend.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+/**
+ * Encja roli użytkownika.
+ */
 @Entity
 @Table(name = "roles")
 @Data

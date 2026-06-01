@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 
+/**
+ * Encja darowizny.
+ */
 @Entity
 @Table(name = "donations")
 @Data

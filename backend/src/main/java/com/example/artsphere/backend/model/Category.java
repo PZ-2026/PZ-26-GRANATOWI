@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+/**
+ * Encja kategorii dzieł sztuki.
+ */
 @Entity
 @Table(name = "categories")
 @Data

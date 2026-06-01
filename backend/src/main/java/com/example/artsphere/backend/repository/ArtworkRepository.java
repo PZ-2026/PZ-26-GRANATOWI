@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repozytorium encji Artwork.
+ */
 @Repository
 public interface ArtworkRepository extends JpaRepository<Artwork, Long> {
     

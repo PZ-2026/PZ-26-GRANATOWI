@@ -6,6 +6,7 @@ import com.example.artsphere.backend.dto.RegisterRequest;
 import com.example.artsphere.backend.logging.AuthFileLogger;
 import com.example.artsphere.backend.model.User;
 import com.example.artsphere.backend.repository.UserRepository;
+import com.example.artsphere.backend.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,9 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.Optional;
 
+/**
+ * Serwis odpowiedzialny za uwierzytelnianie i rejestrację użytkowników.
+ */
 @Service
 public class AuthService {
 
@@ -22,8 +26,23 @@ public class AuthService {
     @Autowired
     private AuthFileLogger authFileLogger;
 
+    @Autowired
+    private JwtService jwtService;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    /**
+     * Przeprowadza logowanie użytkownika na podstawie danych z formularza logowania.
+     * Weryfikuje istnienie konta, aktywność oraz poprawność hasła, a następnie
+     * zwraca dane profilu do użycia po stronie klienta.
+     *
+     * @param request obiekt z danymi logowania; oczekiwane są poprawne wartości
+     *                e-mail oraz hasła wprost z formularza (bez wstępnej walidacji).
+     * @return odpowiedź logowania zawierająca identyfikator, dane profilu, rolę,
+     *         komunikat oraz aktualne saldo użytkownika.
+     * @throws RuntimeException gdy użytkownik nie istnieje, konto jest nieaktywne
+     *                          lub hasło nie pasuje do zapisanego skrótu.
+     */
     public LoginResponse login(LoginRequest request) {
         Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
 
@@ -61,6 +80,16 @@ public class AuthService {
         );
     }
 
+    /**
+     * Rejestruje nowego użytkownika i zapisuje go w bazie danych.
+     * Sprawdza unikalność nazwy użytkownika i adresu e-mail, koduje hasło
+     * algorytmem BCrypt i ustawia rolę domyślną BUYER, jeśli rola nie została podana.
+     *
+     * @param request dane rejestracji użytkownika; wymagane są przynajmniej
+     *                username, email i password, opcjonalnie firstName, lastName oraz roleName.
+     * @return komunikat potwierdzający pomyślną rejestrację.
+     * @throws RuntimeException gdy nazwa użytkownika lub adres e-mail są już zajęte.
+     */
     public String register(RegisterRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             authFileLogger.logRegister(request.getUsername(), request.getEmail(), false, "Użytkownik o takiej nazwie już istnieje");
@@ -86,5 +115,34 @@ public class AuthService {
         userRepository.save(user);
         authFileLogger.logRegister(request.getUsername(), request.getEmail(), true, "Zarejestrowano pomyślnie");
         return "Zarejestrowano pomyślnie";
+    }
+
+    /**
+     * Odświeża access token na podstawie refresh tokenu.
+     * Weryfikuje typ tokenu, a następnie sprawdza, czy użytkownik istnieje
+     * i czy jego konto jest aktywne.
+     *
+     * @param refreshToken refresh token JWT przesłany przez klienta.
+     * @return nowy access token JWT.
+     * @throws RuntimeException gdy token jest nieprawidłowy, użytkownik nie istnieje
+     *                          lub konto jest nieaktywne.
+     */
+    public String refreshAccessToken(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank() || !jwtService.isValid(refreshToken)) {
+            throw new RuntimeException("Nieprawidłowy refresh token");
+        }
+        if (!"refresh".equals(jwtService.getTokenType(refreshToken))) {
+            throw new RuntimeException("Nieprawidłowy typ tokenu");
+        }
+
+        String userId = jwtService.getSubject(refreshToken);
+        User user = userRepository.findById(Long.valueOf(userId))
+                .orElseThrow(() -> new RuntimeException("Nie znaleziono użytkownika"));
+        if (Boolean.FALSE.equals(user.getIsActive())) {
+            throw new RuntimeException("Konto jest nieaktywne");
+        }
+
+        String roleName = user.getRole() != null ? user.getRole() : "BUYER";
+        return jwtService.generateAccessToken(user.getId().toString(), user.getUsername(), roleName);
     }
 }

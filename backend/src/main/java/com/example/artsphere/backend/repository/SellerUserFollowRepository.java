@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repozytorium encji SellerUserFollow.
+ */
 @Repository
 public interface SellerUserFollowRepository extends JpaRepository<SellerUserFollow, Long> {
     Optional<SellerUserFollow> findByUserIdAndSellerId(Long userId, Long sellerId);

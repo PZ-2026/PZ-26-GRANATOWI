@@ -3,6 +3,9 @@ package com.example.artsphere.backend.dto;
 import lombok.Data;
 import java.util.List;
 
+/**
+ * DTO żądania utworzenia zamówienia.
+ */
 @Data
 public class CreateOrderRequest {
     private Long userId;

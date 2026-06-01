@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Encja historii statusów zamówienia.
+ */
 @Entity
 @Table(name = "order_status_history")
 @Data

@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repozytorium encji Donation.
+ */
 @Repository
 public interface DonationRepository extends JpaRepository<Donation, Long> {
     List<Donation> findByClientIdOrderByIdDesc(Long clientId);

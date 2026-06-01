@@ -41,7 +41,12 @@ public class ReportService {
     // ==================== RAPORTY DLA KLIENTA (BUYER) ====================
 
     /**
-     * Raport zakupów klienta w zadanym zakresie dat
+     * Generuje raport zakupów klienta w zadanym zakresie dat.
+     *
+     * @param userId identyfikator klienta, którego zakupy mają być uwzględnione.
+     * @param dateFrom data początkowa zakresu (włącznie).
+     * @param dateTo data końcowa zakresu (włącznie).
+     * @return zawartość PDF raportu jako tablica bajtów.
      */
     public byte[] generateClientPurchaseReport(Long userId, LocalDate dateFrom, LocalDate dateTo) {
         User user = userRepository.findById(userId)
@@ -86,7 +91,12 @@ public class ReportService {
     }
 
     /**
-     * Raport transakcji portfela klienta
+     * Generuje raport transakcji portfela klienta w zadanym zakresie dat.
+     *
+     * @param userId identyfikator klienta, którego transakcje mają być uwzględnione.
+     * @param dateFrom data początkowa zakresu (włącznie).
+     * @param dateTo data końcowa zakresu (włącznie).
+     * @return zawartość PDF raportu jako tablica bajtów.
      */
     public byte[] generateClientTransactionsReport(Long userId, LocalDate dateFrom, LocalDate dateTo) {
         User user = userRepository.findById(userId)
@@ -135,7 +145,13 @@ public class ReportService {
     // ==================== RAPORTY DLA SPRZEDAWCY (ARTIST) ====================
 
     /**
-     * Raport sprzedaży dla sprzedawcy
+     * Generuje raport sprzedaży sprzedawcy, opcjonalnie filtrowany kategorią.
+     *
+     * @param sellerId identyfikator sprzedawcy.
+     * @param dateFrom data początkowa zakresu (włącznie).
+     * @param dateTo data końcowa zakresu (włącznie).
+     * @param category opcjonalny filtr kategorii (nazwa kategorii).
+     * @return zawartość PDF raportu jako tablica bajtów.
      */
     public byte[] generateSellerSalesReport(Long sellerId, LocalDate dateFrom, LocalDate dateTo, String category) {
         User seller = userRepository.findById(sellerId)
@@ -187,7 +203,12 @@ public class ReportService {
     // ==================== RAPORTY DLA ADMINA ====================
 
     /**
-     * Raport aktywności użytkowników (dla admina)
+     * Generuje raport aktywności użytkowników dla administratora.
+     *
+     * @param dateFrom data początkowa zakresu (włącznie).
+     * @param dateTo data końcowa zakresu (włącznie).
+     * @param roleFilter opcjonalny filtr roli użytkownika.
+     * @return zawartość PDF raportu jako tablica bajtów.
      */
     public byte[] generateAdminUserActivityReport(LocalDate dateFrom, LocalDate dateTo, String roleFilter) {
         List<User> users = userRepository.findAll().stream()
@@ -230,7 +251,12 @@ public class ReportService {
     }
 
     /**
-     * Raport prowizji systemowych (dla admina)
+     * Generuje raport prowizji systemowych dla administratora.
+     *
+     * @param dateFrom data początkowa zakresu (włącznie).
+     * @param dateTo data końcowa zakresu (włącznie).
+     * @param category opcjonalny filtr kategorii (nazwa kategorii).
+     * @return zawartość PDF raportu jako tablica bajtów.
      */
     public byte[] generateSystemCommissionReport(LocalDate dateFrom, LocalDate dateTo, String category) {
         List<Sale> allSales = saleRepository.findAll().stream()

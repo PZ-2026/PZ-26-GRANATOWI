@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 
+/**
+ * Encja pozycji zamówienia.
+ */
 @Entity
 @Table(name = "order_items")
 @Data

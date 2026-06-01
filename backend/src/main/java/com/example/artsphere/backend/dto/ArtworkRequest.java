@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
+/**
+ * DTO żądania utworzenia lub aktualizacji dzieła sztuki.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

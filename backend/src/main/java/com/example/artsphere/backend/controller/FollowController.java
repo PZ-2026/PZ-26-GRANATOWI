@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Kontroler REST do zarządzania obserwowaniem sprzedawców.
+ */
 @RestController
 @RequestMapping("/api/follows")
 @CrossOrigin(origins = "*")
@@ -30,6 +33,13 @@ public class FollowController {
     @Autowired
     private ArtworkRepository artworkRepository;
 
+    /**
+     * Endpoint tworzący relację obserwowania sprzedawcy przez użytkownika.
+     *
+     * @param userId identyfikator użytkownika obserwującego.
+     * @param sellerId identyfikator sprzedawcy, którego użytkownik chce obserwować.
+     * @return informacja o utworzeniu relacji lub komunikat, że relacja już istnieje.
+     */
     @PostMapping("/{userId}/{sellerId}")
     public ResponseEntity<?> follow(@PathVariable Long userId, @PathVariable Long sellerId) {
         if(followRepository.findByUserIdAndSellerId(userId, sellerId).isPresent()) {
@@ -45,18 +55,38 @@ public class FollowController {
         return ResponseEntity.ok(Collections.singletonMap("message", "Zaobserwowano"));
     }
 
+    /**
+     * Endpoint usuwający relację obserwowania sprzedawcy.
+     *
+     * @param userId identyfikator użytkownika obserwującego.
+     * @param sellerId identyfikator sprzedawcy.
+     * @return komunikat potwierdzający usunięcie relacji.
+     */
     @DeleteMapping("/{userId}/{sellerId}")
     public ResponseEntity<?> unfollow(@PathVariable Long userId, @PathVariable Long sellerId) {
         followRepository.findByUserIdAndSellerId(userId, sellerId).ifPresent(followRepository::delete);
         return ResponseEntity.ok(Collections.singletonMap("message", "Odobserwowano"));
     }
 
+    /**
+     * Endpoint sprawdzający, czy użytkownik obserwuje wskazanego sprzedawcę.
+     *
+     * @param userId identyfikator użytkownika.
+     * @param sellerId identyfikator sprzedawcy.
+     * @return flaga logiczna informująca o relacji obserwowania.
+     */
     @GetMapping("/{userId}/{sellerId}")
     public ResponseEntity<?> isFollowing(@PathVariable Long userId, @PathVariable Long sellerId) {
         boolean isFollowing = followRepository.findByUserIdAndSellerId(userId, sellerId).isPresent();
         return ResponseEntity.ok(Collections.singletonMap("isFollowing", isFollowing));
     }
 
+    /**
+     * Endpoint zwracający dostępne dzieła sprzedawców obserwowanych przez użytkownika.
+     *
+     * @param userId identyfikator użytkownika.
+     * @return lista dostępnych dzieł obserwowanych sprzedawców.
+     */
     @GetMapping("/{userId}/artworks")
     public ResponseEntity<?> getFollowedArtworks(@PathVariable Long userId) {
         List<Long> sellerIds = followRepository.findByUserId(userId).stream()
@@ -72,6 +102,12 @@ public class FollowController {
         return ResponseEntity.ok(artworks);
     }
 
+    /**
+     * Endpoint zwracający listę obserwujących danego sprzedawcy.
+     *
+     * @param sellerId identyfikator sprzedawcy.
+     * @return lista podstawowych danych obserwujących użytkowników.
+     */
     @GetMapping("/seller/{sellerId}/followers")
     public ResponseEntity<?> getSellerFollowers(@PathVariable Long sellerId) {
         List<User> followers = followRepository.findBySellerId(sellerId).stream()

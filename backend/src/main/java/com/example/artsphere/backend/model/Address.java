@@ -3,6 +3,9 @@ package com.example.artsphere.backend.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+/**
+ * Encja adresu użytkownika.
+ */
 @Entity
 @Table(name = "addresses")
 @Data

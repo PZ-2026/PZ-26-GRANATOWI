@@ -5,6 +5,9 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Encja sprzedaży.
+ */
 @Entity
 @Table(name = "sales")
 @Data

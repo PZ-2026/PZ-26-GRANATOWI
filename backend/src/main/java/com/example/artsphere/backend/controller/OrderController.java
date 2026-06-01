@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Kontroler REST do obsługi zamówień.
+ */
 @RestController
 @RequestMapping("/api/orders")
 @CrossOrigin(origins = "*")
@@ -44,6 +47,15 @@ public class OrderController {
     @Autowired
     private OrderStatusHistoryRepository orderStatusHistoryRepository;
 
+    /**
+     * Endpoint realizujący finalizację koszyka i utworzenie zamówienia.
+     * Tworzy rekord zamówienia, pozycje zamówienia, zapis sprzedaży,
+     * aktualizuje saldo sprzedawcy i oznacza dzieła jako sprzedane.
+     *
+     * @param request dane zamówienia, w tym identyfikator kupującego, lista dzieł,
+     *                cena całkowita oraz opcjonalny adres dostawy.
+     * @return komunikat potwierdzający utworzenie zamówienia lub błąd walidacji.
+     */
     @PostMapping("/checkout")
     public ResponseEntity<?> checkout(@RequestBody CreateOrderRequest request) {
         User buyer = userRepository.findById(request.getUserId())
@@ -124,6 +136,12 @@ public class OrderController {
         return ResponseEntity.ok("Zapisano zamówienie i zaktualizowano saldo artysty.");
     }
 
+    /**
+     * Endpoint zwracający historię zakupów użytkownika.
+     *
+     * @param userId identyfikator użytkownika w ścieżce URL.
+     * @return lista zakupów w formacie {@link PurchaseResponse}.
+     */
     @GetMapping("/user/{userId}/purchases")
     public ResponseEntity<List<PurchaseResponse>> getUserPurchases(@PathVariable Long userId) {
         List<Order> orders = orderRepository.findByUserId(userId);
@@ -151,6 +169,12 @@ public class OrderController {
     }
 
     // --- USUWANIE ZAMÓWIENIA Z HISTORII ---
+    /**
+     * Endpoint usuwający zamówienie z historii użytkownika.
+     *
+     * @param orderId identyfikator zamówienia w ścieżce URL.
+     * @return komunikat potwierdzający usunięcie lub błąd.
+     */
     @DeleteMapping("/{orderId}")
     public ResponseEntity<?> deleteOrder(@PathVariable Long orderId) {
         try {
@@ -163,6 +187,13 @@ public class OrderController {
 
     // NAJLEPSI FANI
 
+    /**
+     * Endpoint zwracający listę najlepszych fanów sprzedawcy
+     * na podstawie liczby i wartości zakupów.
+     *
+     * @param sellerId identyfikator sprzedawcy w ścieżce URL.
+     * @return lista klientów z podsumowaniem zakupów.
+     */
     @GetMapping("/seller/{sellerId}/top-fans")
     public ResponseEntity<?> getTopFans(@PathVariable Long sellerId) {
         // Pobieramy wszystkie sprzedaże i filtrujemy te dotyczące dzieł danego sprzedawcy
@@ -212,6 +243,12 @@ public class OrderController {
 
     // HISTORIA SPRZEDAZY
 
+    /**
+     * Endpoint zwracający historię sprzedaży sprzedawcy.
+     *
+     * @param sellerId identyfikator sprzedawcy w ścieżce URL.
+     * @return lista sprzedaży w formacie map z polami do wyświetlenia.
+     */
     @GetMapping("/seller/{sellerId}/sales")
     public ResponseEntity<?> getSellerSales(@PathVariable Long sellerId) {
         List<Sale> allSales = saleRepository.findAll();

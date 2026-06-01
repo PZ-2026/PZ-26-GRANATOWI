@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Serwis logiki biznesowej dla dzieł sztuki.
+ */
 @Service
 public class ArtworkService {
 
@@ -27,34 +30,70 @@ public class ArtworkService {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * Zwraca listę dzieł przypisanych do sprzedawcy.
+     *
+     * @param userId identyfikator sprzedawcy.
+     * @return lista dzieł sprzedawcy w formacie {@link ArtworkResponse}.
+     */
     public List<ArtworkResponse> getSellerArtworks(Long userId) {
         List<Artwork> artworks = artworkRepository.findByUserId(userId);
         return artworks.stream().map(this::convertToResponse).collect(Collectors.toList());
     }
 
+    /**
+     * Zwraca wszystkie dostępne dzieła (niesprzedane).
+     *
+     * @return lista dostępnych dzieł w formacie {@link ArtworkResponse}.
+     */
     public List<ArtworkResponse> getAllAvailableArtworks() {
         List<Artwork> artworks = artworkRepository.findByIsSoldFalse();
         return artworks.stream().map(this::convertToResponse).collect(Collectors.toList());
     }
 
+    /**
+     * Zwraca wszystkie dzieła w systemie (w tym sprzedane).
+     *
+     * @return lista wszystkich dzieł w formacie {@link ArtworkResponse}.
+     */
     public List<ArtworkResponse> getAllArtworks() {
         return artworkRepository.findAll().stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Pobiera szczegóły dzieła na podstawie identyfikatora.
+     *
+     * @param artworkId identyfikator dzieła.
+     * @return szczegóły dzieła w formacie {@link ArtworkResponse}.
+     * @throws RuntimeException gdy dzieło nie istnieje.
+     */
     public ArtworkResponse getArtworkById(Long artworkId) {
         Artwork artwork = artworkRepository.findById(artworkId)
                 .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));
         return convertToResponse(artwork);
     }
 
+    /**
+     * Pobiera listę kategorii dzieł wraz z podstawowymi statystykami.
+     *
+     * @return lista kategorii w formacie {@link CategoryResponse}.
+     */
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll().stream()
                 .map(this::convertToCategoryResponse)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Tworzy nowe dzieło sztuki przypisane do sprzedawcy.
+     *
+     * @param userId identyfikator sprzedawcy (właściciela dzieła).
+     * @param request dane nowego dzieła przekazane przez użytkownika.
+     * @return utworzone dzieło w formacie {@link ArtworkResponse}.
+     * @throws RuntimeException gdy użytkownik lub kategoria nie istnieją.
+     */
     public ArtworkResponse createArtwork(Long userId, ArtworkRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Użytkownik nie znaleziony"));
@@ -92,6 +131,16 @@ public class ArtworkService {
         return convertToResponse(saved);
     }
 
+    /**
+     * Aktualizuje istniejące dzieło.
+     * Gdy userId jest przekazane, sprawdza właściciela; gdy null, zakłada tryb admina.
+     *
+     * @param artworkId identyfikator dzieła do aktualizacji.
+     * @param userId identyfikator użytkownika wykonującego operację lub null dla admina.
+     * @param request nowe dane dzieła.
+     * @return zaktualizowane dzieło w formacie {@link ArtworkResponse}.
+     * @throws RuntimeException gdy dzieło nie istnieje lub brak uprawnień.
+     */
     public ArtworkResponse updateArtwork(Long artworkId, Long userId, ArtworkRequest request) {
         Artwork artwork = artworkRepository.findById(artworkId)
                 .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));
@@ -130,6 +179,13 @@ public class ArtworkService {
         return convertToResponse(updated);
     }
 
+    /**
+     * Usuwa dzieło z systemu po weryfikacji właściciela.
+     *
+     * @param artworkId identyfikator dzieła do usunięcia.
+     * @param userId identyfikator użytkownika wykonującego operację lub null dla admina.
+     * @throws RuntimeException gdy dzieło nie istnieje lub brak uprawnień.
+     */
     public void deleteArtwork(Long artworkId, Long userId) {
         Artwork artwork = artworkRepository.findById(artworkId)
                 .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));
@@ -141,6 +197,12 @@ public class ArtworkService {
         artworkRepository.delete(artwork);
     }
 
+    /**
+     * Mapuje encję {@link Artwork} do obiektu odpowiedzi.
+     *
+     * @param artwork encja dzieła pobrana z bazy danych.
+     * @return dzieło w formacie {@link ArtworkResponse}.
+     */
     private ArtworkResponse convertToResponse(Artwork artwork) {
         return new ArtworkResponse(
                 artwork.getId(),
@@ -164,6 +226,12 @@ public class ArtworkService {
         );
     }
 
+    /**
+     * Mapuje encję {@link Category} do obiektu odpowiedzi wraz z licznikami dzieł.
+     *
+     * @param category encja kategorii pobrana z bazy danych.
+     * @return kategoria w formacie {@link CategoryResponse}.
+     */
     private CategoryResponse convertToCategoryResponse(Category category) {
         int artworkCount = artworkRepository.countByCategoryId(category.getId());
         int soldCount = artworkRepository.countByCategoryIdAndIsSoldTrue(category.getId());
@@ -186,6 +254,12 @@ public class ArtworkService {
         );
     }
 
+    /**
+     * Oznacza dzieło jako sprzedane i aktualizuje jego status.
+     *
+     * @param artworkId identyfikator dzieła do oznaczenia.
+     * @throws RuntimeException gdy dzieło nie istnieje.
+     */
     public void markAsSold(Long artworkId) {
         Artwork artwork = artworkRepository.findById(artworkId)
                 .orElseThrow(() -> new RuntimeException("Dzieło nie znalezione"));

@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Repozytorium encji Sale.
+ */
 @Repository
 public interface SaleRepository extends JpaRepository<Sale, Long> {
     Optional<Sale> findTopByArtworkIdAndBuyerIdOrderBySoldAtDesc(Long artworkId, Long buyerId);

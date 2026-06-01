@@ -6,6 +6,9 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Encja dzieła sztuki.
+ */
 @Entity
 @Table(name = "artworks")
 @Data

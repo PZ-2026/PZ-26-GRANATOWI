@@ -2,6 +2,9 @@ package com.example.artsphere.backend.dto;
 
 import lombok.Data;
 
+/**
+ * DTO żądania rejestracji.
+ */
 @Data
 public class RegisterRequest {
     private String username;

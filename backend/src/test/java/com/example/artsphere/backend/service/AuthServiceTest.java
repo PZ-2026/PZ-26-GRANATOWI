@@ -3,8 +3,10 @@ package com.example.artsphere.backend.service;
 import com.example.artsphere.backend.dto.LoginRequest;
 import com.example.artsphere.backend.dto.LoginResponse;
 import com.example.artsphere.backend.dto.RegisterRequest;
+import com.example.artsphere.backend.logging.AuthFileLogger;
 import com.example.artsphere.backend.model.User;
 import com.example.artsphere.backend.repository.UserRepository;
+import com.example.artsphere.backend.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,10 @@ class AuthServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private com.example.artsphere.backend.logging.AuthFileLogger authFileLogger;
+    private AuthFileLogger authFileLogger;
+
+    @Mock
+    private JwtService jwtService;
 
     @InjectMocks
     private AuthService authService;

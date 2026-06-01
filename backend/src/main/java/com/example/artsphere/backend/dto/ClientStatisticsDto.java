@@ -2,6 +2,9 @@ package com.example.artsphere.backend.dto;
 
 import lombok.Data;
 
+/**
+ * DTO statystyk klienta.
+ */
 @Data
 public class ClientStatisticsDto {
     private Double totalSpent;

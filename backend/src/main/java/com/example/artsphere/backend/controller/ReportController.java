@@ -21,7 +21,12 @@ public class ReportController {
     // ==================== RAPORTY KLIENTA (BUYER) ====================
 
     /**
-     * Pobiera raport zakupów klienta w formacie PDF
+     * Pobiera raport zakupów klienta w formacie PDF dla wskazanego zakresu dat.
+     *
+     * @param userId identyfikator klienta, dla którego tworzony jest raport.
+     * @param dateFrom data początkowa zakresu raportu (włącznie).
+     * @param dateTo data końcowa zakresu raportu (włącznie).
+     * @return odpowiedź HTTP zawierająca plik PDF jako tablicę bajtów.
      */
     @GetMapping("/client/{userId}/purchases")
     public ResponseEntity<byte[]> getClientPurchaseReport(
@@ -34,7 +39,12 @@ public class ReportController {
     }
 
     /**
-     * Pobiera raport transakcji portfela klienta w formacie PDF
+     * Pobiera raport transakcji portfela klienta w formacie PDF.
+     *
+     * @param userId identyfikator klienta, dla którego tworzony jest raport.
+     * @param dateFrom data początkowa zakresu raportu (włącznie).
+     * @param dateTo data końcowa zakresu raportu (włącznie).
+     * @return odpowiedź HTTP zawierająca plik PDF jako tablicę bajtów.
      */
     @GetMapping("/client/{userId}/transactions")
     public ResponseEntity<byte[]> getClientTransactionsReport(
@@ -49,7 +59,13 @@ public class ReportController {
     // ==================== RAPORTY SPRZEDAWCY (ARTIST) ====================
 
     /**
-     * Pobiera raport sprzedaży sprzedawcy w formacie PDF
+     * Pobiera raport sprzedaży sprzedawcy w formacie PDF.
+     *
+     * @param sellerId identyfikator sprzedawcy, dla którego tworzony jest raport.
+     * @param dateFrom data początkowa zakresu raportu (włącznie).
+     * @param dateTo data końcowa zakresu raportu (włącznie).
+     * @param category opcjonalny filtr kategorii (nazwa kategorii).
+     * @return odpowiedź HTTP zawierająca plik PDF jako tablicę bajtów.
      */
     @GetMapping("/seller/{sellerId}/sales")
     public ResponseEntity<byte[]> getSellerSalesReport(
@@ -65,7 +81,12 @@ public class ReportController {
     // ==================== RAPORTY ADMINA ====================
 
     /**
-     * Pobiera raport aktywności użytkowników w formacie PDF (dla admina)
+     * Pobiera raport aktywności użytkowników w formacie PDF (dla admina).
+     *
+     * @param dateFrom data początkowa zakresu raportu (włącznie).
+     * @param dateTo data końcowa zakresu raportu (włącznie).
+     * @param role opcjonalny filtr roli użytkownika.
+     * @return odpowiedź HTTP zawierająca plik PDF jako tablicę bajtów.
      */
     @GetMapping("/admin/user-activity")
     public ResponseEntity<byte[]> getAdminUserActivityReport(
@@ -78,7 +99,12 @@ public class ReportController {
     }
 
     /**
-     * Pobiera raport prowizji systemowych w formacie PDF (dla admina)
+     * Pobiera raport prowizji systemowych w formacie PDF (dla admina).
+     *
+     * @param dateFrom data początkowa zakresu raportu (włącznie).
+     * @param dateTo data końcowa zakresu raportu (włącznie).
+     * @param category opcjonalny filtr kategorii (nazwa kategorii).
+     * @return odpowiedź HTTP zawierająca plik PDF jako tablicę bajtów.
      */
     @GetMapping("/admin/commissions")
     public ResponseEntity<byte[]> getAdminCommissionReport(
@@ -92,6 +118,13 @@ public class ReportController {
 
     // ==================== POMOCNICZE ====================
 
+    /**
+     * Buduje odpowiedź HTTP dla pliku PDF z poprawnymi nagłówkami.
+     *
+     * @param pdfBytes zawartość PDF jako tablica bajtów.
+     * @param filename nazwa pliku wyświetlana przy pobieraniu.
+     * @return odpowiedź HTTP z nagłówkami i treścią PDF.
+     */
     private ResponseEntity<byte[]> buildPdfResponse(byte[] pdfBytes, String filename) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);

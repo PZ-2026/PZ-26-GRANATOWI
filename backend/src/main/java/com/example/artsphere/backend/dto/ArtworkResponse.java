@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * DTO odpowiedzi z danymi dzieła sztuki.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

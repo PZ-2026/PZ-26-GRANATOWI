@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repozytorium encji WalletTransaction.
+ */
 @Repository
 public interface WalletTransactionRepository extends JpaRepository<WalletTransaction, Long> {
     // Zapytanie pobierze wpłaty użytkownika, sortując od najnowszej

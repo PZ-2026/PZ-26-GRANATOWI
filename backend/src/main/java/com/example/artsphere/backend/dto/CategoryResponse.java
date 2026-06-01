@@ -5,6 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
+/**
+ * DTO odpowiedzi z danymi kategorii.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

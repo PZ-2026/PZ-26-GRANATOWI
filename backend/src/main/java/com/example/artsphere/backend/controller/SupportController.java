@@ -13,6 +13,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Kontroler REST do obsługi zgłoszeń wsparcia.
+ */
 @RestController
 @RequestMapping("/api/support")
 @CrossOrigin(origins = "*")
@@ -22,6 +25,11 @@ public class SupportController {
     @Autowired private DonationRepository donationRepository;
     @Autowired private WalletTransactionRepository walletTransactionRepository;
 
+    /**
+     * Endpoint zwracający listę artystów dostępnych do wsparcia.
+     *
+     * @return lista artystów w formacie {@link ArtistDto}.
+     */
     @GetMapping("/artists")
     public ResponseEntity<List<ArtistDto>> getArtists() {
         List<ArtistDto> artists = userRepository.findByRole("ARTIST").stream()
@@ -30,6 +38,13 @@ public class SupportController {
         return ResponseEntity.ok(artists);
     }
 
+    /**
+     * Endpoint realizujący wsparcie finansowe artysty przez klienta.
+     * Weryfikuje saldo klienta, aktualizuje salda obu stron i zapisuje transakcje.
+     *
+     * @param req dane darowizny: identyfikatory klienta i sprzedawcy oraz kwota.
+     * @return nowe saldo klienta lub błąd walidacji.
+     */
     @PostMapping("/donate")
     @Transactional
     public ResponseEntity<?> donate(@RequestBody DonationRequest req) {
@@ -74,6 +89,12 @@ public class SupportController {
         return ResponseEntity.ok(Collections.singletonMap("newBalance", client.getBalance().doubleValue()));
     }
 
+    /**
+     * Endpoint zwracający historię wsparć udzielonych przez klienta.
+     *
+     * @param userId identyfikator klienta w ścieżce URL.
+     * @return lista wpisów historii wsparć.
+     */
     @GetMapping("/history/{userId}")
     public ResponseEntity<List<DonationHistoryResponse>> getHistory(@PathVariable Long userId) {
         List<DonationHistoryResponse> history = donationRepository.findByClientIdOrderByIdDesc(userId).stream()

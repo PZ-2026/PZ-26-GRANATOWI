@@ -40,6 +40,14 @@ public class UserService {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    /**
+     * Pobiera dane profilu użytkownika na potrzeby widoku "Mój profil".
+     * Metoda zwraca podstawowe informacje identyfikacyjne oraz saldo portfela.
+     *
+     * @param userId identyfikator użytkownika, którego profil ma zostać zwrócony.
+     * @return obiekt {@link LoginResponse} zawierający dane profilu i saldo.
+     * @throws RuntimeException gdy użytkownik o podanym identyfikatorze nie istnieje.
+     */
     public LoginResponse getUserProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Nie znaleziono użytkownika"));
@@ -58,6 +66,16 @@ public class UserService {
         );
     }
 
+    /**
+     * Aktualizuje dane profilu użytkownika wraz z opcjonalną zmianą hasła.
+     * Sprawdza unikalność nowej nazwy użytkownika i e-maila przed zapisem.
+     *
+     * @param userId identyfikator użytkownika, którego profil ma zostać zaktualizowany.
+     * @param request nowe dane profilu; pole password jest opcjonalne i
+     *                zostanie zapisane tylko, gdy nie jest puste.
+     * @return komunikat informujący o pomyślnym zapisie zmian.
+     * @throws RuntimeException gdy użytkownik nie istnieje lub gdy nowa nazwa/e-mail są zajęte.
+     */
     public String updateUserProfile(Long userId, RegisterRequest request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Brak użytkownika"));
 
@@ -83,6 +101,15 @@ public class UserService {
         return "Twój profil został zaktualizowany!";
     }
 
+    /**
+     * Zwiększa saldo portfela użytkownika o podaną kwotę
+     * oraz zapisuje transakcję przychodową w historii.
+     *
+     * @param userId identyfikator użytkownika, którego saldo ma zostać zwiększone.
+     * @param amount kwota do dodania do portfela w walucie PLN.
+     * @return nowe saldo po zasileniu portfela.
+     * @throws RuntimeException gdy użytkownik nie istnieje.
+     */
     public Double addBalance(Long userId, Double amount) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Brak użytkownika"));
         BigDecimal currentBalance = user.getBalance() != null ? user.getBalance() : BigDecimal.ZERO;
@@ -100,6 +127,15 @@ public class UserService {
         return user.getBalance().doubleValue();
     }
 
+    /**
+     * Zmniejsza saldo portfela użytkownika o podaną kwotę
+     * i zapisuje transakcję kosztową w historii.
+     *
+     * @param userId identyfikator użytkownika, którego saldo ma zostać pomniejszone.
+     * @param amount kwota do odjęcia z portfela w walucie PLN.
+     * @return nowe saldo po obciążeniu portfela.
+     * @throws RuntimeException gdy użytkownik nie istnieje lub nie ma wystarczających środków.
+     */
     public Double deductBalance(Long userId, Double amount) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Brak użytkownika"));
         BigDecimal currentBalance = user.getBalance() != null ? user.getBalance() : BigDecimal.ZERO;
@@ -122,6 +158,13 @@ public class UserService {
         return user.getBalance().doubleValue();
     }
 
+    /**
+     * Pobiera listę transakcji portfela użytkownika w kolejności od najnowszych
+     * i mapuje je na format DTO przeznaczony do prezentacji.
+     *
+     * @param userId identyfikator użytkownika, dla którego mają zostać zwrócone transakcje.
+     * @return lista transakcji portfela w formacie {@link TransactionDto}.
+     */
     public List<TransactionDto> getUserTransactions(Long userId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
@@ -135,6 +178,14 @@ public class UserService {
         )).collect(Collectors.toList());
     }
 
+    /**
+     * Wylicza statystyki zakupowe klienta na podstawie jego zamówień
+     * oraz relacji obserwowanych artystów.
+     *
+     * @param userId identyfikator użytkownika-klienta, dla którego liczone są statystyki.
+     * @return obiekt {@link ClientStatisticsDto} z podsumowaniem aktywności klienta.
+     * @throws RuntimeException gdy użytkownik nie istnieje.
+     */
     public ClientStatisticsDto getClientStatistics(Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
         List<Order> orders = orderRepository.findByUserId(userId);
@@ -189,6 +240,15 @@ public class UserService {
     @Autowired
     private com.example.artsphere.backend.repository.ArtworkRepository artworkRepository;
 
+    /**
+     * Wylicza statystyki sprzedawcy na podstawie jego dzieł i sprzedaży.
+     * Uwzględnia m.in. przychody łączne, sprzedaż w bieżącym miesiącu
+     * oraz liczbę aktywnych ofert.
+     *
+     * @param sellerId identyfikator sprzedawcy, dla którego liczone są statystyki.
+     * @return obiekt {@link com.example.artsphere.backend.dto.SellerStatisticsDto}
+     *         zawierający podsumowanie aktywności sprzedawcy.
+     */
     public com.example.artsphere.backend.dto.SellerStatisticsDto getSellerStatistics(Long sellerId) {
         // Wszystkie dzieła wystawione przez sprzedawcę
         List<com.example.artsphere.backend.model.Artwork> sellerArtworks = artworkRepository.findByUserId(sellerId);
@@ -242,7 +302,10 @@ public class UserService {
     }
     
     /**
-     * Pobiera statystyki dla panelu administratora
+     * Pobiera statystyki dla panelu administratora obejmujące użytkowników,
+     * dzieła, zamówienia oraz wartości finansowe.
+     *
+     * @return obiekt {@link AdminDashboardStatsDto} z podsumowaniem dla panelu admina.
      */
     public AdminDashboardStatsDto getAdminDashboardStatistics() {
         AdminDashboardStatsDto stats = new AdminDashboardStatsDto();

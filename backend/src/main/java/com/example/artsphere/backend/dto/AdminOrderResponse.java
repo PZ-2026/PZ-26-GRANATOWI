@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * DTO odpowiedzi z danymi zamówienia dla panelu admina.
+ */
 @Data
 @AllArgsConstructor
 public class AdminOrderResponse {

@@ -20,11 +20,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Generator raportów PDF dla systemu ArtSphere.
+ */
 public class ArtSpherePdfReportGenerator {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
+    /**
+     * Generuje raport PDF sprzedaży artysty na podstawie danych źródłowych.
+     *
+     * @param data dane raportu sprzedaży artysty (filtry, wiersze i podsumowanie).
+     * @return raport PDF jako tablica bajtów.
+     */
     public byte[] generateArtistSalesReport(ArtistSalesReportData data) {
         return buildReport(
                 "Raport sprzedaży artysty",
@@ -48,6 +57,12 @@ public class ArtSpherePdfReportGenerator {
         );
     }
 
+    /**
+     * Generuje raport PDF prowizji systemowych.
+     *
+     * @param data dane raportu prowizji (stawka, wiersze i podsumowanie).
+     * @return raport PDF jako tablica bajtów.
+     */
     public byte[] generateSystemCommissionReport(SystemCommissionReportData data) {
         return buildReport(
                 "Raport prowizji systemowej",
@@ -72,6 +87,12 @@ public class ArtSpherePdfReportGenerator {
         );
     }
 
+    /**
+     * Generuje raport PDF aktywności platformy w zadanym zakresie czasu.
+     *
+     * @param data dane raportu aktywności (zakres czasu, wiersze i statystyki).
+     * @return raport PDF jako tablica bajtów.
+     */
     public byte[] generatePlatformActivityReport(PlatformActivityReportData data) {
         return buildReport(
                 "Raport aktywności platformy",
@@ -95,6 +116,12 @@ public class ArtSpherePdfReportGenerator {
         );
     }
 
+    /**
+     * Generuje raport PDF zakupów użytkownika.
+     *
+     * @param data dane raportu zakupów (filtry, wiersze i podsumowanie).
+     * @return raport PDF jako tablica bajtów.
+     */
     public byte[] generateUserPurchasesReport(UserPurchasesReportData data) {
         return buildReport(
                 "Raport zakupów użytkownika",
@@ -121,6 +148,12 @@ public class ArtSpherePdfReportGenerator {
 
     // === NOWE RAPORTY DLA UŻYTKOWNIKÓW ===
 
+    /**
+     * Generuje raport PDF transakcji portfela użytkownika.
+     *
+     * @param data dane raportu transakcji (filtry, wiersze i podsumowanie).
+     * @return raport PDF jako tablica bajtów.
+     */
     public byte[] generateClientTransactionsReport(ClientTransactionsReportData data) {
         return buildReport(
                 "Raport transakcji użytkownika",
@@ -143,6 +176,12 @@ public class ArtSpherePdfReportGenerator {
         );
     }
 
+    /**
+     * Generuje raport PDF sprzedaży sprzedawcy.
+     *
+     * @param data dane raportu sprzedaży (filtry, wiersze i podsumowanie).
+     * @return raport PDF jako tablica bajtów.
+     */
     public byte[] generateSellerSalesReport(SellerSalesReportData data) {
         return buildReport(
                 "Raport sprzedaży",
@@ -167,6 +206,12 @@ public class ArtSpherePdfReportGenerator {
         );
     }
 
+    /**
+     * Generuje raport PDF aktywności użytkowników dla administratora.
+     *
+     * @param data dane raportu aktywności użytkowników.
+     * @return raport PDF jako tablica bajtów.
+     */
     public byte[] generateAdminUserActivityReport(AdminUserActivityReportData data) {
         return buildReport(
                 "Raport aktywności użytkowników",
@@ -191,6 +236,16 @@ public class ArtSpherePdfReportGenerator {
         );
     }
 
+    /**
+     * Buduje spójny raport PDF na podstawie przekazanych danych tabelarycznych i podsumowania.
+     *
+     * @param title tytuł raportu widoczny na stronie.
+     * @param filters mapa filtrów zastosowanych w raporcie.
+     * @param headers nagłówki kolumn tabeli danych.
+     * @param rows wiersze danych raportu w postaci listy wartości tekstowych.
+     * @param summary mapa wartości podsumowania wyświetlanych pod tabelą.
+     * @return raport PDF jako tablica bajtów.
+     */
     private byte[] buildReport(
             String title,
             Map<String, String> filters,
@@ -234,6 +289,13 @@ public class ArtSpherePdfReportGenerator {
         return outputStream.toByteArray();
     }
 
+    /**
+     * Tworzy tabelę danych do raportu PDF, uwzględniając przypadek braku danych.
+     *
+     * @param headers lista nagłówków kolumn.
+     * @param rows lista wierszy z wartościami tekstowymi.
+     * @return tabela PDF gotowa do dodania do dokumentu.
+     */
     private Table buildDataTable(List<String> headers, List<List<String>> rows) {
         Table table = new Table(UnitValue.createPercentArray(headers.size()))
                 .useAllAvailableWidth()
@@ -261,24 +323,54 @@ public class ArtSpherePdfReportGenerator {
         return table;
     }
 
+    /**
+     * Zapewnia bezpieczną reprezentację tekstu w raporcie.
+     *
+     * @param value wartość wejściowa.
+     * @return wartość wejściowa lub znak "-" gdy brak danych.
+     */
     private String safe(String value) {
         return value == null || value.isBlank() ? "-" : value;
     }
 
+    /**
+     * Zwraca tekst "Wszystkie" dla pustych filtrów.
+     *
+     * @param value wartość filtra.
+     * @return oryginalna wartość lub "Wszystkie" dla pustej wartości.
+     */
     private String fallbackAll(String value) {
         return value == null || value.isBlank() ? "Wszystkie" : value;
     }
 
+    /**
+     * Formatuje zakres dat do postaci czytelnej w raporcie.
+     *
+     * @param range zakres dat zawierający datę od i do.
+     * @return sformatowany zakres dat.
+     */
     private String formatDateRange(DateRange range) {
         return range.from().format(DATE_FORMAT) + " - " + range.to().format(DATE_FORMAT);
     }
 
+    /**
+     * Formatuje datę i czas do postaci czytelnej w raporcie.
+     *
+     * @param value data i czas wejściowe.
+     * @return sformatowana wartość lub "-" gdy brak danych.
+     */
     private String formatDateTime(LocalDateTime value) {
         return Objects.requireNonNullElse(value, LocalDateTime.MIN).equals(LocalDateTime.MIN)
                 ? "-"
                 : value.format(DATE_TIME_FORMAT);
     }
 
+    /**
+     * Formatuje kwotę pieniężną do dwóch miejsc po przecinku.
+     *
+     * @param value kwota wejściowa.
+     * @return sformatowana kwota lub "-" gdy brak danych.
+     */
     private String formatAmount(BigDecimal value) {
         if (value == null) {
             return "-";

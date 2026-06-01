@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import java.math.BigDecimal;
 
+/**
+ * DTO odpowiedzi logowania i profilu użytkownika.
+ */
 @Data
 @AllArgsConstructor
 public class LoginResponse {
