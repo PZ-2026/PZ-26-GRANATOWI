@@ -15,6 +15,11 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Serwis odpowiedzialny za generowanie raportów PDF dla różnych typów użytkowników.
+ * Zawiera metody do generowania raportów sprzedaży, zakupów, transakcji oraz raportów administracyjnych.
+ * Raporty są generowane w formacie PDF i obejmują zakresy dat oraz opcjonalne filtry kategorii.
+ */
 @Service
 public class ReportService {
 
@@ -47,6 +52,7 @@ public class ReportService {
      * @param dateFrom data początkowa zakresu (włącznie).
      * @param dateTo data końcowa zakresu (włącznie).
      * @return zawartość PDF raportu jako tablica bajtów.
+     * @throws RuntimeException gdy użytkownik o podanym identyfikatorze nie istnieje.
      */
     public byte[] generateClientPurchaseReport(Long userId, LocalDate dateFrom, LocalDate dateTo) {
         User user = userRepository.findById(userId)
@@ -97,6 +103,7 @@ public class ReportService {
      * @param dateFrom data początkowa zakresu (włącznie).
      * @param dateTo data końcowa zakresu (włącznie).
      * @return zawartość PDF raportu jako tablica bajtów.
+     * @throws RuntimeException gdy użytkownik o podanym identyfikatorze nie istnieje.
      */
     public byte[] generateClientTransactionsReport(Long userId, LocalDate dateFrom, LocalDate dateTo) {
         User user = userRepository.findById(userId)
@@ -152,6 +159,7 @@ public class ReportService {
      * @param dateTo data końcowa zakresu (włącznie).
      * @param category opcjonalny filtr kategorii (nazwa kategorii).
      * @return zawartość PDF raportu jako tablica bajtów.
+     * @throws RuntimeException gdy sprzedawca o podanym identyfikatorze nie istnieje.
      */
     public byte[] generateSellerSalesReport(Long sellerId, LocalDate dateFrom, LocalDate dateTo, String category) {
         User seller = userRepository.findById(sellerId)
