@@ -30,6 +30,9 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=none
       - SPRING_JPA_SHOW_SQL=true
       - SPRING_SQL_INIT_MODE=always
+      JWT_SECRET: q7Q9mZr2kH8vA1pXn5sT4dY6cL0wJ3uGf9bN2xR8eM6tV1aZy7P4hK9sW2jD0cQx
+      JWT_REFRESH_TTL_DAYS: 7
+      JWT_ACCESS_TTL_MINUTES: 15
     depends_on:
       - postgres-db
     networks:

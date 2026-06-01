@@ -217,7 +217,7 @@ public class UserService {
         String memberSince = "Od zawsze";
         if (user.getCreatedAt() != null) {
             String month = user.getCreatedAt().getMonth().getDisplayName(
-                    java.time.format.TextStyle.FULL_STANDALONE,
+                    java.time.format.TextStyle.FULL,
                     new java.util.Locale("pl", "PL")
             );
             month = month.substring(0, 1).toUpperCase() + month.substring(1);
