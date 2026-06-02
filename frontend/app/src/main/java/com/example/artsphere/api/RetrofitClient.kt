@@ -17,8 +17,17 @@ object RetrofitClient {
         level = HttpLoggingInterceptor.Level.BODY
     }
     
+    private val authInterceptor = okhttp3.Interceptor { chain ->
+        val requestBuilder = chain.request().newBuilder()
+        TokenManager.accessToken?.let {
+            requestBuilder.addHeader("Authorization", "Bearer $it")
+        }
+        chain.proceed(requestBuilder.build())
+    }
+    
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
+        .addInterceptor(authInterceptor)
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)

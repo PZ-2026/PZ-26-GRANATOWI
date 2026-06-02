@@ -29,11 +29,11 @@ fun AppNavigation() {
     val navController = rememberNavController()
 
     // Globalny stan użytkownika
-    var isLoggedIn by remember { mutableStateOf(false) }
-    var currentUserId by remember { mutableStateOf(0L) }
-    var currentUsername by remember { mutableStateOf("") }
-    var currentBalance by remember { mutableStateOf(0.0) }
-    var currentUserRole by remember { mutableStateOf("guest") }
+    var isLoggedIn by remember { mutableStateOf(TokenManager.isLoggedIn) }
+    var currentUserId by remember { mutableStateOf(TokenManager.userId) }
+    var currentUsername by remember { mutableStateOf(TokenManager.username ?: "") }
+    var currentBalance by remember { mutableStateOf(TokenManager.balance) }
+    var currentUserRole by remember { mutableStateOf(TokenManager.role ?: "guest") }
 
     // STAN KOSZYKA (Współdzielony między ekranami)
     var cartItems by remember { mutableStateOf<List<ArtworkResponse>>(emptyList()) }
@@ -56,6 +56,7 @@ fun AppNavigation() {
                     currentUsername = ""
                     currentUserRole = "guest"
                     currentBalance = 0.0
+                    TokenManager.clear()
                     // Koszyk nie jest czyszczony po wylogowaniu
                 },
                 onCartClick = { navController.navigate("cart") },
@@ -109,6 +110,7 @@ fun AppNavigation() {
                 onNavigateToAddAddress = { navController.navigate("address_add") },
                 onPaymentSuccess = { totalPaid ->
                     currentBalance -= totalPaid
+                    TokenManager.balance = currentBalance
                     cartItems = emptyList()
                     navController.navigate("order_success") { popUpTo("home") }
                 }
@@ -126,11 +128,16 @@ fun AppNavigation() {
                 onNavigateBack = { navController.navigate("home") { popUpTo("home") { inclusive = false } } },
                 onNavigateToRegister = { navController.navigate("register/user") { popUpTo("login") { inclusive = true } } },
                 onLoginSuccess = { userId, username, role, balance ->
+                    // Stan lokalny
                     isLoggedIn = true
                     currentUserId = userId
                     currentUsername = username
                     currentUserRole = role
                     currentBalance = balance
+                    
+                    // TokenManager jest już zaktualizowany wewnątrz LoginScreen.kt przed tym wywołaniem,
+                    // ale dla pewności możemy zsynchronizować stan tutaj jeśli zajdzie potrzeba.
+                    
                     navController.navigate("home") { popUpTo(0) }
                 }
             )
@@ -156,6 +163,7 @@ fun AppNavigation() {
                     currentUsername = ""
                     currentUserRole = "guest"
                     currentBalance = 0.0
+                    TokenManager.clear()
                     navController.navigate("home") { popUpTo(0) }
                 },
                 onEditProfileClick = { navController.navigate("edit_profile/client") },
@@ -179,6 +187,7 @@ fun AppNavigation() {
                     currentUsername = ""
                     currentUserRole = "guest"
                     currentBalance = 0.0
+                    TokenManager.clear()
                     navController.navigate("home") { popUpTo(0) }
                 },
                 onEditProfileClick = { navController.navigate("edit_profile/seller") },
@@ -202,6 +211,7 @@ fun AppNavigation() {
                     currentUsername = ""
                     currentUserRole = "guest"
                     currentBalance = 0.0
+                    TokenManager.clear()
                     navController.navigate("home") { popUpTo(0) }
                 },
                 onEditProfileClick = { navController.navigate("edit_profile/admin") },
@@ -223,6 +233,7 @@ fun AppNavigation() {
                 onNavigateBack = { navController.popBackStack() },
                 onSaveSuccess = { newName ->
                     currentUsername = newName
+                    TokenManager.username = newName
                     navController.popBackStack()
                 }
             )
@@ -235,7 +246,10 @@ fun AppNavigation() {
                 role = role,
                 currentBalance = currentBalance,
                 onNavigateBack = { navController.popBackStack() },
-                onBalanceChange = { newBalance -> currentBalance = newBalance }
+                onBalanceChange = { newBalance -> 
+                    currentBalance = newBalance
+                    TokenManager.balance = newBalance
+                }
             )
         }
 

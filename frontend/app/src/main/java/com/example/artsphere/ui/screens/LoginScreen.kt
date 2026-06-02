@@ -105,7 +105,11 @@ fun LoginScreen(
                         )
 
                         if (response.isSuccessful && response.body() != null) {
-                            val loginResponse = response.body()!!
+                            val authResponse = response.body()!!
+                            val loginResponse = authResponse.user
+                            
+                            // Zapisujemy token, żeby Retrofit dołączał go do kolejnych requestów
+                            com.example.artsphere.api.TokenManager.accessToken = authResponse.accessToken
 
                             val role = when(loginResponse.role) {
                                 "ADMIN" -> "admin"
@@ -116,6 +120,14 @@ fun LoginScreen(
 
                             val displayName = "${loginResponse.firstName ?: ""} ${loginResponse.lastName ?: ""}".trim()
                                 .ifEmpty { loginResponse.username }
+
+                            // Zapisujemy wszystko do pamięci trwałej (SharedPreferences)
+                            com.example.artsphere.api.TokenManager.accessToken = authResponse.accessToken
+                            com.example.artsphere.api.TokenManager.userId = loginResponse.userId
+                            com.example.artsphere.api.TokenManager.username = displayName
+                            com.example.artsphere.api.TokenManager.role = role
+                            com.example.artsphere.api.TokenManager.balance = loginResponse.balance ?: 0.0
+                            com.example.artsphere.api.TokenManager.isLoggedIn = true
 
                             // Wysyłamy również pobrane z bazy saldo (balance)
                             onLoginSuccess(loginResponse.userId, displayName, role, loginResponse.balance ?: 0.0)

@@ -63,10 +63,10 @@ public class UserService {
 
         return new LoginResponse(
                 user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
+                safe(user.getUsername()),
+                safe(user.getEmail()),
+                safe(user.getFirstName()),
+                safe(user.getLastName()),
                 user.getRole() != null ? user.getRole() : "BUYER",
                 "Pobrano profil",
                 userBalance
@@ -98,14 +98,18 @@ public class UserService {
 
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
+        user.setFirstName(safe(request.getFirstName()));
+        user.setLastName(safe(request.getLastName()));
 
         if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
         userRepository.save(user);
         return "Twój profil został zaktualizowany!";
+    }
+
+    private String safe(String s) {
+        return s == null ? "" : s;
     }
 
     /**

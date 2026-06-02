@@ -9,6 +9,10 @@ import com.example.artsphere.ui.theme.ArtSphereTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Inicjalizacja TokenManager do zapamiętywania logowania
+        com.example.artsphere.api.TokenManager.init(this)
+
         setContent {
             ArtSphereTheme {
                 // AppNavigation zarządza tym co wyświetla się na ekranie

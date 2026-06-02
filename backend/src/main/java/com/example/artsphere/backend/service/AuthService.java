@@ -74,10 +74,10 @@ public class AuthService {
 
         return new LoginResponse(
                 user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
+                safe(user.getUsername()),
+                safe(user.getEmail()),
+                safe(user.getFirstName()),
+                safe(user.getLastName()),
                 roleName,
                 "Zalogowano pomyślnie",
                 userBalance
@@ -106,11 +106,11 @@ public class AuthService {
         }
 
         User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
+        user.setUsername(safe(request.getUsername()));
+        user.setEmail(safe(request.getEmail()));
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
+        user.setFirstName(safe(request.getFirstName()));
+        user.setLastName(safe(request.getLastName()));
         user.setBalance(BigDecimal.ZERO);
 
         String roleName = request.getRoleName() != null ? request.getRoleName() : "BUYER";
@@ -148,5 +148,9 @@ public class AuthService {
 
         String roleName = user.getRole() != null ? user.getRole() : "BUYER";
         return jwtService.generateAccessToken(user.getId().toString(), user.getUsername(), roleName);
+    }
+
+    private String safe(String s) {
+        return s == null ? "" : s;
     }
 }

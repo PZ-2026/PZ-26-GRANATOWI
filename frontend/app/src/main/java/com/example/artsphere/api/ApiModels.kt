@@ -16,6 +16,11 @@ data class LoginResponse(
     val balance: Double?
 )
 
+data class AuthTokenResponse(
+    val accessToken: String,
+    val user: LoginResponse
+)
+
 data class RegisterRequest(
     val username: String,
     val email: String,
