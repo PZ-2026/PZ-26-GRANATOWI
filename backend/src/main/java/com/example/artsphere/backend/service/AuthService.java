@@ -16,6 +16,8 @@ import java.util.Optional;
 
 /**
  * Serwis odpowiedzialny za uwierzytelnianie i rejestrację użytkowników.
+ *
+ * @author Gemini CLI
  */
 @Service
 public class AuthService {

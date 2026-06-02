@@ -11,10 +11,11 @@ import java.util.List;
 
 /**
  * Kontroler REST do zarządzania adresami użytkowników.
+ *
+ * @author ArtSphere Team
  */
 @RestController
 @RequestMapping("/api/addresses")
-@CrossOrigin(origins = "*")
 public class AddressController {
     /**
      * Konstruktor domyślny.

@@ -18,6 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.artsphere.api.RetrofitClient
 import com.example.artsphere.ui.ArtworkInfo
 import java.text.NumberFormat
 import java.util.Locale
@@ -93,12 +95,25 @@ fun AdminArtworkDetailScreen(
                     .background(Color(0xFF333333)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Image,
-                    contentDescription = "Zdjęcie dzieła",
-                    tint = Color.White.copy(alpha = 0.5f),
-                    modifier = Modifier.size(100.dp)
-                )
+                if (artwork.imagePath.isNullOrBlank()) {
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = "Zdjęcie dzieła",
+                        tint = Color.White.copy(alpha = 0.5f),
+                        modifier = Modifier.size(100.dp)
+                    )
+                } else {
+                    val displayImage = if (artwork.imagePath.startsWith("uploads/")) 
+                        RetrofitClient.BASE_URL + artwork.imagePath 
+                    else artwork.imagePath
+
+                    AsyncImage(
+                        model = displayImage,
+                        contentDescription = artwork.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                    )
+                }
             }
             
             // Status badge na górze

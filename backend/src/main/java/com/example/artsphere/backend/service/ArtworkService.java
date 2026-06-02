@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 
 /**
  * Serwis logiki biznesowej dla dzieł sztuki.
+ *
+ * @author Gemini CLI
  */
 @Service
 public class ArtworkService {

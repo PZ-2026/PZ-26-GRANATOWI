@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 
 /**
  * Serwis logiki biznesowej dla użytkowników.
+ *
+ * @author Gemini CLI
  */
 @Service
 public class UserService {
@@ -353,7 +355,9 @@ public class UserService {
         stats.setTotalOrders(allOrders.size());
         
         long pendingOrders = allOrders.stream().filter(o -> "PENDING".equals(o.getStatus())).count();
-        long completedOrders = allOrders.stream().filter(o -> "COMPLETED".equals(o.getStatus())).count();
+        long completedOrders = allOrders.stream()
+                .filter(o -> "COMPLETED".equals(o.getStatus()) || "DELIVERED".equals(o.getStatus()))
+                .count();
         stats.setPendingOrders((int) pendingOrders);
         stats.setCompletedOrders((int) completedOrders);
         

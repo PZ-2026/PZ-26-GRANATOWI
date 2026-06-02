@@ -18,10 +18,11 @@ import java.util.stream.Collectors;
 
 /**
  * Kontroler REST do zarządzania obserwowaniem sprzedawców.
+ *
+ * @author ArtSphere Team
  */
 @RestController
 @RequestMapping("/api/follows")
-@CrossOrigin(origins = "*")
 public class FollowController {
     /**
      * Konstruktor domyślny.

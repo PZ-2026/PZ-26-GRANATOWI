@@ -18,7 +18,9 @@ import java.util.stream.Collectors;
 /**
  * Serwis odpowiedzialny za generowanie raportów PDF dla różnych typów użytkowników.
  * Zawiera metody do generowania raportów sprzedaży, zakupów, transakcji oraz raportów administracyjnych.
- * Raporty są generowane w formacie PDF i obejmują zakresy dat oraz opcjonalne filtry kategorii.
+ * Raporty are generowane w formacie PDF i obejmują zakresy dat oraz opcjonalne filtry kategorii.
+ *
+ * @author Gemini CLI
  */
 @Service
 public class ReportService {

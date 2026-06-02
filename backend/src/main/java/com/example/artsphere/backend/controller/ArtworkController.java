@@ -4,18 +4,22 @@ import com.example.artsphere.backend.dto.ArtworkRequest;
 import com.example.artsphere.backend.dto.ArtworkResponse;
 import com.example.artsphere.backend.dto.CategoryResponse;
 import com.example.artsphere.backend.service.ArtworkService;
+import com.example.artsphere.backend.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
  * Kontroler REST do obsługi dzieł sztuki.
+ *
+ * @author ArtSphere Team
  */
 @RestController
 @RequestMapping("/api/artworks")
-@CrossOrigin(origins = "*")
 public class ArtworkController {
     /**
      * Konstruktor domyślny.
@@ -24,6 +28,27 @@ public class ArtworkController {
 
     @Autowired
     private ArtworkService artworkService;
+
+    @Autowired
+    private StorageService storageService;
+
+    /**
+     * Endpoint do przesyłania zdjęcia dzieła na serwer.
+     * Przyjmuje plik w formacie multipart/form-data, zapisuje go trwale na dysku serwera
+     * i zwraca relatywną ścieżkę do pliku, która może być użyta w żądaniu zapisu dzieła.
+     *
+     * @param file Przesłany plik graficzny (MultipartFile).
+     * @return ResponseEntity zawierająca mapę z kluczem "imagePath" lub błąd w przypadku niepowodzenia.
+     */
+    @PostMapping("/upload")
+    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
+        try {
+            String imagePath = storageService.store(file);
+            return ResponseEntity.ok(Collections.singletonMap("imagePath", imagePath));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
 
     /**
      * Endpoint zwracający listę dzieł sprzedawcy.

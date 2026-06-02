@@ -17,10 +17,11 @@ import java.util.List;
 
 /**
  * Kontroler REST do obsługi zamówień.
+ *
+ * @author ArtSphere Team
  */
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin(origins = "*")
 public class OrderController {
     /**
      * Konstruktor domyślny.
@@ -75,7 +76,7 @@ public class OrderController {
         Order order = new Order();
         order.setUser(buyer);
         order.setTotalPrice(BigDecimal.valueOf(request.getTotalPrice()));
-        order.setStatus("PENDING");
+        order.setStatus("COMPLETED");
         order.setPaymentStatus("PAID");
         order.setPaymentMethod(
                 request.getPaymentMethod() != null && !request.getPaymentMethod().isBlank()
@@ -89,7 +90,7 @@ public class OrderController {
 
         OrderStatusHistory initialHistory = new OrderStatusHistory();
         initialHistory.setOrder(order);
-        initialHistory.setStatus("PENDING");
+        initialHistory.setStatus("COMPLETED");
         initialHistory.setChangedAt(order.getCreatedAt());
         orderStatusHistoryRepository.save(initialHistory);
 

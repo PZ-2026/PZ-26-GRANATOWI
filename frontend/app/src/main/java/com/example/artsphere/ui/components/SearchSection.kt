@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.artsphere.api.ArtworkResponse
 import com.example.artsphere.api.RetrofitClient
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -180,12 +181,25 @@ fun PublicArtworkCard(artwork: ArtworkResponse, onClick: () -> Unit) {
                     .background(Color.LightGray),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Image,
-                    contentDescription = null,
-                    tint = Color.Gray,
-                    modifier = Modifier.size(48.dp)
-                )
+                if (artwork.imagePath.isNullOrBlank()) {
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = null,
+                        tint = Color.Gray,
+                        modifier = Modifier.size(48.dp)
+                    )
+                } else {
+                    val displayImage = if (artwork.imagePath.startsWith("uploads/")) 
+                        RetrofitClient.BASE_URL + artwork.imagePath 
+                    else artwork.imagePath
+
+                    AsyncImage(
+                        model = displayImage,
+                        contentDescription = artwork.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                }
             }
 
             Column(modifier = Modifier.padding(12.dp)) {

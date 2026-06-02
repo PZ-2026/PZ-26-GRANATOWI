@@ -4,18 +4,57 @@ import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
 
+/**
+ * Serwis API do obsługi uwierzytelniania, profilu użytkownika, portfela i relacji.
+ */
 interface AuthApiService {
+    /**
+     * Odświeża access token.
+     * 
+     * @param refreshTokenCookie Nagłówek Cookie zawierający "refreshToken=...".
+     * @return Odpowiedź z nowym [AccessTokenResponse].
+     */
+    @POST("api/auth/refresh")
+    suspend fun refresh(@Header("Cookie") refreshTokenCookie: String): Response<AccessTokenResponse>
+
+    /**
+     * Loguje użytkownika do systemu.
+     * 
+     * @param request Dane uwierzytelniające (email i hasło).
+     * @return Odpowiedź zawierająca [AuthTokenResponse] z danymi sesji.
+     */
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<AuthTokenResponse>
 
+    /**
+     * Rejestruje nowego użytkownika.
+     * 
+     * @param request Pełne dane rejestracyjne.
+     * @return Odpowiedź tekstowa z wynikiem operacji.
+     */
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<ResponseBody>
 
+    /**
+     * Pobiera szczegółowe dane profilu zalogowanego użytkownika.
+     * 
+     * @param userId Unikalny identyfikator użytkownika.
+     * @return Obiekt [LoginResponse] z danymi profilu.
+     */
     @GET("api/users/{userId}")
     suspend fun getUserProfile(@Path("userId") userId: Long): Response<LoginResponse>
 
+    /**
+     * Aktualizuje dane profilu użytkownika.
+     * 
+     * @param userId Identyfikator edytowanego użytkownika.
+     * @param request Nowe dane (może zawierać zmienione hasło).
+     * @return Mapa z wynikiem operacji.
+     */
     @PUT("api/users/{userId}")
     suspend fun updateUserProfile(@Path("userId") userId: Long, @Body request: RegisterRequest): Response<Map<String, String>>
+
+    // ... (reszta metod pozostaje bez zmian, ale zaktualizuję je jeśli trzeba)
 
     // ENDPOINTY PORTFELA
     @PUT("api/users/{userId}/balance/add")

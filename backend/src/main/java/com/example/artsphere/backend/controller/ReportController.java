@@ -12,10 +12,11 @@ import java.time.LocalDate;
 
 /**
  * Kontroler REST do generowania raportów PDF.
+ *
+ * @author ArtSphere Team
  */
 @RestController
 @RequestMapping("/api/reports")
-@CrossOrigin(origins = "*")
 public class ReportController {
     /**
      * Konstruktor domyślny.

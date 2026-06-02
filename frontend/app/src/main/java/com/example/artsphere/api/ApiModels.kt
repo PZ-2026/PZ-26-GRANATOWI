@@ -1,10 +1,16 @@
 package com.example.artsphere.api
 
+/**
+ * Żądanie logowania zawierające dane uwierzytelniające użytkownika.
+ */
 data class LoginRequest(
     val email: String,
     val password: String
 )
 
+/**
+ * Dane profilu użytkownika zwracane po pomyślnym logowaniu lub pobraniu profilu.
+ */
 data class LoginResponse(
     val userId: Long,
     val username: String,
@@ -16,9 +22,20 @@ data class LoginResponse(
     val balance: Double?
 )
 
+/**
+ * Odpowiedź serwera po pomyślnym logowaniu, zawierająca tokeny dostępu i dane użytkownika.
+ */
 data class AuthTokenResponse(
     val accessToken: String,
+    val refreshToken: String,
     val user: LoginResponse
+)
+
+/**
+ * Odpowiedź serwera zawierająca odświeżony access token.
+ */
+data class AccessTokenResponse(
+    val accessToken: String
 )
 
 data class RegisterRequest(

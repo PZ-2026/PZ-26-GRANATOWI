@@ -123,6 +123,7 @@ fun LoginScreen(
 
                             // Zapisujemy wszystko do pamięci trwałej (SharedPreferences)
                             com.example.artsphere.api.TokenManager.accessToken = authResponse.accessToken
+                            com.example.artsphere.api.TokenManager.refreshToken = authResponse.refreshToken
                             com.example.artsphere.api.TokenManager.userId = loginResponse.userId
                             com.example.artsphere.api.TokenManager.username = displayName
                             com.example.artsphere.api.TokenManager.role = role

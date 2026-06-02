@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.example.artsphere.api.ArtworkResponse
 import com.example.artsphere.api.RetrofitClient
 import kotlinx.coroutines.launch
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,7 +99,20 @@ fun PublicArtworkDetailScreen(
                     modifier = Modifier.fillMaxWidth().height(300.dp).clip(RoundedCornerShape(12.dp)).background(Color.LightGray),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Image, "Zdjęcie", modifier = Modifier.size(64.dp), tint = Color.Gray)
+                    if (art.imagePath.isNullOrBlank()) {
+                        Icon(Icons.Default.Image, "Zdjęcie", modifier = Modifier.size(64.dp), tint = Color.Gray)
+                    } else {
+                        val displayImage = if (art.imagePath.startsWith("uploads/")) 
+                            RetrofitClient.BASE_URL + art.imagePath 
+                        else art.imagePath
+
+                        AsyncImage(
+                            model = displayImage,
+                            contentDescription = art.title,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                        )
+                    }
                 }
 
                 Text(text = art.title, fontSize = 28.sp, fontWeight = FontWeight.Bold, lineHeight = 34.sp)

@@ -22,6 +22,8 @@ import java.util.Objects;
 
 /**
  * Generator raportów PDF dla systemu ArtSphere.
+ *
+ * @author Gemini CLI
  */
 public class ArtSpherePdfReportGenerator {
     /**

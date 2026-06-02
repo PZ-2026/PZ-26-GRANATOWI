@@ -17,10 +17,11 @@ import java.time.Duration;
 
 /**
  * Kontroler REST do obsługi uwierzytelniania i rejestracji.
+ *
+ * @author ArtSphere Team
  */
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
 public class AuthController {
     /**
      * Konstruktor domyślny.
@@ -60,7 +61,7 @@ public class AuthController {
             ResponseCookie refreshCookie = buildRefreshCookie(refreshToken, jwtService.getRefreshTtl());
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                    .body(new AuthTokenResponse(accessToken, response));
+                    .body(new AuthTokenResponse(accessToken, refreshToken, response));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

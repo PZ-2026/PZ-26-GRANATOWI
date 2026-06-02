@@ -1,0 +1,11 @@
+com.example.artsphere.backend
+com.example.artsphere.backend.config
+com.example.artsphere.backend.controller
+com.example.artsphere.backend.dto
+com.example.artsphere.backend.logging
+com.example.artsphere.backend.model
+com.example.artsphere.backend.repository
+com.example.artsphere.backend.security
+com.example.artsphere.backend.service
+com.example.artsphere.pdf
+com.example.artsphere.pdf.model

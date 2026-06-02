@@ -40,17 +40,17 @@ ON CONFLICT (id) DO NOTHING;
 -- ==========================================================
 -- 4. DZIEŁA SZTUKI (Artworks)
 -- ==========================================================
-INSERT INTO artworks (id, title, description, price, is_priceless, artist, category_id, user_id, status, width, height, depth) VALUES
-(1, 'Gwiaździsta Noc', 'Opis klasyka', 1200.00, false, 'Vincent van Gogh', 2, 2, 'AVAILABLE', 92.0, 73.0, 2.5),
-(2, 'Słoneczniki', 'Bukiet w wazonie', 900.00, false, 'Vincent van Gogh', 2, 2, 'SOLD', 91.0, 72.0, 2.0),
-(3, 'Neon City', 'Grafika komputerowa', 450.00, false, 'Anna Nowak', 6, 3, 'AVAILABLE', 50.0, 50.0, 0.1),
-(4, 'Kamienna Twarz', 'Rzeźba z piaskowca', 2100.00, false, 'Maksymilian Rzeźbiarz', 5, 4, 'AVAILABLE', 30.0, 45.0, 25.0),
-(5, 'Bez tytułu', 'Eksperyment rzeźbiarski', null, true, 'Maksymilian Rzeźbiarz', 4, 4, 'AVAILABLE', 20.0, 60.0, 20.0),
-(6, 'Mglisty Poranek', 'Pejzaż w chłodnej tonacji.', 780.00, false, 'Anna Nowak', 3, 3, 'AVAILABLE', 60.0, 45.0, 1.8),
-(7, 'Stalowy Rytm', 'Nowoczesna rzeźba industrialna.', 1650.00, false, 'Maksymilian Rzeźbiarz', 4, 4, 'AVAILABLE', 35.0, 70.0, 28.0),
-(8, 'Złote Pole', 'Impresja inspirowana latem.', 990.00, false, 'Vincent van Gogh', 2, 2, 'AVAILABLE', 88.0, 68.0, 2.1),
-(9, 'Most o Świcie', 'Grafika cyfrowa z motywem miejskim.', 520.00, false, 'Anna Nowak', 6, 3, 'AVAILABLE', 55.0, 55.0, 0.2),
-(10, 'Kamienny Ogród', 'Rzeźba ogrodowa z granitu.', 2400.00, false, 'Maksymilian Rzeźbiarz', 5, 4, 'AVAILABLE', 42.0, 80.0, 30.0)
+INSERT INTO artworks (id, title, description, price, is_priceless, artist, image_path, width, height, depth, category_id, user_id, status) VALUES
+(1, 'Gwiaździsta Noc', 'Opis klasyka', 1200.00, false, 'Vincent van Gogh', 'uploads/zdj1.jpg', 92.0, 73.0, 2.5, 2, 2, 'AVAILABLE'),
+(2, 'Słoneczniki', 'Bukiet w wazonie', 900.00, false, 'Vincent van Gogh', 'uploads/zdj2.jpg', 91.0, 72.0, 2.0, 2, 2, 'SOLD'),
+(3, 'Neon City', 'Grafika komputerowa', 450.00, false, 'Anna Nowak', 'uploads/zdj3.jpg', 50.0, 50.0, 0.1, 6, 3, 'AVAILABLE'),
+(4, 'Kamienna Twarz', 'Rzeźba z piaskowca', 2100.00, false, 'Maksymilian Rzeźbiarz', 'uploads/zdj4.jpg', 30.0, 45.0, 25.0, 5, 4, 'AVAILABLE'),
+(5, 'Bez tytułu', 'Eksperyment rzeźbiarski', null, true, 'Maksymilian Rzeźbiarz', 'uploads/zdj5.jpg', 20.0, 60.0, 20.0, 4, 4, 'AVAILABLE'),
+(6, 'Mglisty Poranek', 'Pejzaż w chłodnej tonacji.', 780.00, false, 'Anna Nowak', 'uploads/zdj6.jpg', 60.0, 45.0, 1.8, 3, 3, 'AVAILABLE'),
+(7, 'Stalowy Rytm', 'Nowoczesna rzeźba industrialna.', 1650.00, false, 'Maksymilian Rzeźbiarz', 'uploads/zdj7.jpg', 35.0, 70.0, 28.0, 4, 4, 'AVAILABLE'),
+(8, 'Złote Pole', 'Impresja inspirowana latem.', 990.00, false, 'Vincent van Gogh', 'uploads/zdj8.jpg', 88.0, 68.0, 2.1, 2, 2, 'AVAILABLE'),
+(9, 'Most o Świcie', 'Grafika cyfrowa z motywem miejskim.', 520.00, false, 'Anna Nowak', 'uploads/zdj9.jpg', 55.0, 55.0, 0.2, 6, 3, 'AVAILABLE'),
+(10, 'Kamienny Ogród', 'Rzeźba ogrodowa z granitu.', 2400.00, false, 'Maksymilian Rzeźbiarz', 'uploads/zdj10.jpg', 42.0, 80.0, 30.0, 5, 4, 'AVAILABLE')
 ON CONFLICT (id) DO NOTHING;
 
 -- ==========================================================

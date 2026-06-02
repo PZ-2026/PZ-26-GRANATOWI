@@ -8,11 +8,15 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
     
-    // Zmień na adres IP komputera z backendem, np. "http://192.168.1.105:8080/"
-    // Dla emulatora Android Studio użyj: "http://10.0.2.2:8080/"
-    // Dla prawdziwego urządzenia użyj IP komputera w tej samej sieci
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    /**
+     * Adres bazowy serwera API.
+     * Używamy 10.0.2.2 dla emulatora Android Studio (odpowiednik localhost).
+     */
+    const val BASE_URL = "http://10.0.2.2:8080/"
 
+    /**
+     * Interceptor odpowiedzialny za logowanie szczegółów zapytań i odpowiedzi HTTP.
+     */
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
@@ -28,6 +32,7 @@ object RetrofitClient {
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
         .addInterceptor(authInterceptor)
+        .authenticator(AuthAuthenticator())
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)

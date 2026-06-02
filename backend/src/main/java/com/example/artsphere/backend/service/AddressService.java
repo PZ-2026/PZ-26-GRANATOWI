@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 
 /**
  * Serwis logiki biznesowej dla adresów.
+ *
+ * @author Gemini CLI
  */
 @Service
 public class AddressService {

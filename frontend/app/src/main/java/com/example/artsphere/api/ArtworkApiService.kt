@@ -1,9 +1,14 @@
 package com.example.artsphere.api
 
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.*
 
 interface ArtworkApiService {
+
+    @Multipart
+    @POST("api/artworks/upload")
+    suspend fun uploadImage(@Part file: MultipartBody.Part): Response<Map<String, String>>
 
     @GET("api/artworks/seller/{userId}")
     suspend fun getSellerArtworks(@Path("userId") userId: Long): Response<List<ArtworkResponse>>

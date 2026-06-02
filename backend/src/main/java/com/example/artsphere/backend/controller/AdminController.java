@@ -46,10 +46,11 @@ import java.util.stream.Collectors;
 
 /**
  * Kontroler REST obsługujący operacje administracyjne.
+ *
+ * @author ArtSphere Team
  */
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "*")
 public class AdminController {
     /**
      * Konstruktor domyślny.
