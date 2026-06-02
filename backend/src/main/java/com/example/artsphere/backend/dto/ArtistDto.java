@@ -7,6 +7,11 @@ import lombok.Data;
  */
 @Data @AllArgsConstructor
 public class ArtistDto {
+    /**
+     * Konstruktor domyślny.
+     */
+    public ArtistDto() {}
+
     private Long id;
     private String username;
     private String firstName;

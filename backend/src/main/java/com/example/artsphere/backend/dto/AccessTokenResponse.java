@@ -9,5 +9,10 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class AccessTokenResponse {
+    /**
+     * Konstruktor domyślny.
+     */
+    public AccessTokenResponse() {}
+
     private String accessToken;
 }

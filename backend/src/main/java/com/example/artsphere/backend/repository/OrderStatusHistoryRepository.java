@@ -11,5 +11,10 @@ import java.util.List;
  */
 @Repository
 public interface OrderStatusHistoryRepository extends JpaRepository<OrderStatusHistory, Long> {
+    /**
+     * Znajduje historię statusów zamówienia posortowaną chronologicznie.
+     * @param orderId identyfikator zamówienia
+     * @return lista wpisów historii statusów
+     */
     List<OrderStatusHistory> findByOrderIdOrderByChangedAtAsc(Long orderId);
 }

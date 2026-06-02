@@ -9,9 +9,13 @@ import java.time.LocalDateTime;
  * DTO odpowiedzi z danymi kategorii.
  */
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class CategoryResponse {
+    /**
+     * Konstruktor domyślny.
+     */
+    public CategoryResponse() {}
+
     private Integer id;
     private String name;
     private String description;

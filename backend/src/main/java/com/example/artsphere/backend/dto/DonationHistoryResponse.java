@@ -7,6 +7,11 @@ import lombok.Data;
  */
 @Data @AllArgsConstructor
 public class DonationHistoryResponse {
+    /**
+     * Konstruktor domyślny.
+     */
+    public DonationHistoryResponse() {}
+
     private String artistName;
     private Double amount;
 }

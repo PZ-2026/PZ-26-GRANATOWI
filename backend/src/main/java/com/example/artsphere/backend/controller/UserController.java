@@ -18,6 +18,10 @@ import java.util.List;
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
 public class UserController {
+    /**
+     * Konstruktor domyślny.
+     */
+    public UserController() {}
 
     @Autowired
     private UserService userService;

@@ -12,6 +12,10 @@ import java.time.LocalDateTime;
 @Table(name = "wallet_transactions")
 @Data
 public class WalletTransaction {
+    /**
+     * Konstruktor domyślny.
+     */
+    public WalletTransaction() {}
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

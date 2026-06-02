@@ -7,6 +7,11 @@ import lombok.Data;
  */
 @Data
 public class ClientStatisticsDto {
+    /**
+     * Konstruktor domyślny.
+     */
+    public ClientStatisticsDto() {}
+
     private Double totalSpent;
     private Integer totalPurchases;
     private Integer favoriteArtistsCount;

@@ -10,6 +10,11 @@ import lombok.Data;
 @Table(name = "addresses")
 @Data
 public class Address {
+    /**
+     * Konstruktor domyślny.
+     */
+    public Address() {}
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

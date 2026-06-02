@@ -7,5 +7,10 @@ import lombok.Data;
  */
 @Data
 public class UpdateUserStatusRequest {
+    /**
+     * Konstruktor domyślny.
+     */
+    public UpdateUserStatusRequest() {}
+
     private Boolean active;
 }

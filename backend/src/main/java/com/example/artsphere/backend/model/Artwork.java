@@ -13,6 +13,11 @@ import java.time.LocalDateTime;
 @Table(name = "artworks")
 @Data
 public class Artwork {
+    /**
+     * Konstruktor domyślny.
+     */
+    public Artwork() {}
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

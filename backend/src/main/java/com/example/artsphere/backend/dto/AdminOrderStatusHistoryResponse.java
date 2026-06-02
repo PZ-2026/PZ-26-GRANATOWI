@@ -9,6 +9,11 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class AdminOrderStatusHistoryResponse {
+    /**
+     * Konstruktor domyślny.
+     */
+    public AdminOrderStatusHistoryResponse() {}
+
     private String status;
     private String date;
 }

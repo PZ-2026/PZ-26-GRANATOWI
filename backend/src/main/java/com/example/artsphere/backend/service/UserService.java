@@ -23,8 +23,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Serwis logiki biznesowej dla użytkowników.
+ */
 @Service
 public class UserService {
+    /**
+     * Konstruktor domyślny.
+     */
+    public UserService() {}
 
     @Autowired
     private UserRepository userRepository;

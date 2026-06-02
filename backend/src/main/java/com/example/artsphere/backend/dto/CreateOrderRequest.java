@@ -8,6 +8,11 @@ import java.util.List;
  */
 @Data
 public class CreateOrderRequest {
+    /**
+     * Konstruktor domyślny.
+     */
+    public CreateOrderRequest() {}
+
     private Long userId;
     private Double totalPrice;
     private List<Long> artworkIds;

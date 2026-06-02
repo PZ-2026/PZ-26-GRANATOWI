@@ -24,6 +24,11 @@ import java.util.Objects;
  * Generator raportów PDF dla systemu ArtSphere.
  */
 public class ArtSpherePdfReportGenerator {
+    /**
+     * Konstruktor domyślny.
+     */
+    public ArtSpherePdfReportGenerator() {}
+
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");

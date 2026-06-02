@@ -16,6 +16,10 @@ import java.util.List;
 @RequestMapping("/api/addresses")
 @CrossOrigin(origins = "*")
 public class AddressController {
+    /**
+     * Konstruktor domyślny.
+     */
+    public AddressController() {}
 
     @Autowired
     private AddressService addressService;

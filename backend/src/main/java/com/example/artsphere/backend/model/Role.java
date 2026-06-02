@@ -10,6 +10,11 @@ import lombok.Data;
 @Table(name = "roles")
 @Data
 public class Role {
+    /**
+     * Konstruktor domyślny.
+     */
+    public Role() {}
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

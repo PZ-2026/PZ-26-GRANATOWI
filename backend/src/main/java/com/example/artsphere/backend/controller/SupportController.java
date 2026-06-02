@@ -20,6 +20,10 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/support")
 @CrossOrigin(origins = "*")
 public class SupportController {
+    /**
+     * Konstruktor domyślny.
+     */
+    public SupportController() {}
 
     @Autowired private UserRepository userRepository;
     @Autowired private DonationRepository donationRepository;

@@ -11,6 +11,10 @@ import java.math.BigDecimal;
 @Table(name = "order_items")
 @Data
 public class OrderItem {
+    /**
+     * Konstruktor domyślny.
+     */
+    public OrderItem() {}
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

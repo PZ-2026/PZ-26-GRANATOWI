@@ -19,6 +19,10 @@ import java.util.Optional;
  */
 @Service
 public class AuthService {
+    /**
+     * Konstruktor domyślny.
+     */
+    public AuthService() {}
 
     @Autowired
     private UserRepository userRepository;

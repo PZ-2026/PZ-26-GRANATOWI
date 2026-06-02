@@ -10,6 +10,11 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 public class LoginResponse {
+    /**
+     * Konstruktor domyślny.
+     */
+    public LoginResponse() {}
+
     private Long userId;
     private String username;
     private String email;

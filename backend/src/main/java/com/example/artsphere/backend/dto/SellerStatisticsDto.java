@@ -7,6 +7,11 @@ import lombok.Data;
  */
 @Data
 public class SellerStatisticsDto {
+    /**
+     * Konstruktor domyślny.
+     */
+    public SellerStatisticsDto() {}
+
     private Integer totalSales;
     private Double totalRevenue;
     private Float averageRating;

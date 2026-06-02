@@ -22,6 +22,10 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ReportService {
+    /**
+     * Konstruktor domyślny.
+     */
+    public ReportService() {}
 
     @Autowired
     private UserRepository userRepository;

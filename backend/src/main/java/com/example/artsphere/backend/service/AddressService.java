@@ -17,6 +17,10 @@ import java.util.stream.Collectors;
  */
 @Service
 public class AddressService {
+    /**
+     * Konstruktor domyślny.
+     */
+    public AddressService() {}
 
     @Autowired
     private AddressRepository addressRepository;

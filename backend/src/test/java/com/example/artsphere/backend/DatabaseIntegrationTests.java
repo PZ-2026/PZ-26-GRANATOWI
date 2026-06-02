@@ -18,10 +18,17 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Integracyjne testy bazy danych.
+ */
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Transactional
 public class DatabaseIntegrationTests {
+    /**
+     * Konstruktor domyślny.
+     */
+    public DatabaseIntegrationTests() {}
 
     @Autowired
     private DataSource dataSource;

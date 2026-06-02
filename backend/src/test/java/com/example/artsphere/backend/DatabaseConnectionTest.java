@@ -11,9 +11,16 @@ import java.sql.Connection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Testy połączenia z bazą danych.
+ */
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class DatabaseConnectionTest {
+    /**
+     * Konstruktor domyślny.
+     */
+    public DatabaseConnectionTest() {}
 
     @Autowired
     private DataSource dataSource;

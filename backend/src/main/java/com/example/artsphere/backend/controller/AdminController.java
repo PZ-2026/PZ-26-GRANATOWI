@@ -51,6 +51,10 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/admin")
 @CrossOrigin(origins = "*")
 public class AdminController {
+    /**
+     * Konstruktor domyślny.
+     */
+    public AdminController() {}
 
     @Autowired
     private UserRepository userRepository;

@@ -11,6 +11,11 @@ import java.math.BigDecimal;
 @Table(name = "donations")
 @Data
 public class Donation {
+    /**
+     * Konstruktor domyślny.
+     */
+    public Donation() {}
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

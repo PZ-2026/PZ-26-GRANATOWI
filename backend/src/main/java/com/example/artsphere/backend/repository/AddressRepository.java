@@ -10,5 +10,10 @@ import java.util.List;
  */
 @Repository
 public interface AddressRepository extends JpaRepository<Address, Long> {
+    /**
+     * Znajduje adresy na podstawie identyfikatora użytkownika.
+     * @param userId identyfikator użytkownika
+     * @return lista adresów
+     */
     List<Address> findByUserId(Long userId);
 }

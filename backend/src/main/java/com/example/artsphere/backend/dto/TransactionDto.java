@@ -9,6 +9,11 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class TransactionDto {
+    /**
+     * Konstruktor domyślny.
+     */
+    public TransactionDto() {}
+
     private String title;
     private Double amount;
     private String date;

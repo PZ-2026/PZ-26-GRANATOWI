@@ -10,5 +10,10 @@ import java.util.List;
  */
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Integer> {
+    /**
+     * Znajduje kategorie na podstawie identyfikatora kategorii nadrzędnej.
+     * @param parentId identyfikator kategorii nadrzędnej
+     * @return lista kategorii
+     */
     List<Category> findByParentId(Integer parentId);
 }

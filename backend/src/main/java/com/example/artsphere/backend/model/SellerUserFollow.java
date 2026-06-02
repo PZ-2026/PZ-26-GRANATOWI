@@ -10,6 +10,10 @@ import lombok.Data;
 @Table(name = "seller_user_follows")
 @Data
 public class SellerUserFollow {
+    /**
+     * Konstruktor domyślny.
+     */
+    public SellerUserFollow() {}
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

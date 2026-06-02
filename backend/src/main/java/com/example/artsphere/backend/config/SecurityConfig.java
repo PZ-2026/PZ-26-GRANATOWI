@@ -15,6 +15,10 @@ import com.example.artsphere.backend.security.JwtAuthenticationFilter;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    /**
+     * Konstruktor domyślny.
+     */
+    public SecurityConfig() {}
 
     /**
      * Definiuje łańcuch filtrów bezpieczeństwa dla aplikacji.

@@ -11,5 +11,11 @@ import java.util.Optional;
  */
 @Repository
 public interface SaleRepository extends JpaRepository<Sale, Long> {
+    /**
+     * Znajduje najnowszą sprzedaż danego dzieła danemu kupującemu.
+     * @param artworkId identyfikator dzieła
+     * @param buyerId identyfikator kupującego
+     * @return opcjonalna sprzedaż
+     */
     Optional<Sale> findTopByArtworkIdAndBuyerIdOrderBySoldAtDesc(Long artworkId, Long buyerId);
 }

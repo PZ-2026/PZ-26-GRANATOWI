@@ -20,6 +20,10 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ArtworkService {
+    /**
+     * Konstruktor domyślny.
+     */
+    public ArtworkService() {}
 
     @Autowired
     private ArtworkRepository artworkRepository;

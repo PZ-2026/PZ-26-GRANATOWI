@@ -15,6 +15,10 @@ import java.time.format.DateTimeFormatter;
  */
 @Service
 public class AuthFileLogger {
+    /**
+     * Konstruktor domyślny.
+     */
+    public AuthFileLogger() {}
 
     private static final Path LOG_PATH = Paths.get("logs", "auth-events.log");
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;

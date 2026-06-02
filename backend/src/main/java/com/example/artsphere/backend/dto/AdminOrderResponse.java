@@ -11,6 +11,11 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class AdminOrderResponse {
+    /**
+     * Konstruktor domyślny.
+     */
+    public AdminOrderResponse() {}
+
     private Long id;
     private String orderNumber;
     private Long buyerId;

@@ -11,8 +11,12 @@ import java.time.LocalDateTime;
  */
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class AdminUserResponse {
+    /**
+     * Konstruktor domyślny.
+     */
+    public AdminUserResponse() {}
+
     private Long id;
     private String username;
     private String email;

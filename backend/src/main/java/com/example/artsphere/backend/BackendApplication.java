@@ -8,6 +8,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 public class BackendApplication {
+	/**
+	 * Konstruktor domyślny.
+	 */
+	public BackendApplication() {}
 
 	/**
 	 * Główna metoda uruchomieniowa aplikacji Spring Boot.

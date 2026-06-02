@@ -9,6 +9,11 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class AddressResponse {
+    /**
+     * Konstruktor domyślny.
+     */
+    public AddressResponse() {}
+
     private Long id;
     private Long userId;
     private String username;

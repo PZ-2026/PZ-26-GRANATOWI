@@ -11,9 +11,13 @@ import java.time.LocalDateTime;
  * DTO odpowiedzi z danymi dzieła sztuki.
  */
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class ArtworkResponse {
+    /**
+     * Konstruktor domyślny.
+     */
+    public ArtworkResponse() {}
+
     private Long id;
     private String title;
     private String description;

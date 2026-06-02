@@ -7,5 +7,10 @@ import lombok.Data;
  */
 @Data
 public class UpdateUserRoleRequest {
+    /**
+     * Konstruktor domyślny.
+     */
+    public UpdateUserRoleRequest() {}
+
     private String role;
 }

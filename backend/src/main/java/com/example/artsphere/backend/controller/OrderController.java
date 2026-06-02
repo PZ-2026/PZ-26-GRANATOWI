@@ -22,6 +22,10 @@ import java.util.List;
 @RequestMapping("/api/orders")
 @CrossOrigin(origins = "*")
 public class OrderController {
+    /**
+     * Konstruktor domyślny.
+     */
+    public OrderController() {}
 
     @Autowired
     private OrderRepository orderRepository;

@@ -9,6 +9,11 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class PurchaseResponse {
+    /**
+     * Konstruktor domyślny.
+     */
+    public PurchaseResponse() {}
+
     private Long orderId;
     private Long artworkId;
     private String title;

@@ -11,6 +11,16 @@ import java.util.List;
  */
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
+    /**
+     * Znajduje zamówienia użytkownika.
+     * @param userId identyfikator użytkownika
+     * @return lista zamówień
+     */
     List<Order> findByUserId(Long userId);
+
+    /**
+     * Znajduje wszystkie zamówienia posortowane malejąco według daty utworzenia.
+     * @return lista zamówień
+     */
     List<Order> findAllByOrderByCreatedAtDesc();
 }

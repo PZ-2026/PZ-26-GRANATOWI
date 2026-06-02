@@ -17,6 +17,10 @@ import java.util.List;
 @RequestMapping("/api/artworks")
 @CrossOrigin(origins = "*")
 public class ArtworkController {
+    /**
+     * Konstruktor domyślny.
+     */
+    public ArtworkController() {}
 
     @Autowired
     private ArtworkService artworkService;

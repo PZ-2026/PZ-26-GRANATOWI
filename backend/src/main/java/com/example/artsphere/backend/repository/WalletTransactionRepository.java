@@ -11,6 +11,10 @@ import java.util.List;
  */
 @Repository
 public interface WalletTransactionRepository extends JpaRepository<WalletTransaction, Long> {
-    // Zapytanie pobierze wpłaty użytkownika, sortując od najnowszej
+    /**
+     * Pobiera transakcje portfela użytkownika, sortując od najnowszej.
+     * @param userId identyfikator użytkownika
+     * @return lista transakcji portfela
+     */
     List<WalletTransaction> findByUserIdOrderByTransactionDateDesc(Long userId);
 }

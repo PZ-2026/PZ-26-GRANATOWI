@@ -8,9 +8,12 @@ import lombok.NoArgsConstructor;
  * DTO dla statystyk administratora - wyświetlane na panelu
  */
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class AdminDashboardStatsDto {
+    /**
+     * Konstruktor domyślny.
+     */
+    public AdminDashboardStatsDto() {}
     
     // === UŻYTKOWNICY ===
     private int totalUsers;

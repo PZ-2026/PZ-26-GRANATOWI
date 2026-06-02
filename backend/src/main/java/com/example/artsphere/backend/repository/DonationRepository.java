@@ -11,5 +11,10 @@ import java.util.List;
  */
 @Repository
 public interface DonationRepository extends JpaRepository<Donation, Long> {
+    /**
+     * Znajduje darowizny klienta posortowane malejąco po identyfikatorze.
+     * @param clientId identyfikator klienta
+     * @return lista darowizn
+     */
     List<Donation> findByClientIdOrderByIdDesc(Long clientId);
 }

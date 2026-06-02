@@ -6,6 +6,11 @@ import lombok.Data;
  */
 @Data
 public class DonationRequest {
+    /**
+     * Konstruktor domyślny.
+     */
+    public DonationRequest() {}
+
     private Long clientId;
     private Long sellerId;
     private Double amount;

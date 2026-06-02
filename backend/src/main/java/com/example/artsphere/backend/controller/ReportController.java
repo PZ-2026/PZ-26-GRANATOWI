@@ -10,10 +10,17 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
+/**
+ * Kontroler REST do generowania raportów PDF.
+ */
 @RestController
 @RequestMapping("/api/reports")
 @CrossOrigin(origins = "*")
 public class ReportController {
+    /**
+     * Konstruktor domyślny.
+     */
+    public ReportController() {}
 
     @Autowired
     private ReportService reportService;

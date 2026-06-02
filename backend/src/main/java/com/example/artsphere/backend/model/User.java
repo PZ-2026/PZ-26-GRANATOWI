@@ -12,6 +12,11 @@ import java.time.LocalDateTime;
 @Table(name = "users")
 @Data
 public class User {
+    /**
+     * Konstruktor domyślny.
+     */
+    public User() {}
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -12,6 +12,10 @@ import java.time.LocalDateTime;
 @Table(name = "sales")
 @Data
 public class Sale {
+    /**
+     * Konstruktor domyślny.
+     */
+    public Sale() {}
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

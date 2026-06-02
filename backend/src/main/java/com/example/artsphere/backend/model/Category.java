@@ -11,6 +11,11 @@ import java.time.LocalDateTime;
 @Table(name = "categories")
 @Data
 public class Category {
+    /**
+     * Konstruktor domyślny.
+     */
+    public Category() {}
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

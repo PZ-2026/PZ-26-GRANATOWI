@@ -22,6 +22,10 @@ import java.time.Duration;
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
 public class AuthController {
+    /**
+     * Konstruktor domyślny.
+     */
+    public AuthController() {}
 
     @Autowired
     private AuthService authService;

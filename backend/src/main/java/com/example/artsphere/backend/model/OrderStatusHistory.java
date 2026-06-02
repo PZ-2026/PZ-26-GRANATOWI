@@ -12,6 +12,10 @@ import java.time.LocalDateTime;
 @Table(name = "order_status_history")
 @Data
 public class OrderStatusHistory {
+    /**
+     * Konstruktor domyślny.
+     */
+    public OrderStatusHistory() {}
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

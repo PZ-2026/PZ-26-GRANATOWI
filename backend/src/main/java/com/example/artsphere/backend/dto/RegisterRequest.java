@@ -7,6 +7,11 @@ import lombok.Data;
  */
 @Data
 public class RegisterRequest {
+    /**
+     * Konstruktor domyślny.
+     */
+    public RegisterRequest() {}
+
     private String username;
     private String email;
     private String password;

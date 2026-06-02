@@ -10,9 +10,13 @@ import java.math.BigDecimal;
  * DTO żądania utworzenia lub aktualizacji dzieła sztuki.
  */
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class ArtworkRequest {
+    /**
+     * Konstruktor domyślny.
+     */
+    public ArtworkRequest() {}
+
     private String title;
     private String description;
     private BigDecimal price;

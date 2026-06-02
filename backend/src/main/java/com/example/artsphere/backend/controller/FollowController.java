@@ -23,6 +23,10 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/follows")
 @CrossOrigin(origins = "*")
 public class FollowController {
+    /**
+     * Konstruktor domyślny.
+     */
+    public FollowController() {}
 
     @Autowired
     private SellerUserFollowRepository followRepository;
